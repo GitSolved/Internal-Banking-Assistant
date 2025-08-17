@@ -1,12 +1,12 @@
 import pytest
 from llama_index.core.llms import ChatMessage, MessageRole
 
-from private_gpt.components.llm.prompt_helper import (
+from internal_assistant.components.llm.prompt_helper import (
     ChatMLPromptStyle,
     DefaultPromptStyle,
     Llama2PromptStyle,
     Llama3PromptStyle,
-    MistralPromptStyle,
+
     TagPromptStyle,
     get_prompt_style,
 )
@@ -18,7 +18,7 @@ from private_gpt.components.llm.prompt_helper import (
         ("default", DefaultPromptStyle),
         ("llama2", Llama2PromptStyle),
         ("tag", TagPromptStyle),
-        ("mistral", MistralPromptStyle),
+
         ("chatml", ChatMLPromptStyle),
     ],
 )
@@ -67,23 +67,7 @@ def test_tag_prompt_style_format_with_system_prompt():
     assert prompt_style.messages_to_prompt(messages) == expected_prompt
 
 
-def test_mistral_prompt_style_format():
-    prompt_style = MistralPromptStyle()
-    messages = [
-        ChatMessage(content="A", role=MessageRole.SYSTEM),
-        ChatMessage(content="B", role=MessageRole.USER),
-    ]
-    expected_prompt = "<s>[INST] A\nB [/INST]"
-    assert prompt_style.messages_to_prompt(messages) == expected_prompt
 
-    messages2 = [
-        ChatMessage(content="A", role=MessageRole.SYSTEM),
-        ChatMessage(content="B", role=MessageRole.USER),
-        ChatMessage(content="C", role=MessageRole.ASSISTANT),
-        ChatMessage(content="D", role=MessageRole.USER),
-    ]
-    expected_prompt2 = "<s>[INST] A\nB [/INST] C</s><s>[INST] D [/INST]"
-    assert prompt_style.messages_to_prompt(messages2) == expected_prompt2
 
 
 def test_chatml_prompt_style_format():

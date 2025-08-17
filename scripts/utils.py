@@ -3,8 +3,8 @@ import os
 import shutil
 from typing import Any, ClassVar
 
-from private_gpt.paths import local_data_path
-from private_gpt.settings.settings import settings
+from internal_assistant.paths import local_data_path
+from internal_assistant.settings.settings import settings
 
 
 def wipe_file(file: str) -> None:

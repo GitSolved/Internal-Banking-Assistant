@@ -9,44 +9,92 @@ test:
 	PYTHONPATH=. poetry run pytest tests
 
 test-coverage:
-	PYTHONPATH=. poetry run pytest tests --cov private_gpt --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
+	PYTHONPATH=. poetry run pytest tests --cov internal_assistant --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
 
 black:
 	poetry run black . --check
 
 ruff:
-	poetry run ruff check private_gpt tests
+	poetry run ruff check internal_assistant tests
 
 format:
 	poetry run black .
-	poetry run ruff check private_gpt tests --fix
+	poetry run ruff check internal_assistant tests --fix
 
 mypy:
-	poetry run mypy private_gpt
+	poetry run mypy internal_assistant
 
 check:
 	make format
 	make mypy
+	make compatibility-check
+
+compatibility-check:
+	@echo "Checking dependency compatibility..."
+	poetry run python scripts/manage_compatibility.py --check
+
+version-enforce:
+	@echo "Enforcing dependency versions..."
+	poetry run python scripts/manage_compatibility.py --enforce
+
+log-cleanup:
+	@echo "Cleaning up old logs..."
+	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --keep-days 7 --max-size 100
+
+log-cleanup-dry-run:
+	@echo "Checking what logs would be cleaned up..."
+	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --keep-days 7 --max-size 100 --dry-run
+
+pre-run: version-enforce log-cleanup
+	@echo "✅ Pre-run checks completed"
 
 ########################################################################################################################
 # Run
 ########################################################################################################################
 
-run:
-	poetry run python -m private_gpt
+run: pre-run
+	poetry run python -m internal_assistant
 
 dev-windows:
-	(set PGPT_PROFILES=local & poetry run python -m uvicorn private_gpt.main:app --reload --port 8001)
+	(set PGPT_PROFILES=local & poetry run python -m uvicorn internal_assistant.main:app --reload --port 8001)
 
 dev:
-	PYTHONUNBUFFERED=1 PGPT_PROFILES=local poetry run python -m uvicorn private_gpt.main:app --reload --port 8001
+	PYTHONUNBUFFERED=1 PGPT_PROFILES=local poetry run python -m uvicorn internal_assistant.main:app --reload --port 8001
+
+########################################################################################################################
+# Security & Production
+########################################################################################################################
+
+security-check:
+	@echo "🔒 Running security validation..."
+	poetry run python -c "import ssl; print('SSL: Available')"
+	poetry run python -c "import cryptography; print('Cryptography: Available')"
+	@echo "✅ Basic security modules validated"
+
+backup:
+	@echo "💾 Creating backup of cybersecurity data..."
+	@mkdir -p backups/$(shell date +%Y%m%d_%H%M%S)
+	cp -r local_data/internal_assistant backups/$(shell date +%Y%m%d_%H%M%S)/data
+	@echo "✅ Backup created in backups/$(shell date +%Y%m%d_%H%M%S)/"
+
+health-check:
+	@echo "🏥 Running health check..."
+	curl -f http://localhost:8001/health || echo "❌ Health check failed"
+	@echo "✅ Health check completed"
+
+production:
+	@echo "🚀 Starting production mode..."
+	@echo "⚠️  Security features enabled"
+	@echo "⚠️  Debug mode disabled"
+	@echo "⚠️  Standard port 8000"
+	PGPT_PROFILES=production poetry run python -m uvicorn internal_assistant.main:app --host 0.0.0.0 --port 8000
 
 ########################################################################################################################
 # Misc
 ########################################################################################################################
 
 api-docs:
-	PGPT_PROFILES=mock poetry run python scripts/extract_openapi.py private_gpt.main:app --out fern/openapi/openapi.json
+	PGPT_PROFILES=mock poetry run python scripts/extract_openapi.py internal_assistant.main:app --out fern/openapi/openapi.json
 
 ingest:
 	@poetry run python scripts/ingest_folder.py $(call args)
@@ -55,13 +103,96 @@ stats:
 	poetry run python scripts/utils.py stats
 
 wipe:
+	@echo "⚠️  WARNING: This will delete ALL stored cybersecurity intelligence data!"
+	@echo "This action is IRREVERSIBLE and will remove:"
+	@echo "  - All ingested documents"
+	@echo "  - Vector embeddings"
+	@echo "  - Chat history"
+	@echo "  - Configuration data"
+	@echo ""
+	@echo "Type 'CONFIRM-WIPE' to proceed:"
+	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-WIPE" ] || exit 1
 	poetry run python scripts/utils.py wipe
 
 setup:
 	poetry run python scripts/setup
 
+setup-logging:
+	@echo "📋 Setting up logging configuration..."
+	@echo "Available log levels: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET"
+	@echo "Current log files:"
+	poetry run python scripts/logging_control.py show
+	@echo ""
+	@echo "To set log level, use: make log-level <LEVEL>"
+	@echo "Example: make log-level DEBUG"
+
+cleanup-logs:
+	@echo "Cleaning up old log files..."
+	@echo "Keeping the 7 most recent log files..."
+	@echo "Use 'make cleanup-logs-dry-run' to preview what will be removed"
+	poetry run python scripts/manage_logs.py --interactive --keep-count 7
+
+cleanup-logs-dry-run:
+	@echo "DRY RUN - Previewing log cleanup..."
+	@echo "Keeping the 7 most recent log files..."
+	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --dry-run
+
+check-model:
+	@echo "🔍 Checking current model configuration..."
+	poetry run python scripts/check_model.py
+
+analyze-models:
+	@echo "🔍 Analyzing model files for duplicates..."
+	poetry run python scripts/analyze_models.py
+
+cleanup-models:
+	@echo "🧹 Cleaning up duplicate model files..."
+	@echo "⚠️  This will remove duplicate files to save disk space"
+	@echo "Type 'CONFIRM-CLEANUP' to proceed:"
+	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-CLEANUP" ] || exit 1
+	poetry run python scripts/analyze_models.py --cleanup
+
+cleanup-unused-models:
+	@echo "🧹 Cleaning up unused model directories..."
+	@echo "⚠️  This will remove completely unused model directories"
+	@echo "Type 'CONFIRM-REMOVE-UNUSED' to proceed:"
+	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-REMOVE-UNUSED" ] || exit 1
+	poetry run python scripts/cleanup_unused_models.py --cleanup
+
+full-model-cleanup:
+	@echo "🧹 FULL MODEL CLEANUP - Duplicates + Unused Directories..."
+	@echo "⚠️  This will remove duplicates AND unused model directories"
+	@echo "Type 'CONFIRM-FULL-CLEANUP' to proceed:"
+	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-FULL-CLEANUP" ] || exit 1
+	@echo "Step 1: Removing duplicate files..."
+	poetry run python scripts/analyze_models.py --cleanup
+	@echo "Step 2: Removing unused directories..."
+	poetry run python scripts/cleanup_unused_models.py --cleanup
+
+log-level:
+	poetry run python scripts/logging_control.py set-level $(call args,INFO)
+
+show-logs:
+	poetry run python scripts/logging_control.py show
+
+tail-logs:
+	poetry run python scripts/logging_control.py tail --lines $(call args,20)
+
+cleanup-old-logs:
+	@echo "Cleaning up old log files..."
+	@echo "Keeping the $(call args,7) most recent log files..."
+	poetry run python scripts/manage_logs.py --interactive --keep-count $(call args,7)
+
 list:
-	@echo "Available commands:"
+	@echo "🔒 CYBERSECURITY PLATFORM - Available Commands:"
+	@echo ""
+	@echo "🛡️  SECURITY & PRODUCTION:"
+	@echo "  security-check  : Validate security modules and configuration"
+	@echo "  production      : Start production mode (secure, no debug)"
+	@echo "  backup          : Create backup of cybersecurity data"
+	@echo "  health-check    : Verify system health and connectivity"
+	@echo ""
+	@echo "🧪 DEVELOPMENT & TESTING:"
 	@echo "  test            : Run tests using pytest"
 	@echo "  test-coverage   : Run tests with coverage report"
 	@echo "  black           : Check code format with black"
@@ -69,10 +200,37 @@ list:
 	@echo "  format          : Format code with black and ruff"
 	@echo "  mypy            : Run mypy for type checking"
 	@echo "  check           : Run format and mypy commands"
-	@echo "  run             : Run the application"
-	@echo "  dev-windows     : Run the application in development mode on Windows"
-	@echo "  dev             : Run the application in development mode"
+	@echo ""
+	@echo "🚀 RUNTIME:"
+	@echo "  run             : Run the application (standard mode)"
+	@echo "  dev-windows     : Run in development mode on Windows ⚠️ DEBUG ENABLED"
+	@echo "  dev             : Run in development mode ⚠️ DEBUG ENABLED"
+	@echo ""
+	@echo "📚 DOCUMENTATION:"
 	@echo "  api-docs        : Generate API documentation"
-	@echo "  ingest          : Ingest data using specified script"
-	@echo "  wipe            : Wipe data using specified script"
+	@echo ""
+	@echo "📊 DATA MANAGEMENT:"
+	@echo "  ingest          : Ingest cybersecurity documents"
+	@echo "  stats           : Show data statistics"
+	@echo "  wipe            : ⚠️ DESTRUCTIVE: Delete all data (requires confirmation)"
+	@echo ""
+	@echo "🔧 UTILITIES:"
 	@echo "  setup           : Setup the application"
+	@echo "  setup-logging   : Setup enhanced logging configuration"
+	@echo "  cleanup-logs    : Clean up old log files (keeps 7 most recent)"
+	@echo "  cleanup-logs-dry-run: Preview log cleanup without removing files"
+	@echo "  check-model        : Check current model configuration"
+	@echo "  analyze-models     : Analyze model files for duplicates"
+	@echo "  cleanup-models     : Remove duplicate model files (requires confirmation)"
+	@echo "  cleanup-unused-models: Remove unused model directories (requires confirmation)"
+	@echo "  full-model-cleanup : Complete cleanup (duplicates + unused directories)"
+	@echo "  log-level       : Set logging level (default: INFO)"
+	@echo "  show-logs       : Display current logs"
+	@echo "  tail-logs       : Show recent log lines (default: 20)"
+	@echo "  cleanup-old-logs: Clean old logs (default: 7 days)"
+	@echo ""
+	@echo "⚠️  SECURITY NOTES:"
+	@echo "  - Development mode exposes debug information"
+	@echo "  - Use 'production' for secure deployments"
+	@echo "  - 'wipe' command requires explicit confirmation"
+	@echo "  - Always backup before destructive operations"

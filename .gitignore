@@ -29,3 +29,21 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# PrivateGPT sensitive data - NEVER commit these
+local_data/
+models/
+DemoData/
+Logs/
+tiktoken_cache/
+pgptvenv/
+*.log
+*.db
+*.sqlite
+*.json
+*.env
+*.token
+HF_TOKEN
+OPENAI_API_KEY
+GOOGLE_API_KEY
+AZ_OPENAI_API_KEY

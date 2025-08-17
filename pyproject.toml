@@ -1,13 +1,37 @@
+# =============================================================================
+# CURRENT SETUP SUMMARY (for AI agents):
+# =============================================================================
+# 
+# ACTIVE COMPONENTS (currently used):
+# - LLM: Ollama with Foundation-Sec-8B-q4_k_m.gguf (llama-index-llms-ollama)
+# - Embeddings: HuggingFace nomic-embed-text-v1.5 (llama-index-embeddings-huggingface)
+# - Vector Store: Qdrant (llama-index-vector-stores-qdrant)
+# - Storage: Simple nodestore (built into llama-index)
+# - UI: Gradio web interface (gradio, ffmpy)
+# - Reranking: DISABLED (rerank.enabled: false in settings.yaml)
+#
+# USED BUT NOT PRIMARY:
+# - llama-cpp: Model file management and settings
+# - openai-like: API compatibility layer
+#
+# NOT USED (available for future use):
+# - All other vector stores (Chroma, Postgres, ClickHouse, Milvus)
+# - All other LLMs (OpenAI, Azure, Gemini, Sagemaker)
+# - All other embeddings (OpenAI, Azure, Gemini, Sagemaker, Ollama)
+# - PostgreSQL storage (using simple nodestore instead)
+# - Reranking (disabled for performance)
+# =============================================================================
+
 [tool.poetry]
-name = "private-gpt"
+name = "internal-assistant"
 version = "0.6.2"
-description = "Private GPT"
-authors = ["Zylon <hi@zylon.ai>"]
+description = "Internal Cybersecurity Intelligence Platform built on PrivateGPT technology"
+authors = []
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = "3.11.9"
 # PrivateGPT
-fastapi = { extras = ["all"], version = "^0.115.0" }
+fastapi = { extras = ["all"], version = ">=0.108.0,<0.115.0" }
 python-multipart = "^0.0.10"
 injector = "^0.22.0"
 pyyaml = "^6.0.2"
@@ -19,70 +43,85 @@ cryptography = "^3.1"
 llama-index-core = ">=0.11.2,<0.12.0"
 llama-index-readers-file = "*"
 # Optional LlamaIndex integration libs
-llama-index-llms-llama-cpp = {version = "*", optional = true}
-llama-index-llms-openai = {version ="*", optional = true}
-llama-index-llms-openai-like = {version ="*", optional = true}
-llama-index-llms-ollama = {version ="*", optional = true}
-llama-index-llms-azure-openai = {version ="*", optional = true}
-llama-index-llms-gemini = {version ="*", optional = true}
-llama-index-embeddings-ollama = {version ="*", optional = true}
-llama-index-embeddings-huggingface = {version ="*", optional = true}
-llama-index-embeddings-openai = {version ="*", optional = true}
-llama-index-embeddings-azure-openai = {version ="*", optional = true}
-llama-index-embeddings-gemini = {version ="*", optional = true}
-llama-index-embeddings-mistralai = {version ="*", optional = true}
-llama-index-vector-stores-qdrant = {version ="*", optional = true}
-llama-index-vector-stores-milvus = {version ="*", optional = true}
-llama-index-vector-stores-chroma = {version ="*", optional = true}
-llama-index-vector-stores-postgres = {version ="*", optional = true}
-llama-index-vector-stores-clickhouse = {version ="*", optional = true}
-llama-index-storage-docstore-postgres = {version ="*", optional = true}
-llama-index-storage-index-store-postgres = {version ="*", optional = true}
-# Postgres
-psycopg2-binary = {version ="^2.9.9", optional = true}
-asyncpg = {version="^0.29.0", optional = true}
+llama-index-llms-llama-cpp = {version = "*", optional = true}  # ← USED: Model file management and settings
+# llama-index-llms-openai = {version ="*", optional = true}  # ← NOT USED: OpenAI direct API (use openai-like instead)
+llama-index-llms-openai-like = {version ="*", optional = true}  # ← USED: OpenAI-compatible API support
+llama-index-llms-ollama = {version ="*", optional = true}  # ← CURRENT: Foundation-Sec-8B via Ollama
+# llama-index-llms-azure-openai = {version ="*", optional = true}  # ← NOT USED: Azure OpenAI (not configured)
+# llama-index-llms-gemini = {version ="*", optional = true}  # ← NOT USED: Google Gemini (not configured)
+# llama-index-embeddings-ollama = {version ="*", optional = true}  # ← NOT USED: Ollama embeddings (use HuggingFace instead)
+llama-index-embeddings-huggingface = {version ="*", optional = true}  # ← CURRENT: nomic-embed-text-v1.5
+# llama-index-embeddings-openai = {version ="*", optional = true}  # ← NOT USED: OpenAI embeddings (use HuggingFace instead)
+# llama-index-embeddings-azure-openai = {version ="*", optional = true}  # ← NOT USED: Azure embeddings (not configured)
+# llama-index-embeddings-gemini = {version ="*", optional = true}  # ← NOT USED: Google embeddings (not configured)
+llama-index-vector-stores-qdrant = {version ="*", optional = true}  # ← CURRENT: Qdrant vector store
+llama-index-vector-stores-milvus = {version ="*", optional = true}  # ← NOT USED: Milvus vector store (use Qdrant instead)
+llama-index-vector-stores-chroma = {version ="*", optional = true}  # ← NOT USED: ChromaDB vector store (use Qdrant instead)
+llama-index-vector-stores-postgres = {version ="*", optional = true}  # ← NOT USED: PostgreSQL vector store (use Qdrant instead)
+llama-index-vector-stores-clickhouse = {version ="*", optional = true}  # ← NOT USED: ClickHouse vector store (use Qdrant instead)
+llama-index-storage-docstore-postgres = {version ="*", optional = true}  # ← NOT USED: PostgreSQL storage (use simple nodestore instead)
+llama-index-storage-index-store-postgres = {version ="*", optional = true}  # ← NOT USED: PostgreSQL index store (use simple nodestore instead)
+# Postgres dependencies (for PostgreSQL storage - NOT USED)
+psycopg2-binary = {version ="^2.9.9", optional = true}  # ← NOT USED: PostgreSQL adapter (use simple nodestore instead)
+asyncpg = {version="^0.29.0", optional = true}  # ← NOT USED: Async PostgreSQL (use simple nodestore instead)
 
-# ClickHouse
-clickhouse-connect = {version = "^0.7.19", optional = true}
+# ClickHouse dependencies (for ClickHouse vector store - NOT USED)
+clickhouse-connect = {version = "^0.7.19", optional = true}  # ← NOT USED: ClickHouse connector (use Qdrant instead)
 
-# Optional Sagemaker dependency
-boto3 = {version ="^1.35.26", optional = true}
+# Sagemaker dependencies (for AWS Sagemaker - NOT USED)
+boto3 = {version ="^1.35.26", optional = true}  # ← NOT USED: AWS SDK (not configured for Sagemaker)
 
-# Optional Reranker dependencies
-torch = {version ="^2.4.1", optional = true}
-sentence-transformers = {version ="^3.1.1", optional = true}
+# Reranker dependencies (currently disabled in settings)
+torch = {version ="^2.4.1", optional = true}  # ← NOT USED: PyTorch (reranking disabled)
+sentence-transformers = {version ="^3.1.1", optional = true}  # ← NOT USED: Sentence transformers (reranking disabled)
 
-# Optional UI
-gradio = {version ="^4.44.0", optional = true}
-ffmpy = {version ="^0.4.0", optional = true}
+# UI dependencies (REQUIRED for Gradio interface)
+gradio = {version =">=4.15.0,<4.39.0", optional = true}  # ← CURRENT: Gradio web interface
+ffmpy = {version ="^0.4.0", optional = true}  # ← CURRENT: Media processing for UI
+
+# RSS feed dependencies
+feedparser = "^6.0.10"
+aiohttp = "^3.9.0"
+beautifulsoup4 = "^4.12.0"
 
 # Optional HF Transformers
 einops = {version = "^0.8.0", optional = true}
 retry-async = "^0.1.4"
-
+pydantic = ">=2.8.0,<2.9.0"
 [tool.poetry.extras]
-ui = ["gradio", "ffmpy"]
-llms-llama-cpp = ["llama-index-llms-llama-cpp"]
-llms-openai = ["llama-index-llms-openai"]
-llms-openai-like = ["llama-index-llms-openai-like"]
-llms-ollama = ["llama-index-llms-ollama"]
-llms-sagemaker = ["boto3"]
-llms-azopenai = ["llama-index-llms-azure-openai"]
-llms-gemini = ["llama-index-llms-gemini"]
-embeddings-ollama = ["llama-index-embeddings-ollama"]
-embeddings-huggingface = ["llama-index-embeddings-huggingface", "einops"]
-embeddings-openai = ["llama-index-embeddings-openai"]
-embeddings-sagemaker = ["boto3"]
-embeddings-azopenai = ["llama-index-embeddings-azure-openai"]
-embeddings-gemini = ["llama-index-embeddings-gemini"]
-embeddings-mistral = ["llama-index-embeddings-mistralai"]
-vector-stores-qdrant = ["llama-index-vector-stores-qdrant"]
-vector-stores-clickhouse = ["llama-index-vector-stores-clickhouse", "clickhouse_connect"]
-vector-stores-chroma = ["llama-index-vector-stores-chroma"]
-vector-stores-postgres = ["llama-index-vector-stores-postgres"]
-vector-stores-milvus = ["llama-index-vector-stores-milvus"]
-storage-nodestore-postgres = ["llama-index-storage-docstore-postgres","llama-index-storage-index-store-postgres","psycopg2-binary","asyncpg"]
-rerank-sentence-transformers = ["torch", "sentence-transformers"]
+# UI extras (REQUIRED for Gradio interface)
+ui = ["gradio", "ffmpy"]  # ← CURRENT: Gradio web interface
+
+# LLM extras
+llms-llama-cpp = ["llama-index-llms-llama-cpp"]  # ← USED: Model file management and settings
+# llms-openai = ["llama-index-llms-openai"]  # ← NOT USED: OpenAI direct API (use openai-like instead)
+llms-openai-like = ["llama-index-llms-openai-like"]  # ← USED: OpenAI-compatible API support
+llms-ollama = ["llama-index-llms-ollama"]  # ← CURRENT: Foundation-Sec-8B via Ollama
+llms-sagemaker = ["boto3"]  # ← NOT USED: AWS Sagemaker (not configured)
+# llms-azopenai = ["llama-index-llms-azure-openai"]  # ← NOT USED: Azure OpenAI (not configured)
+# llms-gemini = ["llama-index-llms-gemini"]  # ← NOT USED: Google Gemini (not configured)
+
+# Embedding extras
+# embeddings-ollama = ["llama-index-embeddings-ollama"]  # ← NOT USED: Ollama embeddings (use HuggingFace instead)
+embeddings-huggingface = ["llama-index-embeddings-huggingface", "einops"]  # ← CURRENT: nomic-embed-text-v1.5
+# embeddings-openai = ["llama-index-embeddings-openai"]  # ← NOT USED: OpenAI embeddings (use HuggingFace instead)
+embeddings-sagemaker = ["boto3"]  # ← NOT USED: AWS Sagemaker embeddings (not configured)
+# embeddings-azopenai = ["llama-index-embeddings-azure-openai"]  # ← NOT USED: Azure embeddings (not configured)
+# embeddings-gemini = ["llama-index-embeddings-gemini"]  # ← NOT USED: Google embeddings (not configured)
+# embeddings-mistral = ["llama-index-embeddings-mistralai"]  # ← NOT USED: Mistral embeddings (not configured)
+
+# Vector store extras
+vector-stores-qdrant = ["llama-index-vector-stores-qdrant"]  # ← CURRENT: Qdrant vector store
+vector-stores-clickhouse = ["llama-index-vector-stores-clickhouse", "clickhouse-connect"]  # ← NOT USED: ClickHouse vector store (use Qdrant instead)
+vector-stores-chroma = ["llama-index-vector-stores-chroma"]  # ← NOT USED: ChromaDB vector store (use Qdrant instead)
+vector-stores-postgres = ["llama-index-vector-stores-postgres"]  # ← NOT USED: PostgreSQL vector store (use Qdrant instead)
+vector-stores-milvus = ["llama-index-vector-stores-milvus"]  # ← NOT USED: Milvus vector store (use Qdrant instead)
+
+# Storage extras
+storage-nodestore-postgres = ["llama-index-storage-docstore-postgres","llama-index-storage-index-store-postgres","psycopg2-binary","asyncpg"]  # ← NOT USED: PostgreSQL storage (use simple nodestore instead)
+
+# Reranker extras (currently disabled in settings)
+rerank-sentence-transformers = ["torch", "sentence-transformers"]  # ← NOT USED: RAG reranking (disabled in settings.yaml)
 
 [tool.poetry.group.dev.dependencies]
 black = "^24"
@@ -195,3 +234,12 @@ testpaths = ["tests"]
 addopts = [
     "--import-mode=importlib",
 ]
+# Logging configuration
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s - %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_file = "Logs/pytest.log"
+log_file_level = "DEBUG"
+log_file_format = "%(asctime)s [%(levelname)8s] %(name)s - %(message)s"
+log_file_date_format = "%Y-%m-%d %H:%M:%S"

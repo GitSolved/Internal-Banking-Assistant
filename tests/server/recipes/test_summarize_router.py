@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from private_gpt.server.recipes.summarize.summarize_router import (
+from internal_assistant.server.recipes.summarize.summarize_router import (
     SummarizeBody,
     SummarizeResponse,
 )
