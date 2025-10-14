@@ -18,8 +18,17 @@ Internal Assistant is configured through *profiles* that are defined using yaml 
 The full list of properties configurable can be found in `settings.yaml`.
 
 ## How to know which profiles exist
-Given that a profile `foo_bar` points to the file `settings-foo_bar.yaml` and vice-versa, you simply have to look
-at the files starting with `settings` and ending in `.yaml`.
+
+Profiles are stored in multiple locations:
+- **Environment profiles**: `config/environments/{profile}.yaml` (e.g., `local.yaml`, `test.yaml`, `docker.yaml`)
+- **Model profiles**: `config/model-configs/{profile}.yaml` (e.g., `foundation-sec.yaml`, `ollama.yaml`)
+- **Legacy profiles**: `config/settings-{profile}.yaml` (for backward compatibility)
+
+To see available profiles:
+```bash
+ls config/environments/
+ls config/model-configs/
+```
 
 ## How to use an existing profiles
 **Please note that the syntax to set the value of an environment variables depends on your OS**.
@@ -51,22 +60,25 @@ Additional details on the profiles are described in this section
 
 ### Environment variable `PGPT_SETTINGS_FOLDER`
 
-The location of the settings folder. Defaults to the root of the project.
-Should contain the default `settings.yaml` and any other `settings-{profile}.yaml`.
+The location of the settings folder. Defaults to `config/`.
+Should contain the default `settings.yaml` and profile directories.
 
 ### Environment variable `PGPT_PROFILES`
 
-By default, the profile definition in `settings.yaml` is loaded.
+By default, the configuration in `config/settings.yaml` is loaded.
 Using this env var you can load additional profiles; format is a comma separated list of profile names.
-This will merge `settings-{profile}.yaml` on top of the base settings file.
 
-For example:
-`PGPT_PROFILES=local,cuda` will load `settings-local.yaml`
-and `settings-cuda.yaml`, their contents will be merged with
-later profiles properties overriding values of earlier ones like `settings.yaml`.
+The system searches for profiles in this order:
+1. `config/environments/{profile}.yaml`
+2. `config/model-configs/{profile}.yaml`
+3. `config/settings-{profile}.yaml` (legacy)
 
-During testing, the `test` profile will be active along with the default, therefore `settings-test.yaml`
-file is required.
+Profile contents are merged on top of the base settings, with later profiles overriding earlier ones.
+
+**Examples:**
+- `PGPT_PROFILES=local` loads `config/environments/local.yaml`
+- `PGPT_PROFILES=test` loads `config/environments/test.yaml`
+- `PGPT_PROFILES=local,docker` loads both profiles, with docker settings taking precedence
 
 ### Environment variables expansion
 

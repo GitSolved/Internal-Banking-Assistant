@@ -21,31 +21,29 @@ API endpoint `DELETE` in the Ingestion API.
 ### Delete All Documents
 
 ```bash
-curl -X DELETE "http://localhost:8001/v1/ingest" \
-  -H "Authorization: Bearer your-api-key"
+curl -X DELETE "http://localhost:8001/v1/ingest"
 ```
+
+> **Note**: If authentication is enabled in your configuration (`server.auth.enabled: true`), add:
+> `-H "Authorization: Basic <base64-encoded-credentials>"`
 
 ### Delete Specific Document
 
 ```bash
-curl -X DELETE "http://localhost:8001/v1/ingest/{doc_id}" \
-  -H "Authorization: Bearer your-api-key"
+curl -X DELETE "http://localhost:8001/v1/ingest/{doc_id}"
 ```
 
-### Delete Documents by Metadata
+Replace `{doc_id}` with the actual document ID from the list endpoint.
 
-You can also delete documents based on specific metadata criteria:
+### Delete Documents by Filename
+
+You can delete specific documents by their filenames:
 
 ```bash
-curl -X DELETE "http://localhost:8001/v1/ingest" \
-  -H "Authorization: Bearer your-api-key" \
+curl -X POST "http://localhost:8001/v1/ingest/delete_by_filenames" \
   -H "Content-Type: application/json" \
   -d '{
-    "filters": {
-      "file_name": "document.pdf",
-      "file_type": "pdf",
-      "created_after": "2024-01-01T00:00:00Z"
-    }
+    "filenames": ["document.pdf", "report.docx"]
   }'
 ```
 
@@ -58,13 +56,14 @@ If you prefer to manually reset the database:
    ```bash
    cd local_data/internal_assistant
    ```
-3. **Delete the following files and directories**:
+3. **Delete the vector database**:
    ```bash
-   rm -rf docstore.json
-   rm -rf graph_store.json
-   rm -rf index_store.json
    rm -rf qdrant/
-   rm -rf mitre_attack/
+   ```
+
+   Optionally, also remove:
+   ```bash
+   rm -rf mitre_attack/    # MITRE ATT&CK cached data
    ```
 4. **Restart the application**
 
