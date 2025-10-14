@@ -399,13 +399,6 @@ class InternalAssistantUI:
         logger.info(f"📝 Getting default system prompt for mode: {default_mode}")
         default_system_prompt = self._get_default_system_prompt(default_mode)
 
-        # Set initial state values - TEMPORARILY DISABLED TO TEST IF THIS IS BLOCKING
-        logger.info("💾 Skipping initial state values to test initialization")
-
-        # TODO: Re-enable after confirming initialization completes without this
-        # self._state_store._state['chat'] = {'mode': default_mode.value}
-        # self._state_store._state['settings'] = {'system_prompt': default_system_prompt}
-
         logger.info("✅ InternalAssistantUI __init__ completed successfully!")
 
     def _load_force_dark_js(self) -> str:

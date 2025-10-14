@@ -1,10 +1,13 @@
 # mypy: ignore-errors
 import json
+import logging
 from typing import Any
 
 import boto3
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from pydantic import Field, PrivateAttr
+
+logger = logging.getLogger(__name__)
 
 
 class SagemakerEmbedding(BaseEmbedding):
@@ -39,7 +42,7 @@ class SagemakerEmbedding(BaseEmbedding):
 
     def _async_not_implemented_warn_once(self) -> None:
         if not self._async_not_implemented_warned:
-            print("Async embedding not available, falling back to sync method.")
+            logger.warning("Async embedding not available, falling back to sync method.")
             self._async_not_implemented_warned = True
 
     def _embed(self, sentences: list[str]) -> list[list[float]]:
