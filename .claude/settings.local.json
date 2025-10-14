@@ -62,7 +62,8 @@
       "Bash(tasklist:*)",
       "Bash(if exist \"local_data\\internal_assistant\\qdrant\\.lock\" del /F \"local_data\\internal_assistant\\qdrant\\.lock\")",
       "Bash(git clone:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": [],
