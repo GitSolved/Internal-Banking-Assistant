@@ -56,6 +56,15 @@ htmlcov/
 Thumbs.db
 
 # ============================================
+# Backup Files (should not be committed)
+# ============================================
+*.backup
+*.backup-*
+*_backup.*
+*.bak
+*.old
+
+# ============================================
 # Internal Assistant Runtime Data (NEVER COMMIT)
 # ============================================
 local_data/
