@@ -12,14 +12,14 @@ test:
 	poetry run pytest tests
 
 test-coverage:
-	poetry run pytest tests --cov src --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
+	poetry run pytest tests --cov internal_assistant --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
 
 format:
 	poetry run black .
-	poetry run ruff check src tests --fix
+	poetry run ruff check internal_assistant tests --fix
 
 mypy:
-	poetry run mypy src
+	poetry run mypy internal_assistant
 
 check:
 	make format

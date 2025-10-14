@@ -258,6 +258,10 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = [
     "--import-mode=importlib",
+    "-m not integration",  # Skip integration tests in CI by default
+]
+markers = [
+    "integration: marks tests that require local services (Ollama, Qdrant)",
 ]
 # Logging configuration
 log_cli = true
