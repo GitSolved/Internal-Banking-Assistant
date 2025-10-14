@@ -85,11 +85,11 @@ class IngestionSettings(BaseModel):
 
 class ServerSettings(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     env_name: str = Field(
         description="Name of the environment (prod, staging, local...)"
     )
-    port: int = Field(description="Port of PrivateGPT FastAPI server, defaults to 8001")
+    port: int = Field(description="Port of Internal Assistant FastAPI server, defaults to 8001")
     cors: CorsSettings = Field(
         description="CORS configuration", default=CorsSettings(enabled=False)
     )
@@ -142,19 +142,19 @@ class LLMSettings(BaseModel):
         0.1,
         description="The temperature of the model. Increasing the temperature will make the model answer more creatively. A value of 0.1 would be more factual.",
     )
-    prompt_style: Literal["default", "llama2", "llama3", "tag", "chatml", "foundation-sec"] = (
-        Field(
-            "llama2",
-            description=(
-                "The prompt style to use for the chat engine. "
-                "If `default` - use the default prompt style from the llama_index. It should look like `role: message`.\n"
-                "If `llama2` - use the llama2 prompt style from the llama_index. Based on `<s>`, `[INST]` and `<<SYS>>`.\n"
-                "If `llama3` - use the llama3 prompt style from the llama_index."
-                "If `tag` - use the `tag` prompt style. It should look like `<|role|>: message`. \n"
-                "If `foundation-sec` - use the custom Foundation-Sec-8B prompt style to avoid duplicate tokens.\n"
-                "`llama2` is the historic behaviour. `default` might work better with your custom models."
-            ),
-        )
+    prompt_style: Literal[
+        "default", "llama2", "llama3", "tag", "chatml", "foundation-sec"
+    ] = Field(
+        "llama2",
+        description=(
+            "The prompt style to use for the chat engine. "
+            "If `default` - use the default prompt style from the llama_index. It should look like `role: message`.\n"
+            "If `llama2` - use the llama2 prompt style from the llama_index. Based on `<s>`, `[INST]` and `<<SYS>>`.\n"
+            "If `llama3` - use the llama3 prompt style from the llama_index."
+            "If `tag` - use the `tag` prompt style. It should look like `<|role|>: message`. \n"
+            "If `foundation-sec` - use the custom Foundation-Sec-8B prompt style to avoid duplicate tokens.\n"
+            "`llama2` is the historic behaviour. `default` might work better with your custom models."
+        ),
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -371,7 +371,9 @@ class AzureOpenAISettings(BaseModel):
 class UISettings(BaseModel):
     enabled: bool
     path: str
-    default_mode: Literal["RAG Mode", "General LLM", "RAG", "Search", "Basic", "Summarize"] = Field(
+    default_mode: Literal[
+        "RAG Mode", "General LLM", "RAG", "Search", "Basic", "Summarize"
+    ] = Field(
         "General LLM",
         description="The default mode.",
     )
@@ -391,6 +393,34 @@ class UISettings(BaseModel):
     )
     delete_all_files_button_enabled: bool = Field(
         False, description="If the button to delete all files is enabled or not."
+    )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class ForumAccessTypes(BaseModel):
+    """Forum access type configuration."""
+
+    clearnet: bool = Field(
+        True,
+        description="Show clearnet forums accessible via standard browsers"
+    )
+    darkweb: bool = Field(
+        False,
+        description="Show dark web forums (require Tor Browser)"
+    )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class ForumDirectorySettings(BaseModel):
+    """Forum directory feature configuration."""
+
+    enabled: bool = Field(
+        True,
+        description="Enable or disable forum directory feature"
+    )
+    access_types: ForumAccessTypes = Field(
+        default_factory=lambda: ForumAccessTypes(clearnet=True, darkweb=False),
+        description="Forum access types to display"
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -607,7 +637,7 @@ class MilvusSettings(BaseModel):
 
 class Settings(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     server: ServerSettings
     data: DataSettings
     ui: UISettings
@@ -624,6 +654,7 @@ class Settings(BaseModel):
     nodestore: NodeStoreSettings
     rag: RagSettings
     summarize: SummarizeSettings
+    forum_directory: ForumDirectorySettings | None = None
     qdrant: QdrantSettings | None = None
     postgres: PostgresSettings | None = None
     clickhouse: ClickHouseSettings | None = None

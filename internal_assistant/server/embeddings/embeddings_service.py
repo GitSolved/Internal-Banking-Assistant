@@ -3,7 +3,9 @@ from typing import Literal
 from injector import inject, singleton
 from pydantic import BaseModel, Field, ConfigDict
 
-from internal_assistant.components.embedding.embedding_component import EmbeddingComponent
+from internal_assistant.components.embedding.embedding_component import (
+    EmbeddingComponent,
+)
 
 
 class Embedding(BaseModel):

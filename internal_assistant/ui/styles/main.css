@@ -1,0 +1,502 @@
+/* ================================================================
+   Internal Assistant - Main Styles
+   ================================================================
+
+   This file contains the core styles for the Internal Assistant UI.
+   Extracted from the monolithic ui.py file for better maintainability.
+   ================================================================ */
+
+/* ================================
+   CSS Variables - Single Source of Truth
+   ================================ */
+
+:root {
+    /* Backgrounds */
+    --bg-primary: #000000;
+    --bg-secondary: #0b0f19;
+    --bg-tertiary: #1a1a1a;
+    --bg-elevated: #1f2229;
+    --bg-input: #1a1d23;
+    --bg-panel: #2a2d33;
+
+    /* Text */
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+    --text-tertiary: #b0b0b0;
+    --text-muted: #6a6a6a;
+    --text-disabled: #3a3d43;
+
+    /* Primary Actions */
+    --primary: #0077BE;
+    --primary-hover: #0099FF;
+    --primary-light: #00BBFF;
+    --primary-active: #0055A0;
+
+    /* Semantic Colors - UNIFIED */
+    --success: #34C759;
+    --success-dim: #28A745;
+    --success-css: #8BC34A;       /* Keep for CSS backward compat */
+
+    --error: #FF3B30;
+    --error-dim: #DC3545;
+    --error-css: #FF5252;         /* Keep for CSS backward compat */
+    --error-light: #FF6B6B;
+
+    --warning: #FFB300;
+    --warning-dim: #FF9500;
+    --warning-light: #FFD60A;
+
+    --info: #0A84FF;
+    --info-light: #5AC8FA;
+
+    /* Threat Levels (Cybersecurity Context) */
+    --threat-critical: #FF3B30;
+    --threat-critical-bg: #2A0A0A;
+    --threat-high: #FF9500;
+    --threat-high-bg: #2A1A00;
+    --threat-medium: #FFD60A;
+    --threat-medium-bg: #2A2400;
+    --threat-low: #34C759;
+    --threat-low-bg: #0A2A0A;
+    --threat-info: #0A84FF;
+    --threat-info-bg: #0A1A2A;
+
+    /* Borders */
+    --border-primary: #3a3d43;
+    --border-secondary: #2a2d33;
+    --border-muted: #1f2229;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 119, 190, 0.4);
+    --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.3);
+
+    /* Focus States */
+    --focus-ring: #0077BE;
+    --focus-ring-width: 3px;
+}
+
+/* ================================
+   Global Reset and Base Styles
+   ================================ */
+
+/* CRITICAL: Force black background on EVERYTHING */
+html, body, #root, #app, main,
+.gradio-container, .gradio-app, .app,
+.gradio-interface, .gradio-interface *,
+.gradio-block, .gradio-group, .gradio-row, .gradio-column,
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded,
+.gradio-tabs, .gradio-tab, .gradio-tab-item, .gradio-tabitem,
+.gradio-accordion, .gradio-accordion-item,
+* {
+    background: var(--bg-primary) !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* EXTREME OVERRIDE: Target all possible root elements */
+html[data-theme], body[data-theme], #root[data-theme], #app[data-theme],
+html, body, #root, #app, main, 
+.gradio-container, .gradio-app, .app,
+.gradio-interface, .gradio-interface *,
+.gradio-block, .gradio-group, .gradio-row, .gradio-column,
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded,
+.gradio-tabs, .gradio-tab, .gradio-tab-item, .gradio-tabitem,
+.gradio-accordion, .gradio-accordion-item,
+div, section, article, aside, main, footer, header,
+.contain, .wrap, .svelte-*, [class*="svelte"], [class*="panel"], 
+[class*="container"], [class*="wrapper"], [class*="block"], [data-testid] {
+    background: var(--bg-primary) !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Override ALL Gradio-generated divs and containers */
+div, section, article, aside, main, footer,
+.gr-panel, .gr-box, .gr-form, .gr-padded, .gr-group,
+.contain, .wrap, .svelte-*,
+[class*="svelte"], [class*="panel"], [class*="container"],
+[class*="wrapper"], [class*="block"], [data-testid] {
+    background: #000000 !important;
+    background-color: #000000 !important;
+}
+
+/* Force all panels and containers to have dark grey backgrounds */
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded, .gradio-group,
+.gradio-accordion, .gradio-tabs, .gradio-tab, .gradio-tabitem,
+.gradio-block, .gradio-row, .gradio-column,
+.sidebar-container, .chat-container, .file-management-section,
+.external-info-section, .cve-tracking-section, .forum-directory-section,
+.mitre-attack-section {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 8px 0 !important;
+}
+
+/* Force ALL row and column layouts to be black */
+.gr-row, .gr-column, .gr-col, .row, .column,
+[class*="row"], [class*="col"] {
+    background: #000000 !important;
+    background-color: #000000 !important;
+}
+
+/* Force tabs and accordions */
+.gr-tabs, .gr-tab, .gr-tab-item, .gr-tabitem,
+.gr-accordion, .gr-accordion-item {
+    background: #000000 !important;
+    background-color: #000000 !important;
+}
+
+.gradio-container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    font-family: 'Arial', 'Helvetica', sans-serif !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+}
+
+/* ================================
+   Header Section
+   ================================ */
+
+.header-container {
+    background: #000000 !important;
+    border-radius: 12px;
+    padding: 8px 22px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 20px rgba(0, 119, 190, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 3px solid #0077BE;
+    min-height: 120px;
+    overflow: visible;
+}
+
+/* Ensure header stays black with white text */
+.header-container, .header-container *:not(.header-title):not(.header-subtitle) {
+    background: #000000 !important;
+    background-color: #000000 !important;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 4px 7px;
+    min-height: 100px;
+}
+
+.header-logo img, .internal-logo-img img {
+    height: 150px;
+    max-width: 450px;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(1) invert(0);
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.internal-logo-img {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.header-title {
+    color: #ffffff;
+    font-size: 38px;
+    font-family: 'Merriweather', 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    font-weight: 800;
+    margin: 0 auto;
+    text-align: center;
+    letter-spacing: 1.0px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    line-height: 1.0;
+}
+
+.header-subtitle {
+    color: #ffffff;
+    font-size: 24px;
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.0;
+}
+
+/* ================================
+   Button Styles
+   ================================ */
+
+/* Primary button style */
+.gr-button, button[type="button"], button[type="submit"] {
+    background: linear-gradient(135deg, #0077BE, #0099FF) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.gr-button:hover, button[type="button"]:hover, button[type="submit"]:hover {
+    background: linear-gradient(135deg, #0099FF, #00BBFF) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 119, 190, 0.4) !important;
+}
+
+/* Secondary button style */
+.gr-button.secondary, button.secondary {
+    background: transparent !important;
+    color: #0077BE !important;
+    border: 2px solid #0077BE !important;
+}
+
+.gr-button.secondary:hover, button.secondary:hover {
+    background: rgba(0, 119, 190, 0.1) !important;
+    border-color: #0099FF !important;
+    color: #0099FF !important;
+}
+
+/* Stop/Delete button style */
+.gr-button.stop, button.stop, button[variant="stop"] {
+    background: linear-gradient(135deg, #FF5252, #FF6B6B) !important;
+    color: white !important;
+}
+
+.gr-button.stop:hover, button.stop:hover, button[variant="stop"]:hover {
+    background: linear-gradient(135deg, #FF6B6B, #FF8787) !important;
+}
+
+/* ================================
+   Input Fields
+   ================================ */
+
+/* Text inputs and textareas */
+input[type="text"], input[type="number"], input[type="email"],
+input[type="password"], textarea, .gr-textbox input, .gr-textbox textarea {
+    background: #1a1d23 !important;
+    color: #ffffff !important;
+    border: 1px solid #2a2d33 !important;
+    border-radius: 6px !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+input:focus, textarea:focus, .gr-textbox input:focus, .gr-textbox textarea:focus {
+    outline: none !important;
+    border-color: #0077BE !important;
+    box-shadow: 0 0 0 3px rgba(0, 119, 190, 0.2) !important;
+    background: #1f2229 !important;
+}
+
+/* Placeholder text */
+input::placeholder, textarea::placeholder {
+    color: #6a6a6a !important;
+    opacity: 1 !important;
+}
+
+/* ================================
+   Tabs and Navigation
+   ================================ */
+
+/* Tab container */
+.tabs, .gr-tabs {
+    background: transparent !important;
+    border-bottom: 2px solid #2a2d33 !important;
+    margin-bottom: 20px !important;
+}
+
+/* Individual tabs */
+.tab-nav button, .gr-tab-nav button, .gr-tab {
+    background: transparent !important;
+    color: #b0b0b0 !important;
+    border: none !important;
+    border-bottom: 3px solid transparent !important;
+    padding: 12px 24px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.tab-nav button:hover, .gr-tab-nav button:hover, .gr-tab:hover {
+    color: #e0e0e0 !important;
+    background: rgba(0, 119, 190, 0.1) !important;
+}
+
+.tab-nav button.selected, .gr-tab-nav button.selected, .gr-tab.selected {
+    color: #0077BE !important;
+    border-bottom-color: #0077BE !important;
+    background: rgba(0, 119, 190, 0.05) !important;
+}
+
+/* ================================
+   Cards and Containers
+   ================================ */
+
+/* Card styling */
+.gr-box, .gr-panel, .card {
+    background: #0b0f19 !important;
+    border: 1px solid #2a2d33 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 8px 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Accordion styling */
+.gr-accordion {
+    background: #0b0f19 !important;
+    border: 1px solid #2a2d33 !important;
+    border-radius: 8px !important;
+    margin: 8px 0 !important;
+    overflow: hidden !important;
+}
+
+.gr-accordion-header {
+    background: #1a1d23 !important;
+    padding: 12px 16px !important;
+    cursor: pointer !important;
+    transition: background 0.3s ease !important;
+}
+
+.gr-accordion-header:hover {
+    background: #1f2229 !important;
+}
+
+/* ================================
+   Sidebar Styles
+   ================================ */
+
+/* Sidebar container */
+.sidebar, .gr-column.sidebar-column {
+    background: #0b0f19 !important;
+    border-right: 1px solid #2a2d33 !important;
+    padding: 16px !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+}
+
+/* Sidebar sections */
+.sidebar-section {
+    background: #1a1d23 !important;
+    border: 1px solid #2a2d33 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+}
+
+.sidebar-section-title {
+    color: #0077BE !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 8px !important;
+}
+
+/* ================================
+   Scrollbar Styling
+   ================================ */
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #0b0f19 !important;
+    border-radius: 5px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2a2d33 !important;
+    border-radius: 5px !important;
+    transition: background 0.3s ease !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3a3d43 !important;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin !important;
+    scrollbar-color: #2a2d33 #0b0f19 !important;
+}
+
+/* ================================
+   Utility Classes
+   ================================ */
+
+/* Text utilities */
+.text-primary { color: #0077BE !important; }
+.text-success { color: #8BC34A !important; }
+.text-warning { color: #FFB300 !important; }
+.text-error { color: #FF5252 !important; }
+.text-muted { color: #6a6a6a !important; }
+
+/* Background utilities */
+.bg-primary { background-color: #0077BE !important; }
+.bg-success { background-color: #8BC34A !important; }
+.bg-warning { background-color: #FFB300 !important; }
+.bg-error { background-color: #FF5252 !important; }
+.bg-dark { background-color: #0b0f19 !important; }
+
+/* Spacing utilities */
+.mt-1 { margin-top: 4px !important; }
+.mt-2 { margin-top: 8px !important; }
+.mt-3 { margin-top: 16px !important; }
+.mt-4 { margin-top: 24px !important; }
+
+.mb-1 { margin-bottom: 4px !important; }
+.mb-2 { margin-bottom: 8px !important; }
+.mb-3 { margin-bottom: 16px !important; }
+.mb-4 { margin-bottom: 24px !important; }
+
+.p-1 { padding: 4px !important; }
+.p-2 { padding: 8px !important; }
+.p-3 { padding: 16px !important; }
+.p-4 { padding: 24px !important; }
+
+/* Display utilities */
+.hidden { display: none !important; }
+.block { display: block !important; }
+.inline-block { display: inline-block !important; }
+.flex { display: flex !important; }
+
+/* Flex utilities */
+.flex-row { flex-direction: row !important; }
+.flex-col { flex-direction: column !important; }
+.justify-center { justify-content: center !important; }
+.justify-between { justify-content: space-between !important; }
+.items-center { align-items: center !important; }
+.flex-1 { flex: 1 !important; }
+
+/* Border utilities */
+.border { border: 1px solid #2a2d33 !important; }
+.border-t { border-top: 1px solid #2a2d33 !important; }
+.border-b { border-bottom: 1px solid #2a2d33 !important; }
+.border-l { border-left: 1px solid #2a2d33 !important; }
+.border-r { border-right: 1px solid #2a2d33 !important; }
+
+/* Rounded corners */
+.rounded { border-radius: 4px !important; }
+.rounded-md { border-radius: 8px !important; }
+.rounded-lg { border-radius: 12px !important; }
+.rounded-full { border-radius: 9999px !important; }

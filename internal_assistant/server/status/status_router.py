@@ -5,8 +5,10 @@ from datetime import datetime
 from typing import Annotated
 from internal_assistant.settings.settings import settings
 
+
 def get_injector(request: Request):
     return request.state.injector
+
 
 try:
     import psutil
@@ -16,8 +18,9 @@ except ImportError:
 # This router exposes only non-sensitive status information for privacy
 status_router = APIRouter(prefix="/status", tags=["Status"])
 
-LOG_PATH = os.path.join("Logs", "pgpt_ingestion1.log")
+LOG_PATH = os.path.join("local_data", "logs", "pgpt_ingestion1.log")
 MAX_LOG_LINES = 100
+
 
 @status_router.get("/ingestion")
 def ingestion_status():
@@ -36,7 +39,10 @@ def ingestion_status():
                 if "[WARNING]" in line:
                     warnings.append(line.strip())
                 # Find last ingestion time from info lines
-                match = re.search(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\].*Finished ingestion", line)
+                match = re.search(
+                    r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\].*Finished ingestion",
+                    line,
+                )
                 if match:
                     last_ingestion_time = match.group(1)
     return {
@@ -46,6 +52,7 @@ def ingestion_status():
         "recent_warnings": warnings,
         "pending_files": [],  # Not tracked in current implementation
     }
+
 
 @status_router.get("/system")
 def system_status():
@@ -73,7 +80,9 @@ def system_status():
         "mode": s.embedding.mode,
     }
     if s.embedding.mode == "huggingface":
-        embedding_info["model_name"] = getattr(s.huggingface, "embedding_hf_model_name", None)
+        embedding_info["model_name"] = getattr(
+            s.huggingface, "embedding_hf_model_name", None
+        )
     elif s.embedding.mode == "openai":
         embedding_info["model"] = getattr(s.openai, "embedding_model", None)
     elif s.llm.mode == "ollama":
@@ -83,7 +92,9 @@ def system_status():
     elif s.llm.mode == "azopenai":
         embedding_info["model"] = getattr(s.azopenai, "embedding_model", None)
     elif s.llm.mode == "sagemaker":
-        embedding_info["endpoint"] = getattr(s.sagemaker, "embedding_endpoint_name", None)
+        embedding_info["endpoint"] = getattr(
+            s.sagemaker, "embedding_endpoint_name", None
+        )
 
     # Vector store info
     vectorstore_info = {
@@ -95,16 +106,24 @@ def system_status():
     try:
         if psutil:
             disk = psutil.disk_usage(os.getcwd())
-            system_stats["disk_total_gb"] = round(disk.total / (1024 ** 3), 2)
-            system_stats["disk_used_gb"] = round(disk.used / (1024 ** 3), 2)
-            system_stats["disk_free_gb"] = round(disk.free / (1024 ** 3), 2)
-            system_stats["ram_total_gb"] = round(psutil.virtual_memory().total / (1024 ** 3), 2)
-            system_stats["ram_available_gb"] = round(psutil.virtual_memory().available / (1024 ** 3), 2)
+            system_stats["disk_total_gb"] = round(disk.total / (1024**3), 2)
+            system_stats["disk_used_gb"] = round(disk.used / (1024**3), 2)
+            system_stats["disk_free_gb"] = round(disk.free / (1024**3), 2)
+            system_stats["ram_total_gb"] = round(
+                psutil.virtual_memory().total / (1024**3), 2
+            )
+            system_stats["ram_available_gb"] = round(
+                psutil.virtual_memory().available / (1024**3), 2
+            )
             system_stats["cpu_percent"] = psutil.cpu_percent(interval=0.5)
         else:
             st = os.statvfs(os.getcwd())
-            system_stats["disk_total_gb"] = round((st.f_blocks * st.f_frsize) / (1024 ** 3), 2)
-            system_stats["disk_free_gb"] = round((st.f_bavail * st.f_frsize) / (1024 ** 3), 2)
+            system_stats["disk_total_gb"] = round(
+                (st.f_blocks * st.f_frsize) / (1024**3), 2
+            )
+            system_stats["disk_free_gb"] = round(
+                (st.f_bavail * st.f_frsize) / (1024**3), 2
+            )
             # RAM/CPU not available without psutil
     except Exception:
         pass
@@ -116,6 +135,7 @@ def system_status():
         "system_stats": system_stats,
     }
 
+
 @status_router.get("/query_stats")
 def query_stats():
     """Return query success/failure rates. Not yet tracked in current implementation."""
@@ -124,4 +144,4 @@ def query_stats():
         "success_rate": None,
         "failure_rate": None,
         "total_queries": None,
-    } 
+    }

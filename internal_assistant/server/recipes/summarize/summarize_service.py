@@ -12,9 +12,13 @@ from llama_index.core.response_synthesizers import ResponseMode
 from llama_index.core.storage.docstore.types import RefDocInfo
 from llama_index.core.types import TokenGen
 
-from internal_assistant.components.embedding.embedding_component import EmbeddingComponent
+from internal_assistant.components.embedding.embedding_component import (
+    EmbeddingComponent,
+)
 from internal_assistant.components.llm.llm_component import LLMComponent
-from internal_assistant.components.node_store.node_store_component import NodeStoreComponent
+from internal_assistant.components.node_store.node_store_component import (
+    NodeStoreComponent,
+)
 from internal_assistant.components.vector_store.vector_store_component import (
     VectorStoreComponent,
 )

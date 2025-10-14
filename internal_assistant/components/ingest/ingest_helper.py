@@ -57,6 +57,16 @@ FILE_READER_CLS = _try_loading_included_file_formats()
 FILE_READER_CLS.update(
     {
         ".json": JSONReader,
+        # Text files should use StringIterableReader for consistent handling
+        # This prevents the "No reader found" warning for .txt files
+        ".txt": type("TextFileReader", (BaseReader,), {
+            "load_data": lambda self, file: [
+                Document(
+                    text=file.read_text(encoding='utf-8'),
+                    metadata={"file_path": str(file)}
+                )
+            ]
+        }),
     }
 )
 
@@ -87,7 +97,7 @@ class IngestionHelper:
     ) -> list[Document]:
         documents = IngestionHelper._load_file_to_documents(file_name, file_data)
         content_hash = IngestionHelper._get_file_hash(file_data)
-        
+
         # Get file metadata
         try:
             file_size = file_data.stat().st_size
@@ -97,14 +107,16 @@ class IngestionHelper:
             logger.warning(f"Could not get file metadata for {file_data}: {e}")
             file_size = 0
             creation_date = ""
-        
+
         for document in documents:
             document.metadata["file_name"] = file_name
             document.metadata["file_size"] = file_size
-            document.metadata["creation_date"] = str(creation_date) if creation_date else ""
+            document.metadata["creation_date"] = (
+                str(creation_date) if creation_date else ""
+            )
             if content_hash:
                 document.metadata["content_hash"] = content_hash
-                
+
         IngestionHelper._exclude_metadata(documents)
         return documents
 
@@ -113,7 +125,7 @@ class IngestionHelper:
         logger.debug("Transforming file_name=%s into documents", file_name)
         extension = Path(file_name).suffix.lower()
         reader_cls = FILE_READER_CLS.get(extension)
-        
+
         if reader_cls is None:
             logger.warning(
                 f"No reader found for extension={extension}, file={file_name}. "
@@ -131,9 +143,13 @@ class IngestionHelper:
         logger.debug("Specific reader found for extension=%s", extension)
         try:
             documents = reader_cls().load_data(file_data)
-            logger.info(f"Successfully loaded {len(documents)} documents from {file_name}")
+            logger.info(
+                f"Successfully loaded {len(documents)} documents from {file_name}"
+            )
         except Exception as e:
-            logger.error(f"Failed to load file {file_name} with {reader_cls.__name__}: {e}")
+            logger.error(
+                f"Failed to load file {file_name} with {reader_cls.__name__}: {e}"
+            )
             raise
 
         # Sanitize NUL bytes in text which can't be stored in Postgres
@@ -151,4 +167,9 @@ class IngestionHelper:
             document.excluded_embed_metadata_keys = ["doc_id"]
             # We don't want the LLM to receive these metadata in the context
             # Note: content_hash is kept for duplicate detection but not sent to LLM
-            document.excluded_llm_metadata_keys = ["file_name", "doc_id", "page_label", "content_hash"]
+            document.excluded_llm_metadata_keys = [
+                "file_name",
+                "doc_id",
+                "page_label",
+                "content_hash",
+            ]

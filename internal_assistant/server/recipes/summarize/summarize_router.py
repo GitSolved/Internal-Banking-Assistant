@@ -6,7 +6,9 @@ from internal_assistant.open_ai.extensions.context_filter import ContextFilter
 from internal_assistant.open_ai.openai_models import (
     to_openai_sse_stream,
 )
-from internal_assistant.server.recipes.summarize.summarize_service import SummarizeService
+from internal_assistant.server.recipes.summarize.summarize_service import (
+    SummarizeService,
+)
 from internal_assistant.server.utils.auth import authenticated
 
 summarize_router = APIRouter(prefix="/v1", dependencies=[Depends(authenticated)])

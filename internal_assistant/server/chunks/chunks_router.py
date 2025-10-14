@@ -44,8 +44,8 @@ def chunks_retrieval(request: Request, body: ChunksBody) -> ChunksResponse:
     The documents being used can be filtered using the `context_filter` and passing
     the document IDs to be used. Ingested documents IDs can be found using
     `/ingest/list` endpoint. If you want all ingested documents to be used,
-    remove `context_filter` altogether.
-    """
+    remove `context_filter` altogether."""
+
     service = request.state.injector.get(ChunksService)
     results = service.retrieve_relevant(
         body.text, body.context_filter, body.limit, body.prev_next_chunks

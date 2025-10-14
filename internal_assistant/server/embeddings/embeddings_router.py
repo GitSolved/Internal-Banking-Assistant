@@ -34,4 +34,6 @@ def embeddings_generation(request: Request, body: EmbeddingsBody) -> EmbeddingsR
     service = request.state.injector.get(EmbeddingsService)
     input_texts = body.input if isinstance(body.input, list) else [body.input]
     embeddings = service.texts_embeddings(input_texts)
-    return EmbeddingsResponse(object="list", model="internal-assistant", data=embeddings)
+    return EmbeddingsResponse(
+        object="list", model="internal-assistant", data=embeddings
+    )

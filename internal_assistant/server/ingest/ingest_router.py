@@ -15,6 +15,7 @@ injector = global_injector
 def get_injector(request: Request) -> Injector:
     return request.state.injector
 
+
 ingest_router = APIRouter(prefix="/v1", dependencies=[Depends(authenticated)])
 
 
@@ -28,6 +29,11 @@ class IngestTextBody(BaseModel):
             "Chinese martial arts."
         ]
     )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class DeleteFilesBody(BaseModel):
+    file_names: list[str] = Field(examples=[["document1.pdf", "document2.txt"]])
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
@@ -68,7 +74,9 @@ def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
     if file.filename is None:
         raise HTTPException(400, "No file name provided")
     ingested_documents = service.ingest_bin_data(file.filename, file.file)
-    return IngestResponse(object="list", model="internal-assistant", data=ingested_documents)
+    return IngestResponse(
+        object="list", model="internal-assistant", data=ingested_documents
+    )
 
 
 @ingest_router.post("/ingest/text", tags=["Ingestion"])
@@ -88,11 +96,15 @@ def ingest_text(request: Request, body: IngestTextBody) -> IngestResponse:
     if len(body.file_name) == 0:
         raise HTTPException(400, "No file name provided")
     ingested_documents = service.ingest_text(body.file_name, body.text)
-    return IngestResponse(object="list", model="internal-assistant", data=ingested_documents)
+    return IngestResponse(
+        object="list", model="internal-assistant", data=ingested_documents
+    )
 
 
 @ingest_router.get("/ingest/list", tags=["Ingestion"])
-def list_ingested(injector: Annotated[Injector, Depends(get_injector)]) -> IngestResponse:
+def list_ingested(
+    injector: Annotated[Injector, Depends(get_injector)]
+) -> IngestResponse:
     """Lists already ingested Documents including their Document ID and metadata.
 
     Those IDs can be used to filter the context used to create responses
@@ -100,11 +112,15 @@ def list_ingested(injector: Annotated[Injector, Depends(get_injector)]) -> Inges
     """
     service = injector.get(IngestService)
     ingested_documents = service.list_ingested()
-    return IngestResponse(object="list", model="internal-assistant", data=ingested_documents)
+    return IngestResponse(
+        object="list", model="internal-assistant", data=ingested_documents
+    )
 
 
 @ingest_router.delete("/ingest/{doc_id}", tags=["Ingestion"])
-def delete_ingested(doc_id: str, injector: Annotated[Injector, Depends(get_injector)]) -> None:
+def delete_ingested(
+    doc_id: str, injector: Annotated[Injector, Depends(get_injector)]
+) -> None:
     """Delete the specified ingested Document.
 
     The `doc_id` can be obtained from the `GET /ingest/list` endpoint.
@@ -112,3 +128,52 @@ def delete_ingested(doc_id: str, injector: Annotated[Injector, Depends(get_injec
     """
     service = injector.get(IngestService)
     service.delete(doc_id)
+
+
+@ingest_router.post("/ingest/delete_by_filenames", tags=["Ingestion"])
+def delete_by_filenames(
+    body: DeleteFilesBody, injector: Annotated[Injector, Depends(get_injector)]
+) -> dict:
+    """Delete multiple ingested Documents by their filenames.
+
+    This endpoint accepts a list of filenames and deletes all documents
+    that match those filenames. Useful for bulk deletion operations.
+
+    Returns a dict with deletion statistics.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    service = injector.get(IngestService)
+    file_names = body.file_names
+
+    if not file_names:
+        raise HTTPException(400, "No file names provided")
+
+    # Get all ingested documents
+    ingested_docs = service.list_ingested()
+
+    # Find documents matching the filenames
+    docs_to_delete = []
+    for doc in ingested_docs:
+        if doc.doc_metadata and doc.doc_metadata.get("file_name") in file_names:
+            docs_to_delete.append(doc)
+
+    # Delete each matching document
+    deleted_count = 0
+    failed_count = 0
+    for doc in docs_to_delete:
+        try:
+            service.delete(doc.doc_id)
+            deleted_count += 1
+            logger.info(f"Deleted document {doc.doc_id} ({doc.doc_metadata.get('file_name')})")
+        except Exception as e:
+            failed_count += 1
+            logger.error(f"Failed to delete {doc.doc_id}: {e}")
+
+    return {
+        "deleted": deleted_count,
+        "failed": failed_count,
+        "requested": len(file_names),
+        "found": len(docs_to_delete)
+    }

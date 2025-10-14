@@ -2,12 +2,12 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: PrivateGPT
+title: Internal Assistant
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
 authors: []
-repository-code: 'https://github.com/zylon-ai/private-gpt'
+repository-code: 'https://github.com/user/internal-assistant'
 license: Apache-2.0
-date-released: '2023-05-02'
+date-released: '2025-01-17'

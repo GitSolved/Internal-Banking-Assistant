@@ -6,9 +6,13 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage import StorageContext
 from pydantic import BaseModel, Field, ConfigDict
 
-from internal_assistant.components.embedding.embedding_component import EmbeddingComponent
+from internal_assistant.components.embedding.embedding_component import (
+    EmbeddingComponent,
+)
 from internal_assistant.components.llm.llm_component import LLMComponent
-from internal_assistant.components.node_store.node_store_component import NodeStoreComponent
+from internal_assistant.components.node_store.node_store_component import (
+    NodeStoreComponent,
+)
 from internal_assistant.components.vector_store.vector_store_component import (
     VectorStoreComponent,
 )

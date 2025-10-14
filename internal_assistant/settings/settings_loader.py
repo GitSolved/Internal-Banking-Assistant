@@ -14,7 +14,7 @@ from internal_assistant.utils.version_check import validate_dependency_versions
 
 logger = logging.getLogger(__name__)
 
-_settings_folder = os.environ.get("PGPT_SETTINGS_FOLDER", PROJECT_ROOT_PATH / "configs")
+_settings_folder = os.environ.get("PGPT_SETTINGS_FOLDER", PROJECT_ROOT_PATH / "config")
 
 # if running in unittest, use the test profile
 _test_profile = ["test"] if "tests.fixtures" in sys.modules else []
@@ -54,11 +54,11 @@ def load_settings_from_profile(profile: str) -> dict[str, Any]:
 
     if profile == "default":
         path = Path(_settings_folder) / profile_file_name
-    
+
     if not path.exists():
         raise FileNotFoundError(f"Configuration file not found: {path}")
-        
-    with Path(path).open("r") as f:
+
+    with Path(path).open("r", encoding="utf-8") as f:
         config = load_yaml_with_envvars(f)
     if not isinstance(config, dict):
         raise TypeError(f"Config file has no top-level mapping: {path}")
@@ -68,10 +68,10 @@ def load_settings_from_profile(profile: str) -> dict[str, Any]:
 def load_active_settings() -> dict[str, Any]:
     """Load active profiles and merge them."""
     logger.info("Starting application with profiles=%s", active_profiles)
-    
+
     # Validate dependency versions before loading settings
     validate_dependency_versions()
-    
+
     loaded_profiles = [
         load_settings_from_profile(profile) for profile in active_profiles
     ]

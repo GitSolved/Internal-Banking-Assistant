@@ -11,24 +11,57 @@ This project has **specific version constraints** to ensure compatibility and pr
 - **Gradio**: >=4.15.0,<4.39.0 (avoids FastAPI integration issues)
 
 ### Installation & Setup
+
+For detailed installation instructions, see the [Installation Guide](docs/user/installation/installation.md).
+
+**⚠️ Important: Package Structure**
+This project uses the `internal_assistant` package structure. For import conventions and troubleshooting, see the [Package Structure Guide](docs/developer/development/package-structure.md).
+
+**Quick Start:**
 ```bash
 # 1. Ensure Python 3.11.9 is installed
 python --version  # Should show 3.11.9
 
-# 2. Install dependencies with enforced versions
+# 2. Install dependencies
 poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
 
-# 3. Set environment variables (if needed)
-# For HuggingFace models (optional):
-# export HF_TOKEN=your_huggingface_token_here  # Linux/Mac
-# set HF_TOKEN=your_huggingface_token_here     # Windows
-
-# 4. Verify compatibility
-make compatibility-check
-
-# 5. Run the application
+# 3. Run the application
 make run
 ```
+
+### 🔧 **Poetry-Enforced Scripts (Recommended)**
+
+To ensure proper dependency isolation and prevent environment issues, use these Poetry-aware scripts:
+
+```bash
+# Quick environment verification
+python verify.py                    # Basic check
+python verify.py --full             # Detailed report
+python verify.py --tests            # Verify all tests pass
+python verify.py --component fastapi # Check specific component
+
+# Run the application
+python run_app.py                   # Production mode
+python run_app.py --dev             # Development mode
+python run_app.py --check           # Environment check only
+
+# Run tests
+python run_tests.py                 # All tests
+python run_tests.py tests/ui/       # Specific test directory
+python run_tests.py tests/ui/test_ui_integration.py # Specific test file
+
+# Master verification (replaces old PowerShell scripts)
+python master_verify.py             # Complete verification
+python master_verify.py --quick     # Quick environment check
+python master_verify.py --tests-only # Tests only
+python master_verify.py --component fastapi # Check specific component
+```
+
+**Why use these scripts?**
+- ✅ Automatic Poetry environment detection and usage
+- ✅ Environment validation before execution
+- ✅ Clear error messages for dependency issues
+- ✅ Fallback support for different environments
 
 ### Environment Variables
 The application uses environment variables for configuration. You can set them directly:
@@ -51,26 +84,35 @@ $env:PGPT_PROFILES="local"
 make run
 ```
 
+### ✅ Installation Commands
+
+For complete installation options, see the [Installation Guide](docs/user/installation/installation.md).
+
+**Recommended:**
+```bash
+poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
+```
+
 ### Compatibility Checks
 - **Manual check**: `make compatibility-check`
 - **Version enforcement**: `make version-enforce`
-- **Documentation**: See [COMPATIBILITY.md](COMPATIBILITY.md)
+- **Comprehensive documentation**: `poetry run python dev/scripts/generate_compatibility_docs.py`
+- **Auto-generated guide**: See [docs/compatibility/compatibility_guide.md](docs/compatibility/compatibility_guide.md)
 
 ### Log Management
 - **Auto cleanup**: `make log-cleanup` (runs automatically before startup)
 - **Check cleanup**: `make log-cleanup-dry-run` (see what would be removed)
-- **Manual cleanup**: `poetry run python scripts/manage_logs.py --interactive`
+- **Manual cleanup**: `poetry run python tools/maintenance/manage_logs.py --interactive`
 
 **Note**: The application will automatically validate versions on startup and clean up old logs.
 
 [![Tests](https://github.com/zylon-ai/private-gpt/actions/workflows/tests.yml/badge.svg)](https://github.com/zylon-ai/private-gpt/actions/workflows/tests.yml?query=branch%3Amain)
-[![Website](https://img.shields.io/website?up_message=check%20it&down_message=down&url=https%3A%2F%2Fdocs.privategpt.dev%2F&label=Documentation)](https://docs.privategpt.dev/)
-[![Discord](https://img.shields.io/discord/1164200432894234644?logo=discord&label=PrivateGPT)](https://discord.gg/bK6mRVpErU)
-[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/ZylonPrivateGPT)](https://twitter.com/ZylonPrivateGPT)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://your-org.github.io/internal-assistant/)
+[![Internal Assistant](https://img.shields.io/badge/Internal%20Assistant-Cybersecurity%20AI-blue)](https://github.com/your-org/internal-assistant)
 
-![Internal Assistant UI](/fern/docs/assets/ui.png?raw=true)
+![Internal Assistant UI](/docs/assets/ui.png?raw=true)
 
-**Internal Assistant** is a specialized cybersecurity intelligence platform built on PrivateGPT technology, optimized for threat analysis, regulatory compliance, and security research. It provides a powerful, privacy-focused AI workspace for cybersecurity professionals.
+**Internal Assistant** is an internal cybersecurity intelligence tool for threat analysis and security research. It provides a privacy-focused AI workspace for cybersecurity professionals.
 
 ## 🎯 Key Features
 
@@ -85,17 +127,17 @@ make run
 - **Regulatory Compliance:** Enhanced content display for compliance documents
 - **Security Research:** Optimized for security analysis workflows
 
-### **⚡ Performance Optimized**
-- **25-35% Faster:** q4_k_m quantization for improved inference speed
-- **Memory Efficient:** ~1 GB RAM reduction while maintaining quality
+### **⚡ Performance Configuration**
+- **Quantization:** q4_k_m quantization for improved inference speed
+- **Memory Optimized:** Reduced memory usage while maintaining quality
 - **Response Times:** 6-20 seconds for most queries
-- **Single Model:** Optimized for Foundation-Sec-8B-q4_k_m.gguf (5.06 GB)
+- **Model:** Foundation-Sec-8B-q4_k_m.gguf (5.06 GB)
 
 ## 🚀 Quick Start
 
 ### **System Requirements**
 - **Python:** 3.11+ (required)
-- **RAM:** 8GB+ (recommended for optimal performance)
+- **RAM:** 8GB+ (recommended)
 - **Storage:** 10GB+ for models and data
 - **OS:** Windows, macOS, or Linux
 
@@ -159,7 +201,7 @@ make run
 
 ### **Model Performance**
 - **Model:** Foundation-Sec-8B-q4_k_m.gguf (5.06 GB)
-- **Quantization:** q4_k_m (25-35% speed improvement)
+- **Quantization:** q4_k_m quantization
 - **Memory Usage:** ~4.5 GB (optimized single model load)
 - **Quality:** Excellent - maintains high quality with optimization
 
@@ -170,7 +212,7 @@ make run
 - **Cybersecurity Analysis:** 10-15 seconds
 
 ### **Optimizations**
-- **System Prompts:** 10-20 tokens (40-120x faster processing)
+- **System Prompts:** 10-20 tokens (optimized processing)
 - **LLM Parameters:** Optimized for speed (max_new_tokens: 100)
 - **RAG Settings:** Speed-optimized (similarity_top_k: 2)
 - **Memory Management:** Single model operation for efficiency
@@ -186,14 +228,68 @@ make run
 ### **Enhanced UI Features**
 - **Horizontal Scrolling:** Optimized for regulatory information display
 - **Content Enhancement:** Longer titles (120 chars) and summaries (200 chars)
-- **Custom Styling:** Blue gradient theme for professional appearance
+- **Custom Styling:** Blue gradient theme
 - **Compact Interface:** Reduced button heights for better UX
+
+## 🏗️ Architecture & Development
+
+### **UI Refactoring Progress**
+- **Phase 1A:** ✅ Complete - Chat interface modularization
+  - **Phase 1B:** ✅ Complete - Document management system (1,963 lines extracted)
+    - DocumentUtilityBuilder (236 lines)
+    - DocumentLibraryBuilder (492 lines)
+    - DocumentEventHandlerBuilder (356 lines)
+    - DocumentStateManager (527 lines)
+    - FeedsDisplayBuilder (352 lines)
+- **Phase 1C:** 🔄 In Progress - Feed event handlers extraction
+- **Phase 1D:** 📋 Planned - Advanced UI componentization
+
+### **Modular Architecture**
+  - **Main UI:** 6,258 lines (down from 6,346 lines - 1.4% reduction)
+  - **Component System:** 5 specialized components (1,963 total lines)
+  - **Extraction Rate:** 30.9% of original code extracted to modular components
+- **Service Integration:** Clean dependency injection patterns
+- **Builder Pattern:** Consistent component creation methodology
+
+### **Backup & Recovery**
+- **Strategic Backups:** Complete backup system in `backup/` folder
+- **Rollback Procedures:** Safe recovery procedures for each phase
+- **Risk Mitigation:** Backup strategy for refactoring safety
+- **Audit Trail:** Historical record of all refactoring changes
 
 ### **Security-Focused Configuration**
 - **Privacy:** No data transmission to external services
 - **Local Processing:** All AI operations on your infrastructure
 - **Secure Storage:** Local vector database with encryption support
-- **Audit Trail:** Complete logging for compliance requirements
+- **Audit Trail:** Logging for compliance requirements
+
+## 📁 Storage Structure
+
+The application uses two main storage directories with distinct purposes:
+
+### `local_data/` - Application Runtime Data
+- **Purpose**: Ephemeral data generated during application operation
+- **Contents**: Logs, session data, vector database cache
+- **Lifecycle**: Can be safely deleted and regenerated
+- **Backup**: Optional - regenerable data
+
+### `data/` - User Persistent Data  
+- **Purpose**: Critical data that must be preserved
+- **Contents**: Models, documents, processed content
+- **Lifecycle**: Permanent - expensive to recreate
+- **Backup**: Required - contains user data and large model files
+
+```
+├── local_data/          # Application runtime (regenerable)
+│   ├── logs/           # Application and session logs
+│   └── internal_assistant/  # Vector DB, app state
+└── data/               # User persistent data (critical)
+    ├── models/         # Model files, embeddings, caches
+    ├── persistent/     # Documents, processed content
+    └── runtime/        # Temporary caches
+```
+
+See `local_data/README.md` and `data/README.md` for detailed information.
 
 ## 🔧 Configuration
 
@@ -378,23 +474,97 @@ We welcome contributions to Internal Assistant! Please ensure:
 poetry install --with dev
 
 # Run in development mode
-make dev
+poetry run make dev
 
 # Set up pre-commit hooks
 pre-commit install
 ```
 
+### **Modern Poetry Workflow**
+This project uses Poetry 2.0+ with modern execution approach:
+
+```bash
+# Start application (recommended)
+poetry run make run
+
+# Development mode
+poetry run make dev
+
+# Run tests
+poetry run make test
+
+# Interactive development
+poetry env activate
+make run
+deactivate
+```
+
+**Note:** `poetry shell` is deprecated in Poetry 2.0+. Use `poetry run` or `poetry env activate` instead.
+
 ## 📄 Documentation
 
-For detailed documentation, configuration options, and advanced usage:
-- **API Documentation:** https://docs.privategpt.dev/
-- **Configuration Guide:** See `configs/` directory
-- **Architecture Details:** See `internal_assistant/` source code
+The project uses **MkDocs** for documentation with full local control.
+
+### **📋 Documentation Guidelines**
+- **For Contributors**: See [Documentation Guidelines](docs/developer/development/documentation-guidelines.md) for creating new documentation
+- **Agent Optimization**: All documentation must be transformed using [Documentation Transformation Prompt](docs/developer/guides/documentation-transformation-prompt.md)
+- **Quality Standards**: Follow the established format and structure requirements
+
+### **📚 Documentation Structure**
+```
+docs/                    # Source documentation (markdown)
+├── user/               # User guides and configuration
+├── developer/          # Architecture and development
+│   ├── architecture/   # System design and planning
+│   │   ├── overview.md # System architecture overview
+│   │   ├── refactoring-guide.md # Comprehensive refactoring plan
+│   │   └── document-categorization.md # Document categorization system
+│   ├── development/    # Developer guides and tools
+│   │   ├── setup.md    # Development environment setup
+│   │   ├── package-structure.md # Package import conventions
+│   │   └── import-quick-reference.md # Quick import reference
+│   └── reports/        # Project status and audit reports
+│       ├── folder-status-report.md # Project structure analysis
+│       ├── documentation-cleanup.md # Documentation maintenance log
+│       └── documentation-strategy.md # Documentation system overview
+├── api/                # API reference  
+└── assets/             # Images and logos
+
+site/                   # Generated website (git-ignored)
+├── index.html          # Built documentation site
+├── search/             # Full-text search functionality
+└── assets/             # Optimized CSS/JS/images
+```
+
+### **📖 Documentation Commands**
+```bash
+# Live development server with auto-reload
+poetry run mkdocs serve
+
+# Build static site (generates site/ folder)
+poetry run mkdocs build
+
+# View built documentation
+open site/index.html    # macOS
+start site/index.html   # Windows
+```
+
+### **🌐 Available Documentation**
+- **Local:** `poetry run mkdocs serve` → http://localhost:8000
+- **Built Site:** `site/index.html` (3.7MB, 21 pages, full search)
+- **Source Files:** `docs/` directory (markdown format)
+
+### **📝 Documentation Features**
+- **Full-text search** with 25 language support
+- **Material Design** theme with dark/light mode
+- **Navigation** with automatic breadcrumbs
+- **Mobile responsive** design
+- **Fast build** (4-5 seconds for complete site)
 
 ## 🏗️ Built On
 
 Internal Assistant is built on the solid foundation of:
-- **[PrivateGPT](https://github.com/zylon-ai/private-gpt)** - Privacy-focused AI framework
+- **[Advanced AI Framework](https://github.com/your-org/internal-assistant)** - Privacy-focused AI framework
 - **[LlamaIndex](https://www.llamaindex.ai/)** - RAG pipeline framework
 - **[Qdrant](https://qdrant.tech/)** - Vector database
 - **[Ollama](https://ollama.ai/)** - Local LLM management
@@ -410,7 +580,7 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 
 - **Discord:** [Join our community](https://discord.gg/bK6mRVpErU)
 - **Issues:** [GitHub Issues](https://github.com/your-repo/internal-assistant/issues)
-- **Documentation:** [Full documentation](https://docs.privategpt.dev/)
+- **Documentation:** [Full documentation](https://your-org.github.io/internal-assistant/)
 
 ---
 

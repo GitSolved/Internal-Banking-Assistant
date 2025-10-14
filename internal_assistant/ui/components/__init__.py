@@ -6,13 +6,14 @@ Each component handles a specific aspect of the user interface.
 """
 
 from .chat import ChatComponent
-from .documents import DocumentLibraryComponent
-from .feeds import FeedsComponent
+from .documents import DocumentComponent
+from .feeds import FeedComponent, ComplexDisplayBuilder
 from .sidebar import SidebarComponent
 
 __all__ = [
     "ChatComponent",
-    "DocumentLibraryComponent", 
-    "FeedsComponent",
-    "SidebarComponent"
+    "DocumentComponent",
+    "FeedComponent",
+    "ComplexDisplayBuilder",
+    "SidebarComponent",
 ]

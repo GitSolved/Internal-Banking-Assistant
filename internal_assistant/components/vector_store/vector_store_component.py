@@ -114,12 +114,16 @@ class VectorStoreComponent:
                     client = QdrantClient(
                         **settings.qdrant.model_dump(exclude_none=True)
                     )
+                # Use configured collection name or default
+                collection_name = getattr(
+                    settings.qdrant, "collection_name", "internal_assistant_documents"
+                )
                 self.vector_store = typing.cast(
                     BasePydanticVectorStore,
                     QdrantVectorStore(
                         client=client,
-                        collection_name="make_this_parameterizable_per_api_call",
-                    ),  # TODO
+                        collection_name=collection_name,
+                    ),
                 )
 
             case "milvus":

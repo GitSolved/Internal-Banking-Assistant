@@ -1,0 +1,1295 @@
+import abc
+import itertools
+import logging
+import multiprocessing
+import multiprocessing.pool
+import os
+import threading
+import time
+from pathlib import Path
+from queue import Queue
+from typing import Any
+
+from llama_index.core.data_structs import IndexDict
+from llama_index.core.embeddings.utils import EmbedType
+from llama_index.core.indices import VectorStoreIndex, load_index_from_storage
+from llama_index.core.indices.base import BaseIndex
+from llama_index.core.ingestion import run_transformations
+from llama_index.core.schema import BaseNode, Document, TransformComponent
+from llama_index.core.storage import StorageContext
+
+from internal_assistant.components.ingest.ingest_helper import IngestionHelper
+from internal_assistant.paths import local_data_path
+from internal_assistant.settings.settings import Settings
+from internal_assistant.utils.eta import eta
+
+logger = logging.getLogger(__name__)
+
+
+class BaseIngestComponent(abc.ABC):
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        logger.debug("Initializing base ingest component type=%s", type(self).__name__)
+        self.storage_context = storage_context
+        self.embed_model = embed_model
+        self.transformations = transformations
+
+    @abc.abstractmethod
+    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+        pass
+
+    @abc.abstractmethod
+    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+        pass
+
+    @abc.abstractmethod
+    def delete(self, doc_id: str) -> None:
+        pass
+
+
+class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
+
+        self.show_progress = True
+        self._index_thread_lock = (
+            threading.Lock()
+        )  # Thread lock! Not Multiprocessing lock
+        self._index = self._initialize_index()
+
+    def _initialize_index(self) -> BaseIndex[IndexDict]:
+        """Initialize the index from the storage context."""
+        try:
+            # Load the index with store_nodes_override=True to be able to delete them
+            index = load_index_from_storage(
+                storage_context=self.storage_context,
+                store_nodes_override=True,  # Force store nodes in index and document stores
+                show_progress=self.show_progress,
+                embed_model=self.embed_model,
+                transformations=self.transformations,
+            )
+        except ValueError:
+            # There are no index in the storage context, creating a new one
+            logger.info("Creating a new vector store index")
+            index = VectorStoreIndex.from_documents(
+                [],
+                storage_context=self.storage_context,
+                store_nodes_override=True,  # Force store nodes in index and document stores
+                show_progress=self.show_progress,
+                embed_model=self.embed_model,
+                transformations=self.transformations,
+            )
+            index.storage_context.persist(persist_dir=str(local_data_path))
+        return index
+
+    def _save_index(self) -> None:
+        """Save index to disk."""
+        try:
+            self._index.storage_context.persist(persist_dir=str(local_data_path))
+            logger.info("Saved index to %s", local_data_path)
+        except Exception as e:
+            logger.error("Failed to save index: %s", e)
+            raise
+
+    def _prepare_persistence_operation(self) -> dict:
+        """Prepare state tracking for persistence operation."""
+        import time
+        import os
+
+        logger.info("🔧 [PERSIST] Preparing persistence operation...")
+
+        persistence_state = {
+            'timestamp': time.time(),
+            'doc_count': len(self._index.ref_doc_info) if hasattr(self._index, 'ref_doc_info') else 0,
+            'storage_path': Path(str(local_data_path)),
+            'pre_persist_files': {},
+            'vector_store_type': type(self.storage_context.vector_store).__name__ if hasattr(self, 'storage_context') else 'Unknown',
+            'doc_store_type': type(self.storage_context.docstore).__name__ if hasattr(self, 'storage_context') else 'Unknown',
+            'index_store_type': type(self.storage_context.index_store).__name__ if hasattr(self, 'storage_context') else 'Unknown'
+        }
+
+        logger.info("🔧 [PERSIST] Index contains %d documents", persistence_state['doc_count'])
+        logger.info("🔧 [PERSIST] Storage types - Vector: %s, Doc: %s, Index: %s",
+                   persistence_state['vector_store_type'],
+                   persistence_state['doc_store_type'],
+                   persistence_state['index_store_type'])
+
+        # Ensure persist directory exists and is writable
+        persist_path = Path(str(local_data_path))
+        if not persist_path.exists():
+            logger.info("🔧 [PERSIST] Creating persist directory: %s", persist_path)
+            persist_path.mkdir(parents=True, exist_ok=True)
+
+        # Check write permissions
+        if not os.access(persist_path, os.W_OK):
+            logger.error("❌ [PERSIST] No write permission to persist directory: %s", persist_path)
+            raise PermissionError(f"Cannot write to persist directory: {persist_path}")
+
+        logger.info("✅ [PERSIST] Persist directory is accessible and writable")
+
+        # Capture pre-persistence file state
+        try:
+            self._capture_storage_state(persistence_state, 'pre')
+        except Exception as e:
+            logger.warning("⚠️ [PERSIST] Could not capture pre-persistence state: %s", e)
+
+        return persistence_state
+
+    def _execute_persistence_operation(self, persistence_state: dict) -> None:
+        """Execute the actual persistence operation."""
+        logger.info("💾 [PERSIST] Executing persistence operation...")
+
+        # Check storage context before persistence
+        if not self._index.storage_context:
+            logger.error("❌ [PERSIST] No storage context available for persistence")
+            raise ValueError("Storage context is None")
+
+        # Perform the persistence
+        try:
+            logger.info("💾 [PERSIST] Calling storage_context.persist()...")
+            start_time = time.time()
+
+            self._index.storage_context.persist(persist_dir=str(persistence_state['storage_path']))
+
+            end_time = time.time()
+            persistence_state['persist_duration'] = end_time - start_time
+
+            logger.info("✅ [PERSIST] persist() completed in %.2f seconds", persistence_state['persist_duration'])
+
+            # CRITICAL FIX: Explicitly persist docstore to ensure document metadata is saved
+            # storage_context.persist() sometimes doesn't persist the docstore properly
+            logger.info("💾 [PERSIST] Explicitly persisting docstore to ensure metadata is saved...")
+            try:
+                if hasattr(self._index.storage_context, 'docstore'):
+                    docstore = self._index.storage_context.docstore
+                    if hasattr(docstore, 'persist'):
+                        # docstore.persist() expects persist_path parameter (directory for SimpleDocumentStore)
+                        from pathlib import Path
+                        docstore_path = Path(str(persistence_state['storage_path'])) / "docstore.json"
+                        logger.info("💾 [PERSIST] Persisting docstore to: %s", docstore_path)
+                        docstore.persist(persist_path=str(docstore_path))
+                        logger.info("✅ [PERSIST] Docstore explicitly persisted")
+                    else:
+                        logger.warning("⚠️ [PERSIST] Docstore does not have persist() method")
+            except Exception as docstore_error:
+                logger.error("❌ [PERSIST] Failed to explicitly persist docstore: %s", docstore_error, exc_info=True)
+                # Don't fail the entire operation if docstore persistence fails
+                # The main storage_context.persist() may have succeeded
+                logger.warning("⚠️ [PERSIST] Continuing despite docstore persistence error")
+
+        except Exception as e:
+            logger.error("❌ [PERSIST] Persistence operation failed: %s", e)
+            raise RuntimeError(f"Index persistence failed: {e}")
+
+    def _verify_persistence_operation(self, persistence_state: dict) -> None:
+        """Verify that persistence operation completed successfully."""
+        logger.info("🔍 [PERSIST] Verifying persistence operation...")
+
+        # Capture post-persistence file state
+        try:
+            self._capture_storage_state(persistence_state, 'post')
+        except Exception as e:
+            logger.warning("⚠️ [PERSIST] Could not capture post-persistence state: %s", e)
+
+        # Verify storage directory exists and is accessible
+        storage_path = persistence_state['storage_path']
+        if not storage_path.exists():
+            raise RuntimeError(f"Storage directory does not exist after persistence: {storage_path}")
+
+        # Check for critical storage files
+        try:
+            critical_files = self._check_critical_storage_files(persistence_state)
+            logger.info("✅ [PERSIST] Critical storage files verified: %d files found", len(critical_files))
+        except Exception as e:
+            logger.warning("⚠️ [PERSIST] Critical file verification warning: %s", e)
+
+        # Verify document count consistency
+        try:
+            self._verify_document_count_consistency(persistence_state)
+        except Exception as e:
+            logger.warning("⚠️ [PERSIST] Document count verification warning: %s", e)
+
+        logger.info("✅ [PERSIST] Persistence verification completed")
+
+    def _force_disk_sync(self, persistence_state: dict) -> None:
+        """Force disk synchronization to ensure data is written to persistent storage."""
+        import os
+        logger.info("🔄 [PERSIST] Forcing disk synchronization...")
+
+        try:
+            # Force OS to flush filesystem buffers
+            if hasattr(os, 'sync'):
+                os.sync()
+                logger.info("✅ [PERSIST] OS sync() completed")
+            else:
+                logger.warning("⚠️ [PERSIST] OS sync() not available on this platform")
+
+            # Try to fsync storage directories if accessible (Windows compatibility)
+            try:
+                storage_path = persistence_state['storage_path']
+                if storage_path.exists():
+                    # Windows doesn't support directory fsync the same way - try file-based approach
+                    import sys
+                    if sys.platform == "win32":
+                        # On Windows, just ensure parent directory exists and is accessible
+                        if os.access(str(storage_path), os.R_OK | os.W_OK):
+                            logger.info("✅ [PERSIST] Storage directory accessible (Windows)")
+                        else:
+                            logger.warning("⚠️ [PERSIST] Storage directory access limited (Windows)")
+                    else:
+                        # Unix/Linux - use directory fsync
+                        dir_fd = os.open(str(storage_path), os.O_RDONLY)
+                        try:
+                            os.fsync(dir_fd)
+                            logger.info("✅ [PERSIST] Directory fsync completed (Unix)")
+                        finally:
+                            os.close(dir_fd)
+            except PermissionError as e:
+                logger.info("ℹ️ [PERSIST] Directory fsync skipped due to permissions - this is normal on Windows")
+            except Exception as e:
+                logger.warning("⚠️ [PERSIST] Directory sync failed: %s", e)
+
+            # Add a small delay to ensure disk operations complete
+            time.sleep(0.1)
+
+            logger.info("✅ [PERSIST] Disk synchronization completed")
+
+        except Exception as e:
+            logger.warning("⚠️ [PERSIST] Disk sync warning: %s", e)
+
+    def _capture_storage_state(self, persistence_state: dict, phase: str) -> None:
+        """Capture current storage state for comparison."""
+        storage_path = persistence_state['storage_path']
+
+        if not storage_path.exists():
+            logger.warning(f"⚠️ [PERSIST] Storage path does not exist during {phase}-persistence check")
+            return
+
+        state_key = f'{phase}_persist_files'
+        persistence_state[state_key] = {}
+
+        try:
+            # Recursively scan storage directory
+            for file_path in storage_path.rglob("*"):
+                if file_path.is_file():
+                    try:
+                        stat = file_path.stat()
+                        relative_path = file_path.relative_to(storage_path)
+                        persistence_state[state_key][str(relative_path)] = {
+                            'size': stat.st_size,
+                            'mtime': stat.st_mtime
+                        }
+                    except Exception as e:
+                        logger.warning(f"⚠️ [PERSIST] Could not stat file {file_path}: {e}")
+
+            file_count = len(persistence_state[state_key])
+            total_size = sum(info['size'] for info in persistence_state[state_key].values())
+
+            logger.info(f"📊 [PERSIST] {phase.capitalize()}-persistence: {file_count} files, {total_size} bytes total")
+
+        except Exception as e:
+            logger.warning(f"⚠️ [PERSIST] Error capturing {phase}-persistence state: {e}")
+
+    def _check_critical_storage_files(self, persistence_state: dict) -> list:
+        """Check for critical storage files that should exist after persistence."""
+        storage_path = persistence_state['storage_path']
+        critical_files = []
+
+        # Look for various storage file patterns
+        patterns = [
+            "**/vector_store.json",
+            "**/docstore.json",
+            "**/index_store.json",
+            "**/default__vector_store.json",
+            "**/*.db",
+            "**/*.json"
+        ]
+
+        for pattern in patterns:
+            matches = list(storage_path.glob(pattern))
+            critical_files.extend(matches)
+            if matches:
+                logger.info(f"📄 [PERSIST] Found {len(matches)} files matching {pattern}")
+
+        return critical_files
+
+    def _verify_document_count_consistency(self, persistence_state: dict) -> None:
+        """Verify that document count is consistent after persistence."""
+        current_doc_count = len(self._index.ref_doc_info) if hasattr(self._index, 'ref_doc_info') else 0
+
+        if current_doc_count != persistence_state['doc_count']:
+            logger.warning(f"⚠️ [PERSIST] Document count changed during persistence: {persistence_state['doc_count']} -> {current_doc_count}")
+        else:
+            logger.info(f"✅ [PERSIST] Document count consistent: {current_doc_count}")
+
+    def delete(self, doc_id: str) -> None:
+        import time
+        logger = logging.getLogger(__name__)
+        logger.info(f"🗑️ [INGEST_COMPONENT] Starting atomic deletion for doc_id: {doc_id}")
+
+        with self._index_thread_lock:
+            logger.info(f"🗑️ [INGEST_COMPONENT] Acquired thread lock for atomic deletion")
+
+            # Prepare atomic deletion operation
+            deletion_state = self._prepare_atomic_deletion(doc_id)
+
+            try:
+                # Execute atomic deletion
+                self._execute_atomic_deletion(doc_id, deletion_state)
+
+                # Verify deletion success
+                self._verify_atomic_deletion(doc_id, deletion_state)
+
+                logger.info(f"✅ [INGEST_COMPONENT] Atomic deletion completed successfully for doc_id: {doc_id}")
+
+            except Exception as e:
+                logger.error(f"❌ [INGEST_COMPONENT] Atomic deletion failed, attempting recovery: {e}", exc_info=True)
+
+                # Attempt to restore if deletion was partial
+                try:
+                    self._recover_from_failed_deletion(doc_id, deletion_state)
+                    logger.info(f"✅ [INGEST_COMPONENT] Recovery completed for failed deletion")
+                except Exception as recovery_error:
+                    logger.error(f"❌ [INGEST_COMPONENT] CRITICAL: Recovery from failed deletion failed: {recovery_error}")
+                    self._log_deletion_inconsistency(doc_id, deletion_state, e, recovery_error)
+
+                raise
+
+        logger.info(f"🗑️ [INGEST_COMPONENT] Released thread lock, atomic deletion process complete")
+
+    def _prepare_atomic_deletion(self, doc_id: str) -> dict:
+        """Prepare state information for atomic deletion operation."""
+        import time
+        logger.info(f"🔧 [ATOMIC_DELETE] Preparing atomic deletion state for: {doc_id}")
+
+        deletion_state = {
+            'timestamp': time.time(),
+            'doc_id': doc_id,
+            'initial_doc_count': len(self._index.ref_doc_info) if hasattr(self._index, 'ref_doc_info') else 0,
+            'document_existed': False,
+            'document_metadata': None,
+            'operation_phase': 'preparation'
+        }
+
+        # Check if document exists and capture metadata
+        try:
+            if hasattr(self._index, 'ref_doc_info') and doc_id in self._index.ref_doc_info:
+                deletion_state['document_existed'] = True
+                deletion_state['document_metadata'] = self._index.ref_doc_info.get(doc_id)
+                logger.info(f"✅ [ATOMIC_DELETE] Document {doc_id} exists and metadata captured")
+            else:
+                logger.warning(f"⚠️ [ATOMIC_DELETE] Document {doc_id} not found in index")
+        except Exception as e:
+            logger.warning(f"⚠️ [ATOMIC_DELETE] Error checking document existence: {e}")
+
+        logger.info(f"✅ [ATOMIC_DELETE] Atomic deletion state prepared for: {doc_id}")
+        return deletion_state
+
+    def _execute_atomic_deletion(self, doc_id: str, deletion_state: dict) -> None:
+        """Execute atomic deletion operation."""
+        logger.info(f"🔧 [ATOMIC_DELETE] Executing atomic deletion for: {doc_id}")
+
+        if not deletion_state['document_existed']:
+            logger.warning(f"⚠️ [ATOMIC_DELETE] Document {doc_id} does not exist, deletion skipped")
+            return
+
+        deletion_state['operation_phase'] = 'deletion'
+
+        # Perform the deletion with graceful degradation
+        try:
+            logger.info(f"🗑️ [ATOMIC_DELETE] Deleting document from index and docstore: {doc_id}")
+            self._index.delete_ref_doc(doc_id, delete_from_docstore=True)
+            logger.info(f"✅ [ATOMIC_DELETE] Document deletion command completed for: {doc_id}")
+        except Exception as e:
+            # Check if this is a missing collection error
+            if "Collection" in str(e) and "not found" in str(e):
+                logger.warning(f"⚠️ [ATOMIC_DELETE] Vector collection missing, attempting graceful degradation for: {doc_id}")
+                success = self._handle_graceful_deletion(doc_id, deletion_state)
+                if success:
+                    logger.info(f"✅ [ATOMIC_DELETE] Graceful deletion completed for: {doc_id}")
+                else:
+                    logger.error(f"❌ [ATOMIC_DELETE] Graceful deletion failed for: {doc_id}")
+                    raise RuntimeError(f"Document deletion failed: {e}")
+            else:
+                logger.error(f"❌ [ATOMIC_DELETE] Failed to delete document {doc_id}: {e}")
+                raise RuntimeError(f"Document deletion failed: {e}")
+
+        deletion_state['operation_phase'] = 'persistence'
+
+        # Persist the deletion
+        try:
+            logger.info(f"💾 [ATOMIC_DELETE] Persisting deletion to disk for: {doc_id}")
+            self._save_index()
+            logger.info(f"✅ [ATOMIC_DELETE] Deletion persistence completed for: {doc_id}")
+        except Exception as e:
+            logger.error(f"❌ [ATOMIC_DELETE] Failed to persist deletion for {doc_id}: {e}")
+            raise RuntimeError(f"Deletion persistence failed: {e}")
+
+        deletion_state['operation_phase'] = 'completed'
+
+    def _verify_atomic_deletion(self, doc_id: str, deletion_state: dict) -> None:
+        """Verify that atomic deletion completed successfully."""
+        logger.info(f"🔍 [ATOMIC_DELETE] Verifying atomic deletion for: {doc_id}")
+
+        if not deletion_state['document_existed']:
+            logger.info(f"✅ [ATOMIC_DELETE] Verification skipped - document did not exist")
+            return
+
+        # Verify document no longer exists in index
+        try:
+            if hasattr(self._index, 'ref_doc_info') and doc_id in self._index.ref_doc_info:
+                raise RuntimeError(f"Document {doc_id} still exists in index after deletion")
+
+            logger.info(f"✅ [ATOMIC_DELETE] Document {doc_id} confirmed removed from index")
+        except AttributeError:
+            logger.warning(f"⚠️ [ATOMIC_DELETE] Cannot verify index state - ref_doc_info not accessible")
+
+        # Verify document count decreased
+        try:
+            current_doc_count = len(self._index.ref_doc_info) if hasattr(self._index, 'ref_doc_info') else 0
+            expected_count = deletion_state['initial_doc_count'] - 1
+
+            if current_doc_count != expected_count:
+                logger.warning(f"⚠️ [ATOMIC_DELETE] Document count mismatch: expected {expected_count}, found {current_doc_count}")
+            else:
+                logger.info(f"✅ [ATOMIC_DELETE] Document count verification successful")
+
+        except Exception as e:
+            logger.warning(f"⚠️ [ATOMIC_DELETE] Error verifying document count: {e}")
+
+        logger.info(f"✅ [ATOMIC_DELETE] Atomic deletion verification completed for: {doc_id}")
+
+    def _recover_from_failed_deletion(self, doc_id: str, deletion_state: dict) -> None:
+        """Attempt to recover from a failed deletion operation."""
+        logger.warning(f"🔄 [ATOMIC_DELETE] Attempting recovery from failed deletion: {doc_id}")
+
+        # For deletion, recovery is mainly about ensuring consistent state
+        # If deletion partially succeeded, complete it; if it failed, ensure document still exists properly
+
+        try:
+            # Check current state
+            doc_exists = hasattr(self._index, 'ref_doc_info') and doc_id in self._index.ref_doc_info
+
+            if not doc_exists and deletion_state['document_existed']:
+                # Deletion succeeded but persistence might have failed - retry persistence
+                logger.info(f"🔄 [ATOMIC_DELETE] Document deleted but persistence uncertain, retrying save")
+                self._save_index()
+                logger.info(f"✅ [ATOMIC_DELETE] Recovery persistence completed")
+
+            elif doc_exists and deletion_state['operation_phase'] in ['deletion', 'persistence']:
+                # Deletion failed partway through - retry deletion
+                logger.info(f"🔄 [ATOMIC_DELETE] Retrying deletion for: {doc_id}")
+                self._index.delete_ref_doc(doc_id, delete_from_docstore=True)
+                self._save_index()
+                logger.info(f"✅ [ATOMIC_DELETE] Recovery deletion completed")
+
+        except Exception as e:
+            logger.error(f"❌ [ATOMIC_DELETE] Recovery failed: {e}")
+            raise
+
+    def _log_deletion_inconsistency(self, doc_id: str, deletion_state: dict,
+                                  original_error: Exception, recovery_error: Exception) -> None:
+        """Log details for manual recovery when deletion leaves system in inconsistent state."""
+        logger.critical(f"🚨 [ATOMIC_DELETE] CRITICAL: Deletion inconsistency for document {doc_id}!")
+        logger.critical(f"🚨 [ATOMIC_DELETE] Original error: {original_error}")
+        logger.critical(f"🚨 [ATOMIC_DELETE] Recovery error: {recovery_error}")
+        logger.critical(f"🚨 [ATOMIC_DELETE] Deletion state: {deletion_state}")
+        logger.critical(f"🚨 [ATOMIC_DELETE] Manual intervention required for document: {doc_id}")
+
+    def _handle_graceful_deletion(self, doc_id: str, deletion_state: dict) -> bool:
+        """Handle graceful deletion when vector store is unavailable."""
+        logger.info(f"🆘 [GRACEFUL_DELETE] Starting graceful deletion for: {doc_id}")
+
+        try:
+            # Step 1: Remove from document store only (bypass vector store)
+            if hasattr(self.storage_context, 'docstore') and self.storage_context.docstore:
+                logger.info(f"📄 [GRACEFUL_DELETE] Removing from document store: {doc_id}")
+                try:
+                    self.storage_context.docstore.delete_document(doc_id)
+                    logger.info(f"✅ [GRACEFUL_DELETE] Document removed from docstore")
+                except Exception as e:
+                    logger.warning(f"⚠️ [GRACEFUL_DELETE] Could not remove from docstore: {e}")
+                    # Continue with other cleanup steps
+
+            # Step 2: Remove from index store (metadata only)
+            if hasattr(self._index, 'ref_doc_info') and doc_id in self._index.ref_doc_info:
+                logger.info(f"📚 [GRACEFUL_DELETE] Removing from index metadata: {doc_id}")
+                del self._index.ref_doc_info[doc_id]
+                logger.info(f"✅ [GRACEFUL_DELETE] Document removed from index metadata")
+
+            # Step 3: Update internal index state
+            if hasattr(self._index, '_docstore_cache'):
+                self._index._docstore_cache.pop(doc_id, None)
+
+            # Step 4: Persist changes to disk
+            logger.info(f"💾 [GRACEFUL_DELETE] Persisting graceful deletion changes")
+            try:
+                # Save document store changes
+                if hasattr(self.storage_context.docstore, 'persist'):
+                    self.storage_context.docstore.persist()
+
+                # Save index changes
+                if hasattr(self.storage_context.index_store, 'persist'):
+                    self.storage_context.index_store.persist()
+
+                logger.info(f"✅ [GRACEFUL_DELETE] Persistence completed")
+
+            except Exception as persist_e:
+                logger.warning(f"⚠️ [GRACEFUL_DELETE] Persistence warning: {persist_e}")
+                # Continue even if persistence has issues
+
+            # Mark as gracefully deleted in state
+            deletion_state['graceful_deletion'] = True
+            deletion_state['vector_store_bypassed'] = True
+
+            logger.info(f"✅ [GRACEFUL_DELETE] Graceful deletion completed for: {doc_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ [GRACEFUL_DELETE] Graceful deletion failed for {doc_id}: {e}")
+            return False
+
+
+class SimpleIngestComponent(BaseIngestComponentWithIndex):
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
+
+    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+        logger.info("🔧 [INGEST_COMPONENT] Starting ingestion of file_name=%s", file_name)
+        logger.info("🔧 [INGEST_COMPONENT] File path: %s", file_data)
+
+        # Check file before processing
+        if file_data.exists():
+            file_size = file_data.stat().st_size
+            logger.info("🔧 [INGEST_COMPONENT] File exists, size: %d bytes", file_size)
+        else:
+            logger.error("🔧 [INGEST_COMPONENT] File does not exist: %s", file_data)
+            return []
+
+        try:
+            logger.info("🔧 [INGEST_COMPONENT] Transforming file into documents...")
+            documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+            logger.info("🔧 [INGEST_COMPONENT] Transformed file=%s into count=%d documents",
+                       file_name, len(documents))
+
+            if documents:
+                logger.info("🔧 [INGEST_COMPONENT] Saving %d documents in the index and doc store", len(documents))
+                saved_docs = self._save_docs(documents)
+                logger.info("🔧 [INGEST_COMPONENT] ✅ Successfully saved %d documents for file=%s",
+                           len(saved_docs), file_name)
+                return saved_docs
+            else:
+                logger.warning("🔧 [INGEST_COMPONENT] No documents created from file=%s", file_name)
+                return []
+
+        except Exception as e:
+            logger.error("🔧 [INGEST_COMPONENT] ❌ Error ingesting file=%s: %s", file_name, e, exc_info=True)
+            return []
+
+    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+        saved_documents = []
+        for file_name, file_data in files:
+            documents = IngestionHelper.transform_file_into_documents(
+                file_name, file_data
+            )
+            saved_documents.extend(self._save_docs(documents))
+        return saved_documents
+
+    def _save_docs(self, documents: list[Document]) -> list[Document]:
+        import time
+        logger.info("💾 [SAVE_DOCS] Starting atomic document save process with %d documents", len(documents))
+
+        # Log document details
+        for i, doc in enumerate(documents):
+            logger.info("💾 [SAVE_DOCS] Document %d: ID=%s, metadata=%s",
+                       i+1, doc.doc_id, doc.metadata)
+
+        with self._index_thread_lock:
+            logger.info("💾 [SAVE_DOCS] Acquired thread lock for atomic operation")
+
+            # Prepare for atomic operation
+            operation_state = self._prepare_atomic_operation(documents)
+
+            try:
+                # Execute atomic save operation
+                result = self._execute_atomic_save(documents, operation_state)
+
+                # Verify operation success
+                self._verify_atomic_operation(documents, operation_state)
+
+                logger.info("✅ [SAVE_DOCS] Atomic document save completed successfully")
+                return result
+
+            except Exception as e:
+                logger.error("❌ [SAVE_DOCS] Atomic operation failed, initiating rollback: %s", e, exc_info=True)
+
+                # Attempt rollback
+                try:
+                    self._rollback_atomic_operation(documents, operation_state)
+                    logger.info("✅ [SAVE_DOCS] Rollback completed successfully")
+                except Exception as rollback_error:
+                    logger.error("❌ [SAVE_DOCS] CRITICAL: Rollback failed: %s", rollback_error, exc_info=True)
+                    # System is in inconsistent state - log details for manual recovery
+                    self._log_inconsistent_state(documents, operation_state, e, rollback_error)
+
+                raise
+
+        logger.info("💾 [SAVE_DOCS] Released thread lock")
+
+    def _prepare_atomic_operation(self, documents: list[Document]) -> dict:
+        """Prepare state information for atomic operation and potential rollback."""
+        import time
+        logger.info("🔧 [ATOMIC] Preparing atomic operation state...")
+
+        # Capture initial node count (not document count - nodes are what actually get stored)
+        initial_nodes = {}
+        if hasattr(self._index, 'index_struct') and hasattr(self._index.index_struct, 'nodes_dict'):
+            initial_nodes = dict(self._index.index_struct.nodes_dict)
+
+        operation_state = {
+            'timestamp': time.time(),
+            'document_ids': [doc.doc_id for doc in documents],
+            'initial_nodes': initial_nodes,
+            'backup_created': False,
+            'documents_inserted': [],
+            'operation_phase': 'preparation'
+        }
+
+        # Create storage state backup for rollback
+        try:
+            operation_state['backup_created'] = self._create_storage_backup(operation_state)
+            logger.info("✅ [ATOMIC] Storage backup created successfully")
+        except Exception as e:
+            logger.warning("⚠️ [ATOMIC] Could not create storage backup: %s", e)
+
+        logger.info("✅ [ATOMIC] Atomic operation state prepared")
+        return operation_state
+
+    def _execute_atomic_save(self, documents: list[Document], operation_state: dict) -> list[Document]:
+        """Execute atomic save operation with detailed tracking."""
+        logger.info("🔧 [ATOMIC] Executing atomic save operation...")
+
+        operation_state['operation_phase'] = 'insertion'
+
+        # Insert documents with tracking
+        for i, document in enumerate(documents, 1):
+            try:
+                logger.info("💾 [ATOMIC] Inserting document %d/%d: %s", i, len(documents), document.doc_id)
+
+                # Verify document doesn't already exist
+                # BUGFIX: Wrap in try-except to handle storage inconsistencies
+                try:
+                    if hasattr(self._index, 'ref_doc_info') and document.doc_id in self._index.ref_doc_info:
+                        logger.warning("⚠️ [ATOMIC] Document %s already exists, will overwrite", document.doc_id)
+                except (ValueError, KeyError) as e:
+                    # Storage inconsistency detected (orphaned nodes in index)
+                    logger.warning("⚠️ [ATOMIC] Cannot check for duplicate (storage inconsistency): %s", e)
+                    logger.info("🔄 [ATOMIC] Proceeding with insert anyway")
+
+                # Insert into the index (this creates nodes from the document and adds to vector store)
+                # Insert into the index (this creates nodes from the document and adds to vector store)
+                self._index.insert(document, show_progress=False)
+
+                # CRITICAL FIX FOR DOCSTORE: Explicitly ensure document is stored in docstore
+                # VectorStoreIndex.insert() only creates nodes, not the full document in docstore
+                if hasattr(self._index.storage_context, 'docstore'):
+                    docstore = self._index.storage_context.docstore
+                    
+                    try:
+                        # Add the document to docstore with full text to populate docstore/data
+                        # This is REQUIRED for list_ingested() to work
+                        docstore.add_documents([document], allow_update=True, store_text=True)
+                        logger.info("💾 [ATOMIC] Added document to docstore/data: %s", document.doc_id)
+                        
+                        # CRITICAL: Also set the document hash in metadata
+                        if hasattr(docstore, 'set_document_hash'):
+                            import hashlib
+                            doc_text = document.get_content()
+                            doc_hash = hashlib.sha256(doc_text.encode()).hexdigest()
+                            docstore.set_document_hash(document.doc_id, doc_hash)
+                            logger.debug("💾 [ATOMIC] Set document hash in docstore/metadata: %s", document.doc_id)
+                        
+                    except Exception as docstore_error:
+                        logger.error("❌ [ATOMIC] Failed to add document to docstore: %s", docstore_error)
+                        raise
+
+                operation_state['documents_inserted'].append(document.doc_id)
+
+                logger.info("✅ [ATOMIC] Successfully inserted document %d/%d", i, len(documents))
+
+            except Exception as e:
+                # Check for dimension mismatch error
+                if "could not broadcast input array from shape (768,) into shape (384,)" in str(e):
+                    logger.error("❌ [ATOMIC] Dimension mismatch detected - collection created with wrong dimensions")
+                    logger.info("🚑 [ATOMIC] Attempting to recreate collection with correct dimensions...")
+
+                    try:
+                        # Force recreate collection with correct dimensions
+                        self._recreate_collection_with_correct_dimensions()
+                        logger.info("✅ [ATOMIC] Collection recreated successfully, retrying insert...")
+
+                        # Retry the insert operation
+                        self._index.insert(document)
+                        operation_state['documents_inserted'].append(document.doc_id)
+                        logger.info("✅ [ATOMIC] Successfully inserted document %d/%d after collection recreation", i, len(documents))
+                        continue
+
+                    except Exception as recreate_error:
+                        logger.error("❌ [ATOMIC] Collection recreation failed: %s", recreate_error)
+                        raise RuntimeError(f"Document insertion failed due to dimension mismatch and collection recreation failed: {recreate_error}")
+
+                logger.error("❌ [ATOMIC] Failed to insert document %d/%d (%s): %s",
+                           i, len(documents), document.doc_id, e)
+                raise RuntimeError(f"Document insertion failed at document {i}: {e}")
+
+        # Verify all documents were inserted by checking nodes were created in the index
+        # index.insert() creates nodes from documents and adds them to index_struct.nodes_dict
+        try:
+            # Count nodes in the index (not documents - each document may create multiple nodes)
+            if hasattr(self._index, 'index_struct') and hasattr(self._index.index_struct, 'nodes_dict'):
+                current_node_count = len(self._index.index_struct.nodes_dict)
+                initial_node_count = len(operation_state.get('initial_nodes', {}))
+                new_nodes_count = current_node_count - initial_node_count
+
+                logger.info("🔍 [ATOMIC] Node count verification: initial=%d, current=%d, new=%d",
+                           initial_node_count, current_node_count, new_nodes_count)
+
+                # Verify that at least some nodes were created (each document creates 1+ nodes)
+                if new_nodes_count == 0:
+                    raise RuntimeError(f"No nodes were created from {len(documents)} documents - insertion may have failed")
+
+                logger.info("✅ [ATOMIC] Verified %d new nodes created from %d documents", new_nodes_count, len(documents))
+            else:
+                logger.warning("⚠️ [ATOMIC] Cannot verify node count - index_struct.nodes_dict not available")
+        except Exception as e:
+            logger.warning("⚠️ [ATOMIC] Could not verify node count: %s", e)
+            # Don't fail on verification errors - the insertion may have succeeded
+
+        operation_state['operation_phase'] = 'persistence'
+
+        # Persist the index atomically
+        try:
+            logger.info("💾 [ATOMIC] Starting atomic index persistence...")
+            self._save_index()
+            logger.info("✅ [ATOMIC] Atomic index persistence completed")
+        except Exception as e:
+            logger.error("❌ [ATOMIC] Index persistence failed: %s", e)
+            raise RuntimeError(f"Index persistence failed: {e}")
+
+        operation_state['operation_phase'] = 'completed'
+        return documents
+
+    def _verify_atomic_operation(self, documents: list[Document], operation_state: dict) -> None:
+        """Verify that the atomic operation completed successfully."""
+        logger.info("🔍 [ATOMIC] Verifying atomic operation completion...")
+
+        # Verify nodes were persisted correctly by checking index_struct
+        try:
+            if hasattr(self._index, 'index_struct') and hasattr(self._index.index_struct, 'nodes_dict'):
+                final_node_count = len(self._index.index_struct.nodes_dict)
+                initial_node_count = len(operation_state.get('initial_nodes', {}))
+
+                logger.info("🔍 [ATOMIC] Final verification: initial_nodes=%d, final_nodes=%d",
+                           initial_node_count, final_node_count)
+
+                if final_node_count <= initial_node_count:
+                    raise RuntimeError(f"Verification failed: no new nodes after persistence (initial={initial_node_count}, final={final_node_count})")
+
+                logger.info("✅ [ATOMIC] Atomic operation verification successful - %d nodes persisted",
+                           final_node_count - initial_node_count)
+            else:
+                logger.warning("⚠️ [ATOMIC] Cannot verify operation - index_struct not available")
+        except Exception as e:
+            logger.error("❌ [ATOMIC] Verification failed: %s", e)
+            raise
+
+    def _recreate_collection_with_correct_dimensions(self) -> None:
+        """Recreate Qdrant collection with correct embedding dimensions."""
+        logger.info("🚑 [COLLECTION_RECREATE] Starting collection recreation with correct dimensions...")
+
+        try:
+            # Get vector store client and collection name
+            vector_store = self.storage_context.vector_store
+            if not hasattr(vector_store, 'client'):
+                raise RuntimeError("Vector store does not have a client")
+
+            client = vector_store.client
+            collection_name = getattr(vector_store, 'collection_name', 'internal_assistant_documents')
+
+            # Get correct embedding dimension from settings
+            from internal_assistant.settings.settings import settings
+            embedding_settings = settings().embedding
+            embedding_dim = getattr(embedding_settings, 'embed_dim', 768)
+
+            logger.info(f"🚑 [COLLECTION_RECREATE] Deleting existing collection: {collection_name}")
+
+            # Delete existing collection
+            try:
+                client.delete_collection(collection_name)
+                logger.info(f"✅ [COLLECTION_RECREATE] Collection deleted successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ [COLLECTION_RECREATE] Collection deletion warning (may not exist): {e}")
+
+            # Recreate collection with correct dimensions
+            from qdrant_client.models import Distance, VectorParams
+
+            logger.info(f"🚑 [COLLECTION_RECREATE] Creating collection with {embedding_dim} dimensions...")
+
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config=VectorParams(
+                    size=embedding_dim,
+                    distance=Distance.COSINE,
+                ),
+            )
+
+            logger.info(f"✅ [COLLECTION_RECREATE] Collection created successfully with {embedding_dim} dimensions")
+
+        except Exception as e:
+            logger.error(f"❌ [COLLECTION_RECREATE] Failed to recreate collection: {e}")
+            raise
+
+    def _rollback_atomic_operation(self, documents: list[Document], operation_state: dict) -> None:
+        """Rollback atomic operation to previous state."""
+        logger.warning("🔄 [ATOMIC] Initiating atomic operation rollback...")
+
+        # Remove documents that were successfully inserted
+        removed_count = 0
+        for doc_id in operation_state['documents_inserted']:
+            try:
+                if hasattr(self._index, 'ref_doc_info') and doc_id in self._index.ref_doc_info:
+                    self._index.delete_ref_doc(doc_id, delete_from_docstore=True)
+                    removed_count += 1
+                    logger.info("🔄 [ATOMIC] Rolled back document: %s", doc_id)
+            except Exception as e:
+                logger.error("❌ [ATOMIC] Failed to rollback document %s: %s", doc_id, e)
+
+        # Verify rollback by checking node count
+        try:
+            if hasattr(self._index, 'index_struct') and hasattr(self._index.index_struct, 'nodes_dict'):
+                current_node_count = len(self._index.index_struct.nodes_dict)
+                initial_node_count = len(operation_state.get('initial_nodes', {}))
+                if current_node_count == initial_node_count:
+                    logger.info("✅ [ATOMIC] Rollback verification successful: restored to %d nodes", current_node_count)
+                else:
+                    logger.warning("⚠️ [ATOMIC] Rollback verification: expected %d nodes, found %d",
+                               initial_node_count, current_node_count)
+        except Exception as e:
+            logger.error("❌ [ATOMIC] Rollback verification error: %s", e)
+
+        # Attempt to persist rollback state
+        try:
+            self._save_index()
+            logger.info("✅ [ATOMIC] Rollback state persisted")
+        except Exception as e:
+            logger.error("❌ [ATOMIC] Failed to persist rollback state: %s", e)
+
+    def _create_storage_backup(self, operation_state: dict) -> bool:
+        """Create a backup of storage state for rollback purposes."""
+        try:
+            # For now, just store the current document IDs
+            # In a more robust implementation, this could backup actual data
+            operation_state['backup_doc_ids'] = set(self._index.ref_doc_info.keys()) if hasattr(self._index, 'ref_doc_info') else set()
+            return True
+        except Exception:
+            return False
+
+    def _log_inconsistent_state(self, documents: list[Document], operation_state: dict,
+                               original_error: Exception, rollback_error: Exception) -> None:
+        """Log details for manual recovery when system is in inconsistent state."""
+        logger.critical("🚨 [ATOMIC] CRITICAL: System in inconsistent state!")
+        logger.critical("🚨 [ATOMIC] Original error: %s", original_error)
+        logger.critical("🚨 [ATOMIC] Rollback error: %s", rollback_error)
+        logger.critical("🚨 [ATOMIC] Operation state: %s", operation_state)
+        logger.critical("🚨 [ATOMIC] Documents involved: %s", [doc.doc_id for doc in documents])
+        logger.critical("🚨 [ATOMIC] Manual intervention required for data consistency")
+
+
+class BatchIngestComponent(BaseIngestComponentWithIndex):
+    """Parallelize the file reading and parsing on multiple CPU core.
+
+    This also makes the embeddings to be computed in batches (on GPU or CPU).
+    """
+
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        count_workers: int,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
+        # Make an efficient use of the CPU and GPU, the embedding
+        # must be in the transformations
+        assert (
+            len(self.transformations) >= 2
+        ), "Embeddings must be in the transformations"
+        assert count_workers > 0, "count_workers must be > 0"
+        self.count_workers = count_workers
+
+        self._file_to_documents_work_pool = multiprocessing.Pool(
+            processes=self.count_workers
+        )
+
+    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+        logger.info("Ingesting file_name=%s", file_name)
+        documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+        logger.info(
+            "Transformed file=%s into count=%s documents", file_name, len(documents)
+        )
+        logger.debug("Saving the documents in the index and doc store")
+        return self._save_docs(documents)
+
+    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+        documents = list(
+            itertools.chain.from_iterable(
+                self._file_to_documents_work_pool.starmap(
+                    IngestionHelper.transform_file_into_documents, files
+                )
+            )
+        )
+        logger.info(
+            "Transformed count=%s files into count=%s documents",
+            len(files),
+            len(documents),
+        )
+        return self._save_docs(documents)
+
+    def _save_docs(self, documents: list[Document]) -> list[Document]:
+        logger.debug("Transforming count=%s documents into nodes", len(documents))
+        nodes = run_transformations(
+            documents,  # type: ignore[arg-type]
+            self.transformations,
+            show_progress=self.show_progress,
+        )
+        # Locking the index to avoid concurrent writes
+        with self._index_thread_lock:
+            logger.info("Inserting count=%s nodes in the index", len(nodes))
+            self._index.insert_nodes(nodes, show_progress=True)
+            for document in documents:
+                self._index.docstore.set_document_hash(
+                    document.get_doc_id(), document.hash
+                )
+            logger.debug("Persisting the index and nodes")
+            # persist the index and nodes
+            self._save_index()
+            logger.debug("Persisted the index and nodes")
+        return documents
+
+
+class ParallelizedIngestComponent(BaseIngestComponentWithIndex):
+    """Parallelize the file ingestion (file reading, embeddings, and index insertion).
+
+    This use the CPU and GPU in parallel (both running at the same time), and
+    reduce the memory pressure by not loading all the files in memory at the same time.
+    """
+
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        count_workers: int,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
+        # To make an efficient use of the CPU and GPU, the embeddings
+        # must be in the transformations (to be computed in batches)
+        assert (
+            len(self.transformations) >= 2
+        ), "Embeddings must be in the transformations"
+        assert count_workers > 0, "count_workers must be > 0"
+        self.count_workers = count_workers
+        # We are doing our own multiprocessing
+        # To do not collide with the multiprocessing of huggingface, we disable it
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        self._ingest_work_pool = multiprocessing.pool.ThreadPool(
+            processes=self.count_workers
+        )
+
+        self._file_to_documents_work_pool = multiprocessing.Pool(
+            processes=self.count_workers
+        )
+
+    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+        logger.info("Ingesting file_name=%s", file_name)
+        # Running in a single (1) process to release the current
+        # thread, and take a dedicated CPU core for computation
+        documents = self._file_to_documents_work_pool.apply(
+            IngestionHelper.transform_file_into_documents, (file_name, file_data)
+        )
+        logger.info(
+            "Transformed file=%s into count=%s documents", file_name, len(documents)
+        )
+        logger.debug("Saving the documents in the index and doc store")
+        return self._save_docs(documents)
+
+    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+        # Lightweight threads, used for parallelize the
+        # underlying IO calls made in the ingestion
+
+        documents = list(
+            itertools.chain.from_iterable(
+                self._ingest_work_pool.starmap(self.ingest, files)
+            )
+        )
+        return documents
+
+    def _save_docs(self, documents: list[Document]) -> list[Document]:
+        logger.debug("Transforming count=%s documents into nodes", len(documents))
+        nodes = run_transformations(
+            documents,  # type: ignore[arg-type]
+            self.transformations,
+            show_progress=self.show_progress,
+        )
+        # Locking the index to avoid concurrent writes
+        with self._index_thread_lock:
+            logger.info("Inserting count=%s nodes in the index", len(nodes))
+            self._index.insert_nodes(nodes, show_progress=True)
+            for document in documents:
+                self._index.docstore.set_document_hash(
+                    document.get_doc_id(), document.hash
+                )
+            logger.debug("Persisting the index and nodes")
+            # persist the index and nodes
+            self._save_index()
+            logger.debug("Persisted the index and nodes")
+        return documents
+
+    def __del__(self) -> None:
+        # We need to do the appropriate cleanup of the multiprocessing pools
+        # when the object is deleted. Using root logger to avoid
+        # the logger to be deleted before the pool
+        logging.debug("Closing the ingest work pool")
+        self._ingest_work_pool.close()
+        self._ingest_work_pool.join()
+        self._ingest_work_pool.terminate()
+        logging.debug("Closing the file to documents work pool")
+        self._file_to_documents_work_pool.close()
+        self._file_to_documents_work_pool.join()
+        self._file_to_documents_work_pool.terminate()
+
+
+class PipelineIngestComponent(BaseIngestComponentWithIndex):
+    """Pipeline ingestion - keeping the embedding worker pool as busy as possible.
+
+    This class implements a threaded ingestion pipeline, which comprises two threads
+    and two queues. The primary thread is responsible for reading and parsing files
+    into documents. These documents are then placed into a queue, which is
+    distributed to a pool of worker processes for embedding computation. After
+    embedding, the documents are transferred to another queue where they are
+    accumulated until a threshold is reached. Upon reaching this threshold, the
+    accumulated documents are flushed to the document store, index, and vector
+    store.
+
+    Exception handling ensures robustness against erroneous files. However, in the
+    pipelined design, one error can lead to the discarding of multiple files. Any
+    discarded files will be reported.
+    """
+
+    NODE_FLUSH_COUNT = 5000  # Save the index every # nodes.
+
+    def __init__(
+        self,
+        storage_context: StorageContext,
+        embed_model: EmbedType,
+        transformations: list[TransformComponent],
+        count_workers: int,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
+        self.count_workers = count_workers
+        assert (
+            len(self.transformations) >= 2
+        ), "Embeddings must be in the transformations"
+        assert count_workers > 0, "count_workers must be > 0"
+        self.count_workers = count_workers
+        # We are doing our own multiprocessing
+        # To do not collide with the multiprocessing of huggingface, we disable it
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        # doc_q stores parsed files as Document Segments.
+        # Using a shallow queue causes the filesystem parser to block
+        # when it reaches capacity. This ensures it doesn't outpace the
+        # computationally intensive embeddings phase, avoiding unnecessary
+        # memory consumption.  The semaphore is used to bound the async worker
+        # embedding computations to cause the doc Q to fill and block.
+        self.doc_semaphore = multiprocessing.Semaphore(
+            self.count_workers
+        )  # limit the doc queue to # items.
+        self.doc_q: Queue[tuple[str, str | None, list[Document] | None]] = Queue(20)
+        # node_q stores documents parsed into nodes (embeddings).
+        # Larger queue size so we don't block the embedding workers during a slow
+        # index update.
+        self.node_q: Queue[
+            tuple[str, str | None, list[Document] | None, list[BaseNode] | None]
+        ] = Queue(40)
+        threading.Thread(target=self._doc_to_node, daemon=True).start()
+        threading.Thread(target=self._write_nodes, daemon=True).start()
+
+    def _doc_to_node(self) -> None:
+        # Parse documents into nodes
+        with multiprocessing.pool.ThreadPool(processes=self.count_workers) as pool:
+            while True:
+                try:
+                    cmd, file_name, documents = self.doc_q.get(
+                        block=True
+                    )  # Documents for a file
+                    if cmd == "process":
+                        # Push CPU/GPU embedding work to the worker pool
+                        # Acquire semaphore to control access to worker pool
+                        self.doc_semaphore.acquire()
+                        pool.apply_async(
+                            self._doc_to_node_worker, (file_name, documents)
+                        )
+                    elif cmd == "quit":
+                        break
+                finally:
+                    if cmd != "process":
+                        self.doc_q.task_done()  # unblock Q joins
+
+    def _doc_to_node_worker(self, file_name: str, documents: list[Document]) -> None:
+        # CPU/GPU intensive work in its own process
+        try:
+            nodes = run_transformations(
+                documents,  # type: ignore[arg-type]
+                self.transformations,
+                show_progress=self.show_progress,
+            )
+            self.node_q.put(("process", file_name, documents, list(nodes)))
+        finally:
+            self.doc_semaphore.release()
+            self.doc_q.task_done()  # unblock Q joins
+
+    def _save_docs(
+        self, files: list[str], documents: list[Document], nodes: list[BaseNode]
+    ) -> None:
+        try:
+            logger.info(
+                f"Saving {len(files)} files ({len(documents)} documents / {len(nodes)} nodes)"
+            )
+            self._index.insert_nodes(nodes)
+            for document in documents:
+                self._index.docstore.set_document_hash(
+                    document.get_doc_id(), document.hash
+                )
+            self._save_index()
+        except Exception:
+            # Tell the user so they can investigate these files
+            logger.exception(f"Processing files {files}")
+        finally:
+            # Clearing work, even on exception, maintains a clean state.
+            nodes.clear()
+            documents.clear()
+            files.clear()
+
+    def _write_nodes(self) -> None:
+        # Save nodes to index.  I/O intensive.
+        node_stack: list[BaseNode] = []
+        doc_stack: list[Document] = []
+        file_stack: list[str] = []
+        while True:
+            try:
+                cmd, file_name, documents, nodes = self.node_q.get(block=True)
+                if cmd in ("flush", "quit"):
+                    if file_stack:
+                        self._save_docs(file_stack, doc_stack, node_stack)
+                    if cmd == "quit":
+                        break
+                elif cmd == "process":
+                    node_stack.extend(nodes)  # type: ignore[arg-type]
+                    doc_stack.extend(documents)  # type: ignore[arg-type]
+                    file_stack.append(file_name)  # type: ignore[arg-type]
+                    # Constant saving is heavy on I/O - accumulate to a threshold
+                    if len(node_stack) >= self.NODE_FLUSH_COUNT:
+                        self._save_docs(file_stack, doc_stack, node_stack)
+            finally:
+                self.node_q.task_done()
+
+    def _flush(self) -> None:
+        self.doc_q.put(("flush", None, None))
+        self.doc_q.join()
+        self.node_q.put(("flush", None, None, None))
+        self.node_q.join()
+
+    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+        documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+        self.doc_q.put(("process", file_name, documents))
+        self._flush()
+        return documents
+
+    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+        docs = []
+        for file_name, file_data in eta(files):
+            try:
+                documents = IngestionHelper.transform_file_into_documents(
+                    file_name, file_data
+                )
+                self.doc_q.put(("process", file_name, documents))
+                docs.extend(documents)
+            except Exception:
+                logger.exception(f"Skipping {file_data.name}")
+        self._flush()
+        return docs
+
+
+def get_ingestion_component(
+    storage_context: StorageContext,
+    embed_model: EmbedType,
+    transformations: list[TransformComponent],
+    settings: Settings,
+) -> BaseIngestComponent:
+    """Get the ingestion component for the given configuration."""
+    ingest_mode = settings.embedding.ingest_mode
+    if ingest_mode == "batch":
+        return BatchIngestComponent(
+            storage_context=storage_context,
+            embed_model=embed_model,
+            transformations=transformations,
+            count_workers=settings.embedding.count_workers,
+        )
+    elif ingest_mode == "parallel":
+        return ParallelizedIngestComponent(
+            storage_context=storage_context,
+            embed_model=embed_model,
+            transformations=transformations,
+            count_workers=settings.embedding.count_workers,
+        )
+    elif ingest_mode == "pipeline":
+        return PipelineIngestComponent(
+            storage_context=storage_context,
+            embed_model=embed_model,
+            transformations=transformations,
+            count_workers=settings.embedding.count_workers,
+        )
+    else:
+        return SimpleIngestComponent(
+            storage_context=storage_context,
+            embed_model=embed_model,
+            transformations=transformations,
+        )

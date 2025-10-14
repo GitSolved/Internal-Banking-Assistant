@@ -146,6 +146,7 @@ class EmbeddingComponent:
                 )
 
             case "mock":
-                # Not a random number, is the dimensionality used by
-                # the default embedding model
-                self.embedding_model = MockEmbedding(384)
+                # Use the configured embedding dimension from settings
+                # to match production behavior (nomic-embed-text-v1.5 = 768)
+                embed_dim = settings.embedding.embed_dim
+                self.embedding_model = MockEmbedding(embed_dim)

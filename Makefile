@@ -1,3 +1,24 @@
+# Internal Assistant Makefile
+#
+# MODERN POETRY APPROACH (Poetry 2.0+)
+# =====================================
+# This project uses the modern Poetry approach with 'poetry run' commands.
+# 
+# ✅ RECOMMENDED USAGE:
+#   poetry run make run          # Start the application
+#   poetry run make dev          # Development mode
+#   poetry run make test         # Run tests
+# 
+# ❌ DEPRECATED (Poetry < 2.0):
+#   poetry shell                 # No longer available in Poetry 2.0+
+#   make run                     # Won't work without poetry run
+# 
+# For interactive development sessions:
+#   poetry env activate          # Activate environment
+#   make run                     # Run commands
+#   deactivate                   # Deactivate when done
+# =====================================
+
 # Any args passed to the make script, use with $(call args, default_value)
 args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 
@@ -5,24 +26,25 @@ args = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 # Quality checks
 ########################################################################################################################
 
+.PHONY: test
 test:
-	PYTHONPATH=. poetry run pytest tests
+	poetry run pytest tests
 
 test-coverage:
-	PYTHONPATH=. poetry run pytest tests --cov internal_assistant --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
+	poetry run pytest tests --cov src --cov-report term --cov-report=html --cov-report xml --junit-xml=tests-results.xml
 
 black:
 	poetry run black . --check
 
 ruff:
-	poetry run ruff check internal_assistant tests
+	poetry run ruff check src tests
 
 format:
 	poetry run black .
-	poetry run ruff check internal_assistant tests --fix
+	poetry run ruff check src tests --fix
 
 mypy:
-	poetry run mypy internal_assistant
+	poetry run mypy src
 
 check:
 	make format
@@ -30,23 +52,26 @@ check:
 	make compatibility-check
 
 compatibility-check:
-	@echo "Checking dependency compatibility..."
-	poetry run python scripts/manage_compatibility.py --check
+	@echo "🔍 Checking dependency compatibility..."
+	poetry run python tools/system/manage_compatibility.py --check
 
 version-enforce:
-	@echo "Enforcing dependency versions..."
-	poetry run python scripts/manage_compatibility.py --enforce
+	@echo "🔒 Enforcing version requirements..."
+	poetry run python tools/system/manage_compatibility.py --enforce
 
 log-cleanup:
-	@echo "Cleaning up old logs..."
-	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --keep-days 7 --max-size 100
+	@echo "🧹 Cleaning up old log files..."
+	poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7
+
+# Manual cleanup command (run when needed)
+cleanup-logs: log-cleanup
 
 log-cleanup-dry-run:
-	@echo "Checking what logs would be cleaned up..."
-	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --keep-days 7 --max-size 100 --dry-run
+	@echo "🔍 Checking what logs would be cleaned up..."
+	poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7 --dry-run
 
-pre-run: version-enforce log-cleanup
-	@echo "✅ Pre-run checks completed"
+pre-run: log-cleanup
+	@echo "Pre-run checks completed"
 
 ########################################################################################################################
 # Run
@@ -56,10 +81,11 @@ run: pre-run
 	poetry run python -m internal_assistant
 
 dev-windows:
-	(set PGPT_PROFILES=local & poetry run python -m uvicorn internal_assistant.main:app --reload --port 8001)
+	poetry run python -m uvicorn internal_assistant.main:app --reload --reload-exclude="models/cache/*" --port 8001
 
+.PHONY: dev
 dev:
-	PYTHONUNBUFFERED=1 PGPT_PROFILES=local poetry run python -m uvicorn internal_assistant.main:app --reload --port 8001
+	poetry run python -m uvicorn internal_assistant.main:app --reload --reload-exclude="models/cache/*" --port 8001
 
 ########################################################################################################################
 # Security & Production
@@ -94,16 +120,19 @@ production:
 ########################################################################################################################
 
 api-docs:
-	PGPT_PROFILES=mock poetry run python scripts/extract_openapi.py internal_assistant.main:app --out fern/openapi/openapi.json
+	@echo "📚 Generating API documentation..."
+	PGPT_PROFILES=mock poetry run python tools/system/extract_openapi.py internal_assistant.main:app --out docs/api/openapi.json
 
 ingest:
-	@poetry run python scripts/ingest_folder.py $(call args)
+	@echo "📥 Running folder ingestion..."
+	@poetry run python tools/data/ingest_folder.py $(call args)
 
 stats:
-	poetry run python scripts/utils.py stats
+	@echo "📊 Showing database statistics..."
+	poetry run python tools/system/utils.py stats
 
 wipe:
-	@echo "⚠️  WARNING: This will delete ALL stored cybersecurity intelligence data!"
+	@echo "🗑️  Wiping all data..."
 	@echo "This action is IRREVERSIBLE and will remove:"
 	@echo "  - All ingested documents"
 	@echo "  - Vector embeddings"
@@ -112,16 +141,17 @@ wipe:
 	@echo ""
 	@echo "Type 'CONFIRM-WIPE' to proceed:"
 	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-WIPE" ] || exit 1
-	poetry run python scripts/utils.py wipe
+	poetry run python tools/system/utils.py wipe
 
 setup:
-	poetry run python scripts/setup
+	@echo "🔧 Running setup..."
+	poetry run python tools/system/setup
 
 setup-logging:
 	@echo "📋 Setting up logging configuration..."
 	@echo "Available log levels: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET"
 	@echo "Current log files:"
-	poetry run python scripts/logging_control.py show
+	poetry run python tools/maintenance/logging_control.py show
 	@echo ""
 	@echo "To set log level, use: make log-level <LEVEL>"
 	@echo "Example: make log-level DEBUG"
@@ -130,34 +160,34 @@ cleanup-logs:
 	@echo "Cleaning up old log files..."
 	@echo "Keeping the 7 most recent log files..."
 	@echo "Use 'make cleanup-logs-dry-run' to preview what will be removed"
-	poetry run python scripts/manage_logs.py --interactive --keep-count 7
+	poetry run python tools/maintenance/manage_logs.py --interactive --keep-count 7
 
 cleanup-logs-dry-run:
 	@echo "DRY RUN - Previewing log cleanup..."
 	@echo "Keeping the 7 most recent log files..."
-	poetry run python scripts/manage_logs.py --auto --keep-sessions 7 --dry-run
+	poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7 --dry-run
 
 check-model:
 	@echo "🔍 Checking current model configuration..."
-	poetry run python scripts/check_model.py
+	poetry run python tools/maintenance/check_model.py
 
 analyze-models:
 	@echo "🔍 Analyzing model files for duplicates..."
-	poetry run python scripts/analyze_models.py
+	poetry run python tools/maintenance/analyze_models.py
 
 cleanup-models:
-	@echo "🧹 Cleaning up duplicate model files..."
+	@echo "🧹 Cleaning up duplicate models..."
 	@echo "⚠️  This will remove duplicate files to save disk space"
 	@echo "Type 'CONFIRM-CLEANUP' to proceed:"
 	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-CLEANUP" ] || exit 1
-	poetry run python scripts/analyze_models.py --cleanup
+	poetry run python tools/maintenance/analyze_models.py --cleanup
 
 cleanup-unused-models:
-	@echo "🧹 Cleaning up unused model directories..."
+	@echo "🗑️  Removing unused model directories..."
 	@echo "⚠️  This will remove completely unused model directories"
 	@echo "Type 'CONFIRM-REMOVE-UNUSED' to proceed:"
 	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-REMOVE-UNUSED" ] || exit 1
-	poetry run python scripts/cleanup_unused_models.py --cleanup
+	poetry run python tools/maintenance/cleanup_unused_models.py --cleanup
 
 full-model-cleanup:
 	@echo "🧹 FULL MODEL CLEANUP - Duplicates + Unused Directories..."
@@ -165,23 +195,23 @@ full-model-cleanup:
 	@echo "Type 'CONFIRM-FULL-CLEANUP' to proceed:"
 	@read -p "Confirmation: " confirm && [ "$$confirm" = "CONFIRM-FULL-CLEANUP" ] || exit 1
 	@echo "Step 1: Removing duplicate files..."
-	poetry run python scripts/analyze_models.py --cleanup
+	poetry run python tools/maintenance/analyze_models.py --cleanup
 	@echo "Step 2: Removing unused directories..."
-	poetry run python scripts/cleanup_unused_models.py --cleanup
+	poetry run python tools/maintenance/cleanup_unused_models.py --cleanup
 
 log-level:
-	poetry run python scripts/logging_control.py set-level $(call args,INFO)
+	poetry run python tools/maintenance/logging_control.py set-level $(call args,INFO)
 
 show-logs:
-	poetry run python scripts/logging_control.py show
+	poetry run python tools/maintenance/logging_control.py show
 
 tail-logs:
-	poetry run python scripts/logging_control.py tail --lines $(call args,20)
+	poetry run python tools/maintenance/logging_control.py tail --lines $(call args,20)
 
 cleanup-old-logs:
 	@echo "Cleaning up old log files..."
 	@echo "Keeping the $(call args,7) most recent log files..."
-	poetry run python scripts/manage_logs.py --interactive --keep-count $(call args,7)
+	poetry run python tools/maintenance/manage_logs.py --interactive --keep-count $(call args,7)
 
 list:
 	@echo "🔒 CYBERSECURITY PLATFORM - Available Commands:"

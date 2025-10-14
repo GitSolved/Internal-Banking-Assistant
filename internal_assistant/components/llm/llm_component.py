@@ -35,10 +35,9 @@ class LLMComponent:
                 )
             except Exception as e:
                 logger.warning(
-                    f"Failed to download tokenizer {settings.llm.tokenizer}: {e!s}"
-                    f"Please follow the instructions in the documentation to download it if needed: "
-                    f"https://docs.privategpt.dev/installation/getting-started/troubleshooting#tokenizer-setup."
-                    f"Falling back to default tokenizer."
+                    f"Failed to download tokenizer {settings.llm.tokenizer}: {e!s} "
+                    f"Falling back to default tokenizer. "
+                    f"You may need to configure HF_TOKEN environment variable for access to restricted models."
                 )
 
         logger.info("Initializing the LLM in mode=%s", llm_mode)
@@ -77,7 +76,9 @@ class LLMComponent:
 
             case "sagemaker":
                 try:
-                    from internal_assistant.components.llm.custom.sagemaker import SagemakerLLM
+                    from internal_assistant.components.llm.custom.sagemaker import (
+                        SagemakerLLM,
+                    )
                 except ImportError as e:
                     raise ImportError(
                         "Sagemaker dependencies not found, install with `poetry install --extras llms-sagemaker`"
@@ -162,7 +163,10 @@ class LLMComponent:
                 )
 
                 if ollama_settings.autopull_models:
-                    from internal_assistant.utils.ollama import check_connection, pull_model
+                    from internal_assistant.utils.ollama import (
+                        check_connection,
+                        pull_model,
+                    )
 
                     if not check_connection(llm.client):
                         raise ValueError(

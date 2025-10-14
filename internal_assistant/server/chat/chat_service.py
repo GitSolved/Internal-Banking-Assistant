@@ -17,9 +17,13 @@ from llama_index.core.storage import StorageContext
 from llama_index.core.types import TokenGen
 from pydantic import BaseModel, ConfigDict
 
-from internal_assistant.components.embedding.embedding_component import EmbeddingComponent
+from internal_assistant.components.embedding.embedding_component import (
+    EmbeddingComponent,
+)
 from internal_assistant.components.llm.llm_component import LLMComponent
-from internal_assistant.components.node_store.node_store_component import NodeStoreComponent
+from internal_assistant.components.node_store.node_store_component import (
+    NodeStoreComponent,
+)
 from internal_assistant.components.vector_store.vector_store_component import (
     VectorStoreComponent,
 )
@@ -112,17 +116,17 @@ class ChatService:
         try:
             # Get all documents from storage
             all_docs = list(self.storage_context.docstore.docs.values())
-            
+
             file_counts = {}
             unique_files = set()
             total_docs = len(all_docs)
-            
+
             for doc in all_docs:
-                if hasattr(doc, 'metadata') and doc.metadata:
+                if hasattr(doc, "metadata") and doc.metadata:
                     file_name = doc.metadata.get("file_name", "Unknown")
                     unique_files.add(file_name)
                     file_counts[file_name] = file_counts.get(file_name, 0) + 1
-            
+
             return {
                 "total_documents": total_docs,
                 "unique_files": len(unique_files),
@@ -135,20 +139,20 @@ class ChatService:
                 "unique_files": 0,
                 "files_list": [],
                 "documents_per_file": {},
-                "error": str(e)
+                "error": str(e),
             }
 
     def enhance_system_prompt_with_inventory(self, original_prompt: str) -> str:
         """Add system inventory information to the system prompt with enhanced document correlation"""
         inventory = self.get_system_inventory()
-        
+
         if inventory["total_documents"] == 0:
             inventory_text = "\n\nSYSTEM STATUS: You currently have no documents in your knowledge base."
         else:
             files_summary = ", ".join(inventory["files_list"][:5])
             if len(inventory["files_list"]) > 5:
                 files_summary += f" and {len(inventory['files_list']) - 5} more files"
-            
+
             inventory_text = f"""
 
 CYBERSECURITY INTELLIGENCE SYSTEM:
@@ -159,7 +163,7 @@ CYBERSECURITY INTELLIGENCE SYSTEM:
 - You excel at finding correlations and connections between different documents
 - You can identify patterns, inconsistencies, and relationships across your document collection
 - Always prioritize information from your document collection over general knowledge when available"""
-        
+
         return original_prompt + inventory_text
 
     def _chat_engine(
@@ -169,11 +173,11 @@ CYBERSECURITY INTELLIGENCE SYSTEM:
         context_filter: ContextFilter | None = None,
     ) -> BaseChatEngine:
         settings = self.settings
-        
+
         # DISABLED: Enhance system prompt with enhanced cybersecurity intelligence
         # if system_prompt and use_context:
         #     system_prompt = self.enhance_system_prompt_with_inventory(system_prompt)
-        
+
         if use_context:
             vector_index_retriever = self.vector_store_component.get_retriever(
                 index=self.index,
@@ -220,9 +224,11 @@ CYBERSECURITY INTELLIGENCE SYSTEM:
             if chat_engine_input.last_message
             else None
         )
-        
+
         # Validate message to prevent None/empty vectors from breaking vector search
-        if not last_message or (isinstance(last_message, str) and last_message.strip() == ""):
+        if not last_message or (
+            isinstance(last_message, str) and last_message.strip() == ""
+        ):
             # Return a minimal completion gen for empty messages
             completion_gen = CompletionGen(
                 response=iter(["Please provide a valid message."]), sources=[]
@@ -246,7 +252,7 @@ CYBERSECURITY INTELLIGENCE SYSTEM:
             message=last_message.strip() if last_message else "Hello",
             chat_history=chat_history,
         )
-        
+
         # Collect sources from documents with enhanced correlation
         sources = [Chunk.from_node(node) for node in streaming_response.source_nodes]
         completion_gen = CompletionGen(
@@ -284,7 +290,7 @@ CYBERSECURITY INTELLIGENCE SYSTEM:
             message=last_message if last_message is not None else "",
             chat_history=chat_history,
         )
-        
+
         # Collect sources from documents with enhanced correlation
         sources = [Chunk.from_node(node) for node in wrapped_response.source_nodes]
         completion = Completion(response=wrapped_response.response, sources=sources)

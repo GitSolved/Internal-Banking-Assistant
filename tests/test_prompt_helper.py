@@ -6,7 +6,6 @@ from internal_assistant.components.llm.prompt_helper import (
     DefaultPromptStyle,
     Llama2PromptStyle,
     Llama3PromptStyle,
-
     TagPromptStyle,
     get_prompt_style,
 )
@@ -18,7 +17,6 @@ from internal_assistant.components.llm.prompt_helper import (
         ("default", DefaultPromptStyle),
         ("llama2", Llama2PromptStyle),
         ("tag", TagPromptStyle),
-
         ("chatml", ChatMLPromptStyle),
     ],
 )
@@ -65,9 +63,6 @@ def test_tag_prompt_style_format_with_system_prompt():
     )
 
     assert prompt_style.messages_to_prompt(messages) == expected_prompt
-
-
-
 
 
 def test_chatml_prompt_style_format():

@@ -1,0 +1,427 @@
+/* ================================================================
+   Internal Assistant - Responsive Styles
+   ================================================================
+   
+   This file contains responsive design styles for different screen sizes.
+   Breakpoints:
+   - Mobile: < 768px
+   - Tablet: 768px - 1024px
+   - Desktop: > 1024px
+   ================================================================ */
+
+/* ================================
+   Mobile Styles (< 768px)
+   ================================ */
+
+@media (max-width: 767px) {
+    /* Main container */
+    .gradio-container {
+        max-width: 100% !important;
+        padding: 8px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Header adjustments */
+    .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 12px !important;
+        min-height: auto !important;
+    }
+    
+    .header-logo {
+        margin-bottom: 8px !important;
+    }
+    
+    .header-logo img, .internal-logo-img img {
+        height: 80px !important;
+        max-width: 200px !important;
+    }
+    
+    .header-title {
+        font-size: 24px !important;
+    }
+    
+    .header-subtitle {
+        font-size: 16px !important;
+    }
+    
+    /* Sidebar becomes top bar */
+    .sidebar, .gr-column.sidebar-column {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid #2a2d33 !important;
+        max-height: none !important;
+        padding: 8px !important;
+    }
+    
+    /* Tabs stack vertically */
+    .tabs, .gr-tabs {
+        overflow-x: auto !important;
+    }
+    
+    .tab-nav, .gr-tab-nav {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+    
+    .tab-nav button, .gr-tab-nav button, .gr-tab {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    /* Chat component adjustments */
+    .chat-container, .gr-chatbot {
+        height: 400px !important;
+    }
+    
+    .message {
+        max-width: 90% !important;
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+    
+    .chat-input {
+        font-size: 14px !important;
+        min-height: 50px !important;
+    }
+    
+    .chat-buttons {
+        flex-direction: column !important;
+    }
+    
+    .chat-send-btn, .chat-clear-btn {
+        width: 100% !important;
+    }
+    
+    /* Document library adjustments */
+    .doc-library-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    
+    .doc-filters {
+        justify-content: center !important;
+    }
+    
+    .filter-btn {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+    
+    .doc-item {
+        padding: 8px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    
+    .doc-icon {
+        font-size: 20px !important;
+    }
+    
+    .doc-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+        margin-top: 8px !important;
+    }
+    
+    /* Feed component adjustments */
+    .feed-tabs {
+        overflow-x: auto !important;
+    }
+    
+    .feed-tab {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+        white-space: nowrap !important;
+    }
+    
+    .feed-item {
+        padding: 12px !important;
+    }
+    
+    .feed-item-header {
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+    
+    .feed-item-title {
+        font-size: 14px !important;
+    }
+    
+    .feed-item-content {
+        font-size: 13px !important;
+    }
+    
+    /* Sidebar component adjustments */
+    .mode-buttons {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+    }
+    
+    .mode-btn {
+        white-space: nowrap !important;
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .quick-action-btn {
+        width: 100% !important;
+        padding: 10px !important;
+    }
+    
+    /* Buttons */
+    .gr-button, button[type="button"], button[type="submit"] {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Inputs */
+    input[type="text"], input[type="number"], textarea {
+        font-size: 14px !important;
+        padding: 8px !important;
+    }
+    
+    /* Cards */
+    .gr-box, .gr-panel, .card {
+        padding: 12px !important;
+        margin: 4px 0 !important;
+    }
+    
+    /* Hide non-essential elements */
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* ================================
+   Tablet Styles (768px - 1024px)
+   ================================ */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    /* Main container */
+    .gradio-container {
+        max-width: 100% !important;
+        padding: 12px !important;
+    }
+    
+    /* Header adjustments */
+    .header-container {
+        padding: 12px 16px !important;
+    }
+    
+    .header-logo img, .internal-logo-img img {
+        height: 120px !important;
+        max-width: 350px !important;
+    }
+    
+    .header-title {
+        font-size: 28px !important;
+    }
+    
+    .header-subtitle {
+        font-size: 18px !important;
+    }
+    
+    /* Sidebar width adjustment */
+    .sidebar, .gr-column.sidebar-column {
+        width: 280px !important;
+    }
+    
+    /* Chat component */
+    .chat-container, .gr-chatbot {
+        height: 450px !important;
+    }
+    
+    /* Document library */
+    .doc-filters {
+        flex-wrap: wrap !important;
+    }
+    
+    /* Feed component */
+    .feed-item {
+        padding: 14px !important;
+    }
+    
+    /* Buttons slightly smaller */
+    .gr-button, button[type="button"], button[type="submit"] {
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Hide tablet-specific elements */
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* ================================
+   Desktop Styles (> 1024px)
+   ================================ */
+
+@media (min-width: 1025px) {
+    /* Main container - default styles apply */
+    
+    /* Show desktop-only elements */
+    .mobile-only {
+        display: none !important;
+    }
+    
+    .tablet-only {
+        display: none !important;
+    }
+    
+    /* Enhanced hover effects for desktop */
+    .doc-item:hover {
+        transform: translateX(8px) !important;
+    }
+    
+    .feed-item:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 119, 190, 0.2) !important;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-3px) scale(1.05) !important;
+    }
+}
+
+/* ================================
+   Large Desktop (> 1440px)
+   ================================ */
+
+@media (min-width: 1441px) {
+    /* Wider container for large screens */
+    .gradio-container {
+        max-width: 1600px !important;
+    }
+    
+    /* Larger fonts for readability */
+    .gradio-container {
+        font-size: 17px !important;
+    }
+    
+    .header-title {
+        font-size: 36px !important;
+    }
+    
+    .header-subtitle {
+        font-size: 22px !important;
+    }
+    
+    /* More spacious layout */
+    .gr-box, .gr-panel, .card {
+        padding: 20px !important;
+    }
+    
+    .chat-container, .gr-chatbot {
+        height: 600px !important;
+    }
+}
+
+/* ================================
+   Print Styles
+   ================================ */
+
+@media print {
+    /* Light background for printing */
+    * {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* Hide interactive elements */
+    button, .gr-button, input, textarea, .sidebar {
+        display: none !important;
+    }
+    
+    /* Show content only */
+    .chat-container, .document-library, .feed-container {
+        border: 1px solid #ccc !important;
+        page-break-inside: avoid !important;
+    }
+    
+    /* Ensure messages are visible */
+    .message {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .message.user {
+        background: #f0f0f0 !important;
+    }
+}
+
+/* ================================
+   Accessibility Features
+   ================================ */
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    * {
+        border-width: 2px !important;
+    }
+    
+    .gr-button, button {
+        border: 2px solid white !important;
+    }
+    
+    input, textarea {
+        border: 2px solid white !important;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Dark mode preference (already dark by default) */
+@media (prefers-color-scheme: dark) {
+    /* Our default theme is already dark */
+}
+
+/* Light mode preference override */
+@media (prefers-color-scheme: light) {
+    /* Could provide light theme overrides here if needed */
+}
+
+/* ================================
+   Orientation-Specific Styles
+   ================================ */
+
+/* Landscape orientation on mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+    .header-container {
+        min-height: 60px !important;
+        padding: 8px !important;
+    }
+    
+    .header-logo img {
+        height: 50px !important;
+    }
+    
+    .chat-container, .gr-chatbot {
+        height: 300px !important;
+    }
+}
+
+/* Portrait orientation on tablets */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    .sidebar {
+        width: 100% !important;
+        max-height: 200px !important;
+        border-right: none !important;
+        border-bottom: 1px solid #2a2d33 !important;
+    }
+}

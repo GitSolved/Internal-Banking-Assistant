@@ -12,16 +12,17 @@ PRETTY_LOG_FORMAT = (
     "%(asctime)s.%(msecs)03d [%(levelname)-8s] %(name)+25s - %(message)s"
 )
 
-# Create Logs directory if it doesn't exist
-logs_dir = Path("Logs")
-logs_dir.mkdir(exist_ok=True)
+# Create logs directory if it doesn't exist
+logs_dir = Path("local_data/logs")
+logs_dir.mkdir(parents=True, exist_ok=True)
+
 
 def get_next_session_number() -> int:
     """Find the next available session number by checking existing SessionLogN.log files."""
     session_files = list(logs_dir.glob("SessionLog*.log"))
     if not session_files:
         return 1
-    
+
     # Extract numbers from existing session log files
     session_numbers = []
     for file_path in session_files:
@@ -32,28 +33,27 @@ def get_next_session_number() -> int:
                 session_numbers.append(number)
             except ValueError:
                 continue
-    
+
     return max(session_numbers) + 1 if session_numbers else 1
+
 
 # Configure session-based file handler
 session_number = get_next_session_number()
 session_log_file = logs_dir / f"SessionLog{session_number}.log"
 
 file_handler = logging.FileHandler(
-    session_log_file,
-    mode="w",  # Create new session log file
-    encoding="utf-8"
+    session_log_file, mode="w", encoding="utf-8"  # Create new session log file
 )
 
 # Configure logging with both console and file handlers
 logging.basicConfig(
-    level=ROOT_LOG_LEVEL, 
-    format=PRETTY_LOG_FORMAT, 
+    level=ROOT_LOG_LEVEL,
+    format=PRETTY_LOG_FORMAT,
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(),  # Console handler
-        file_handler  # File handler (overwrites each session)
-    ]
+        file_handler,  # File handler (overwrites each session)
+    ],
 )
 
 logging.captureWarnings(True)
@@ -70,4 +70,4 @@ os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
 # os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 # adding tiktoken cache path within repo to be able to run in offline environment.
-os.environ["TIKTOKEN_CACHE_DIR"] = "tiktoken_cache"
+os.environ["TIKTOKEN_CACHE_DIR"] = "local_data/cache"

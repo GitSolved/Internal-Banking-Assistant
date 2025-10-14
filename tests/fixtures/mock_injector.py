@@ -36,7 +36,16 @@ class MockInjector:
     def get(self, interface: type[T]) -> T:
         return self.test_injector.get(interface)
 
+    def clear_cache(self) -> None:
+        """Clear the injector's instance cache to force recreation of singletons."""
+        try:
+            if hasattr(self.test_injector, "_instance_cache"):
+                self.test_injector._instance_cache.clear()
+        except Exception:
+            pass
+
 
 @pytest.fixture
 def injector() -> MockInjector:
+    # Ensure each test gets a completely fresh injector instance
     return MockInjector()

@@ -30,20 +30,37 @@ __pycache__/
 # macOS
 .DS_Store
 
-# PrivateGPT sensitive data - NEVER commit these
+# Build artifacts and generated files
+site/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.coverage.*
+
+# Internal Assistant sensitive data - NEVER commit these
 local_data/
-models/
+data/
 DemoData/
-Logs/
-tiktoken_cache/
+external/
 pgptvenv/
 *.log
 *.db
 *.sqlite
-*.json
 *.env
 *.token
 HF_TOKEN
 OPENAI_API_KEY
 GOOGLE_API_KEY
 AZ_OPENAI_API_KEY
+
+# Tools - generated results and analysis files
+tools/**/*-results.json
+tools/**/results.json
+tools/**/baseline-*.json
+tools/**/dependency-*.json

@@ -238,9 +238,6 @@ class TagPromptStyle(AbstractPromptStyle):
         )
 
 
-
-
-
 class ChatMLPromptStyle(AbstractPromptStyle):
     def _messages_to_prompt(self, messages: Sequence[ChatMessage]) -> str:
         prompt = "<|im_start|>system\n"
@@ -265,11 +262,11 @@ class ChatMLPromptStyle(AbstractPromptStyle):
 
 class FoundationSecPromptStyle(AbstractPromptStyle):
     """Custom prompt style for Foundation-Sec-8B to avoid duplicate <s> tokens."""
-    
+
     def _messages_to_prompt(self, messages: Sequence[ChatMessage]) -> str:
         """Format messages for Foundation-Sec-8B without duplicate tokens."""
         prompt = ""
-        
+
         for message in messages:
             if message.role == MessageRole.SYSTEM:
                 # System message - no special formatting needed
@@ -280,7 +277,7 @@ class FoundationSecPromptStyle(AbstractPromptStyle):
             elif message.role == MessageRole.ASSISTANT:
                 # Assistant message - simple format
                 prompt += f"Assistant: {message.content.strip()}\n"
-        
+
         # Add completion trigger
         prompt += "Assistant: "
         return prompt

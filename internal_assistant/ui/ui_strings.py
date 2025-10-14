@@ -1,4 +1,4 @@
-# Centralized UI strings for PrivateGPT (English)
+# Centralized UI strings for Internal Assistant (English)
 # This file contains all user-facing text that appears in the web interface
 # To change any text in the UI, simply update the value here and restart the application
 
@@ -40,4 +40,4 @@ SIDEBAR_SEARCH = "🔍 Quick Search"
 SIDEBAR_ADVANCED = "⚙️ Advanced Settings"
 
 # Placeholder text in the chat input box (hint text when box is empty)
-CHAT_PLACEHOLDER = "Type your message here..." 
+CHAT_PLACEHOLDER = "Type your message here..."

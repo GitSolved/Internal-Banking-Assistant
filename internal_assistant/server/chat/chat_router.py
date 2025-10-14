@@ -46,7 +46,7 @@ class ChatBody(BaseModel):
                 }
             ]
         },
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed=True,
     )
 
 

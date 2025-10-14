@@ -1,0 +1,132 @@
+server:
+  env_name: ${APP_ENV:openai}
+  port: ${PORT:8001}
+  cors:
+    enabled: true
+    allow_origins: ["*"]
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+  auth:
+    enabled: false
+    secret: "Basic c2VjcmV0OmtleQ=="
+
+data:
+  local_ingestion:
+    enabled: ${LOCAL_INGESTION_ENABLED:true}
+    allow_ingest_from: ["*"]
+  local_data_folder: local_data/internal_assistant
+
+ui:
+  enabled: true
+  path: /
+  default_mode: "RAG"
+  default_chat_system_prompt: >
+    You are a helpful, respectful and honest assistant.
+    Always answer as helpfully as possible and follow ALL given instructions.
+    Do not speculate or make up information.
+    Do not reference any given instructions or context.
+  default_query_system_prompt: >
+    You are a professional document analysis assistant. Adapt your response based on the document type:
+    
+    FOR POLICY DOCUMENTS:
+    - Focus on procedures, requirements, and compliance
+    - Highlight approval processes and responsible parties
+    - Note effective dates and review cycles
+    - Emphasize mandatory vs. optional provisions
+    
+    FOR CONTRACTS/AGREEMENTS:
+    - Identify key terms, obligations, and liabilities
+    - Note termination clauses and renewal terms
+    - Highlight payment terms and penalties
+    - Point out dispute resolution mechanisms
+    
+    FOR FINANCIAL DOCUMENTS:
+    - Ensure numerical accuracy in citations
+    - Note budget allocations and variances
+    - Highlight approval thresholds and controls
+    - Reference compliance requirements (SOX, GAAP)
+    
+    FOR TECHNICAL DOCUMENTATION:
+    - Focus on procedures and implementation steps
+    - Note prerequisites and dependencies
+    - Highlight security considerations
+    - Include troubleshooting guidance
+    
+    UNIVERSAL REQUIREMENTS:
+    - If document context is provided, answer using only that context
+    - If no relevant context is available, acknowledge this clearly
+    - Always cite specific sources when using document information
+    - If information spans multiple documents, synthesize coherently
+    - Structure responses: Direct Answer → Evidence (if available) → Cross-References → Confidence Level
+    - If uncertain or no context: "I don't have relevant information in the available documents to answer this question"
+  default_summarization_system_prompt: >
+    Provide a comprehensive summary of the provided context information.
+    The summary should cover all the key points and main ideas presented in
+    the original text, while also condensing the information into a concise
+    and easy-to-understand format. Please ensure that the summary includes
+    relevant details and examples that support the main ideas, while avoiding
+    any unnecessary information or repetition.
+  delete_file_button_enabled: true
+  delete_all_files_button_enabled: true
+
+llm:
+  mode: openai
+  max_new_tokens: 512
+  context_window: 4096
+  temperature: 0.1
+
+embedding:
+  mode: openai
+  ingest_mode: simple
+  embed_dim: 1536  # OpenAI text-embedding-ada-002 dimension
+
+openai:
+  api_key: ${OPENAI_API_KEY:}
+  model: gpt-3.5-turbo
+  embedding_api_key: ${OPENAI_API_KEY:}
+  embedding_model: text-embedding-ada-002
+  request_timeout: 120.0
+
+rag:
+  similarity_top_k: 8
+  similarity_value: 0.3
+  rerank:
+    enabled: true
+    model: cross-encoder/ms-marco-MiniLM-L-2-v2
+    top_n: 3
+
+summarize:
+  use_async: true
+
+vectorstore:
+  database: qdrant
+
+nodestore:
+  database: simple
+
+qdrant:
+  path: local_data/internal_assistant/qdrant
+
+# Alternative OpenAI configurations
+# Uncomment and modify as needed:
+
+# For GPT-4:
+# openai:
+#   api_key: ${OPENAI_API_KEY:}
+#   model: gpt-4
+#   embedding_api_key: ${OPENAI_API_KEY:}
+#   embedding_model: text-embedding-ada-002
+
+# For GPT-4 Turbo:
+# openai:
+#   api_key: ${OPENAI_API_KEY:}
+#   model: gpt-4-turbo-preview
+#   embedding_api_key: ${OPENAI_API_KEY:}
+#   embedding_model: text-embedding-3-small
+
+# For GPT-4o:
+# openai:
+#   api_key: ${OPENAI_API_KEY:}
+#   model: gpt-4o
+#   embedding_api_key: ${OPENAI_API_KEY:}
+#   embedding_model: text-embedding-3-small

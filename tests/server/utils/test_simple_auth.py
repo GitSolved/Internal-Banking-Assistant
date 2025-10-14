@@ -1,7 +1,7 @@
 """Tests to validate that the simple authentication mechanism is working.
 
 NOTE: We are not testing the switch based on the config in
-      `alpine_assistant.server.utils.auth`. This is not done because of the way the code
+      `internal_assistant.server.utils.auth`. This is not done because of the way the code
       is currently architecture (it is hard to patch the `settings` and the app while
       the tests are directly importing them).
 """

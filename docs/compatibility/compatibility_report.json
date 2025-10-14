@@ -1,0 +1,179 @@
+{
+  "application_version": "0.6.2",
+  "python_version": {
+    "required": "3.11.9",
+    "current": "3.11.9",
+    "compatible": true
+  },
+  "critical_packages": {
+    "fastapi": {
+      "current_version": "0.108.0",
+      "required_min": ">=0.108.0",
+      "required_max": "<0.115.0",
+      "compatible": true
+    },
+    "pydantic": {
+      "current_version": "2.8.2",
+      "required_min": ">=2.8.0",
+      "required_max": "<2.9.0",
+      "compatible": true
+    },
+    "llama-index-core": {
+      "current_version": "0.11.2",
+      "required_min": ">=0.11.2",
+      "required_max": "<0.12.0",
+      "compatible": true
+    },
+    "transformers": {
+      "current_version": "4.55.0",
+      "required_min": ">=4.44.2",
+      "required_max": "<5.0.0",
+      "compatible": true
+    }
+  },
+  "all_packages": {
+    "fastapi": {
+      "current_version": "0.108.0",
+      "required_min": ">=0.108.0",
+      "required_max": "<0.115.0",
+      "compatible": true
+    },
+    "pydantic": {
+      "current_version": "2.8.2",
+      "required_min": ">=2.8.0",
+      "required_max": "<2.9.0",
+      "compatible": true
+    },
+    "gradio": {
+      "current_version": "4.15.0",
+      "required_min": ">=4.15.0",
+      "required_max": "<4.39.0",
+      "compatible": true
+    },
+    "llama-index-core": {
+      "current_version": "0.11.2",
+      "required_min": ">=0.11.2",
+      "required_max": "<0.12.0",
+      "compatible": true
+    },
+    "transformers": {
+      "current_version": "4.55.0",
+      "required_min": ">=4.44.2",
+      "required_max": "<5.0.0",
+      "compatible": true
+    },
+    "torch": {
+      "current_version": "2.8.0",
+      "required_min": ">=2.4.1",
+      "required_max": "<3.0.0",
+      "compatible": true
+    },
+    "llama-index-vector-stores-qdrant": {
+      "current_version": "0.3.3",
+      "required_min": "*",
+      "required_max": "*",
+      "compatible": true
+    },
+    "llama-index-embeddings-huggingface": {
+      "current_version": "0.3.1",
+      "required_min": "*",
+      "required_max": "*",
+      "compatible": true
+    },
+    "sentence-transformers": {
+      "current_version": "3.4.1",
+      "required_min": ">=3.1.1",
+      "required_max": "<4.0.0",
+      "compatible": true
+    },
+    "llama-index-llms-ollama": {
+      "current_version": "0.3.6",
+      "required_min": "*",
+      "required_max": "*",
+      "compatible": true
+    },
+    "llama-index-llms-openai-like": {
+      "current_version": "0.2.0",
+      "required_min": "*",
+      "required_max": "*",
+      "compatible": true
+    },
+    "cryptography": {
+      "current_version": "3.4.8",
+      "required_min": ">=3.1",
+      "required_max": "<4.0.0",
+      "compatible": true
+    },
+    "python-multipart": {
+      "current_version": "0.0.10",
+      "required_min": ">=0.0.10",
+      "required_max": "<1.0.0",
+      "compatible": true
+    },
+    "docx2txt": {
+      "current_version": "0.8",
+      "required_min": ">=0.8",
+      "required_max": "<1.0.0",
+      "compatible": true
+    },
+    "feedparser": {
+      "current_version": "6.0.11",
+      "required_min": ">=6.0.10",
+      "required_max": "<7.0.0",
+      "compatible": true
+    },
+    "aiohttp": {
+      "current_version": "3.12.15",
+      "required_min": ">=3.9.0",
+      "required_max": "<4.0.0",
+      "compatible": true
+    },
+    "beautifulsoup4": {
+      "current_version": "4.13.4",
+      "required_min": ">=4.12.0",
+      "required_max": "<5.0.0",
+      "compatible": true
+    },
+    "psutil": {
+      "current_version": "7.0.0",
+      "required_min": ">=7.0.0",
+      "required_max": "<8.0.0",
+      "compatible": true
+    },
+    "watchdog": {
+      "current_version": "4.0.2",
+      "required_min": ">=4.0.1",
+      "required_max": "<5.0.0",
+      "compatible": true
+    },
+    "pytest": {
+      "current_version": "8.4.1",
+      "required_min": ">=8.0.0",
+      "required_max": "<9.0.0",
+      "compatible": true
+    },
+    "black": {
+      "current_version": "24.10.0",
+      "required_min": ">=24.0.0",
+      "required_max": "<25.0.0",
+      "compatible": true
+    },
+    "ruff": {
+      "current_version": "0.12.8",
+      "required_min": ">=0.0.0",
+      "required_max": "<1.0.0",
+      "compatible": true
+    }
+  },
+  "system_resources": {
+    "memory": {
+      "total_gb": 31.7,
+      "sufficient": true
+    },
+    "disk": {
+      "free_gb": 799.3,
+      "sufficient": true
+    }
+  },
+  "recommendations": []
+}

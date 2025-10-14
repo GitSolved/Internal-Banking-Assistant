@@ -1,0 +1,108 @@
+/* ================================================================
+   FORCE DARK THEME - ULTIMATE OVERRIDE
+   ================================================================
+   
+   This file contains the most aggressive CSS overrides to force
+   a dark theme on all elements, including those that resist
+   normal CSS overrides.
+   ================================================================ */
+
+/* NUCLEAR OPTION: Force black background on absolutely everything */
+html, body, #root, #app, main, 
+.gradio-container, .gradio-app, .app,
+.gradio-interface, .gradio-interface *,
+.gradio-block, .gradio-group, .gradio-row, .gradio-column,
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded,
+.gradio-tabs, .gradio-tab, .gradio-tab-item, .gradio-tabitem,
+.gradio-accordion, .gradio-accordion-item,
+div, section, article, aside, main, footer, header,
+.contain, .wrap, .svelte-*, [class*="svelte"], [class*="panel"], 
+[class*="container"], [class*="wrapper"], [class*="block"], [data-testid],
+* {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Force all panels to have grey backgrounds */
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded, .gradio-group,
+.gradio-accordion, .gradio-tabs, .gradio-tab, .gradio-tabitem,
+.gradio-block, .gradio-row, .gradio-column,
+.sidebar-container, .chat-container, .file-management-section,
+.external-info-section, .cve-tracking-section, .forum-directory-section,
+.mitre-attack-section, .usage-instructions-section {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 8px 0 !important;
+}
+
+/* Force header to be black */
+.header-container, .header-container *, 
+.header-logo, .header-logo *, 
+.header-title, .header-title *, 
+.header-subtitle, .header-subtitle * {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Force all text to be white */
+p, div, span, h1, h2, h3, h4, h5, h6, label, li, td, th, tr {
+    color: #ffffff !important;
+}
+
+/* Force input fields to have dark backgrounds */
+input, textarea, select, .gradio-textbox, .gradio-dropdown {
+    background-color: #232526 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Force buttons to maintain styling but with white text */
+button, .gradio-button {
+    color: #ffffff !important;
+}
+
+/* Force links to be blue */
+a, .gradio-link {
+    color: #0077BE !important;
+}
+
+/* Force tables to have dark backgrounds */
+table, .gradio-dataframe {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+table th, .gradio-dataframe th {
+    background-color: #0077BE !important;
+    color: #ffffff !important;
+}
+
+table td, .gradio-dataframe td {
+    background-color: #232526 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Force any remaining white elements to be black */
+[style*="background-color: white"], 
+[style*="background-color: #ffffff"], 
+[style*="background-color: #fff"],
+[style*="background: white"], 
+[style*="background: #ffffff"], 
+[style*="background: #fff"] {
+    background: #000000 !important;
+    background-color: #000000 !important;
+}
+
+/* Force any remaining white text elements to be white */
+[style*="color: black"], 
+[style*="color: #000000"], 
+[style*="color: #000"] {
+    color: #ffffff !important;
+}

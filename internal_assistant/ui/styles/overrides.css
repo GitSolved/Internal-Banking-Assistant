@@ -1,0 +1,573 @@
+/* ================================================================
+   Internal Assistant - Override Styles
+   ================================================================
+   
+   This file contains override styles to ensure proper rendering
+   and fix any white backgrounds or unwanted styling from Gradio.
+   These styles have high specificity to override default styles.
+   ================================================================ */
+
+/* ULTIMATE OVERRIDE: Force black background on everything, everywhere, always */
+html, body, #root, #app, main, 
+.gradio-container, .gradio-app, .app,
+.gradio-interface, .gradio-interface *,
+.gradio-block, .gradio-group, .gradio-row, .gradio-column,
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded,
+.gradio-tabs, .gradio-tab, .gradio-tab-item, .gradio-tabitem,
+.gradio-accordion, .gradio-accordion-item,
+div, section, article, aside, main, footer, header,
+.contain, .wrap, .svelte-*, [class*="svelte"], [class*="panel"], 
+[class*="container"], [class*="wrapper"], [class*="block"], [data-testid],
+* {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Force header area to be black */
+.header-container, .header-container *, 
+.header-logo, .header-logo *, 
+.header-title, .header-title *, 
+.header-subtitle, .header-subtitle * {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* ================================
+   Global Background Overrides
+   ================================ */
+
+/* Fix white boxes around titles and headers */
+.header-container,
+.header-container *,
+.header-logo,
+.header-logo *,
+.header-title,
+.header-title *,
+.header-subtitle,
+.header-subtitle * {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.header-container {
+    border: 3px solid #0077BE !important;
+}
+
+/* Fix any remaining white backgrounds */
+.gradio-app,
+.gradio-app *,
+.main,
+.main *,
+.contain,
+.contain *,
+.gradio-interface,
+.gradio-interface *,
+.gradio-container,
+.gradio-container *,
+.gradio-block,
+.gradio-block *,
+.gradio-group,
+.gradio-group *,
+.gradio-row,
+.gradio-row *,
+.gradio-column,
+.gradio-column *,
+.gradio-panel,
+.gradio-panel *,
+.gradio-box,
+.gradio-box *,
+.gradio-form,
+.gradio-form *,
+.gradio-padded,
+.gradio-padded *,
+.gradio-tabs,
+.gradio-tabs *,
+.gradio-tab,
+.gradio-tab *,
+.gradio-tabitem,
+.gradio-tabitem *,
+.gradio-accordion,
+.gradio-accordion * {
+    background-color: #000000 !important;
+}
+
+/* Force all panels to have grey backgrounds */
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded, .gradio-group,
+.gradio-accordion, .gradio-tabs, .gradio-tab, .gradio-tabitem,
+.gradio-block, .gradio-row, .gradio-column {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Specific overrides for common elements */
+.gradio-block,
+.gradio-group,
+.gradio-row,
+.gradio-column {
+    background-color: #000000 !important;
+}
+
+/* Fix any iframe or embedded content */
+iframe {
+    background-color: #000000 !important;
+}
+
+/* ================================
+   Message Display Overrides
+   ================================ */
+
+/* Chat messages - clean white text without backgrounds */
+.message,
+.message * {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 2px 0 !important;
+    border-radius: 0 !important;
+}
+
+.message.user,
+.message.user * {
+    background-color: transparent !important;
+    color: #8BC34A !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 2px 0 !important;
+    border-radius: 0 !important;
+}
+
+.message.bot,
+.message.bot * {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 2px 0 !important;
+    border-radius: 0 !important;
+}
+
+/* ================================
+   Input Area Overrides
+   ================================ */
+
+.input-container {
+    background-color: #000000 !important;
+}
+
+textarea,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"] {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+}
+
+/* ================================
+   Dropdown and Select Overrides
+   ================================ */
+
+select,
+.dropdown,
+.gr-dropdown {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #333 !important;
+}
+
+select option,
+.dropdown option {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+}
+
+/* ================================
+   Radio Button Overrides
+   ================================ */
+
+input[type="radio"] {
+    background-color: #232526 !important;
+    border: 2px solid #0077BE !important;
+}
+
+input[type="radio"]:checked {
+    background-color: #0077BE !important;
+}
+
+.gr-radio label {
+    color: #e0e0e0 !important;
+}
+
+/* ================================
+   Checkbox Overrides
+   ================================ */
+
+input[type="checkbox"] {
+    background-color: #232526 !important;
+    border: 2px solid #0077BE !important;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #0077BE !important;
+}
+
+.gr-checkbox label {
+    color: #e0e0e0 !important;
+}
+
+/* ================================
+   Slider Overrides
+   ================================ */
+
+.gr-slider-container {
+    background-color: transparent !important;
+}
+
+.gr-slider-track {
+    background-color: #232526 !important;
+}
+
+.gr-slider-fill {
+    background-color: #0077BE !important;
+}
+
+.gr-slider-thumb {
+    background-color: #0077BE !important;
+    border: 2px solid #e0e0e0 !important;
+}
+
+/* ================================
+   File Upload Overrides
+   ================================ */
+
+.gr-file,
+.gr-file-preview {
+    background-color: #232526 !important;
+    border: 2px dashed #0077BE !important;
+    color: #e0e0e0 !important;
+}
+
+.gr-file:hover {
+    background-color: #2a2d2e !important;
+    border-color: #0099FF !important;
+}
+
+.gr-file.drag-over {
+    background-color: rgba(0, 119, 190, 0.1) !important;
+    border-color: #8BC34A !important;
+}
+
+/* ================================
+   Gallery Overrides
+   ================================ */
+
+.gr-gallery {
+    background-color: #000000 !important;
+}
+
+.gr-gallery-item {
+    background-color: #232526 !important;
+    border: 1px solid #333 !important;
+}
+
+.gr-gallery-item:hover {
+    border-color: #0077BE !important;
+}
+
+/* ================================
+   DataFrame/Table Overrides
+   ================================ */
+
+.gr-dataframe,
+table {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+}
+
+.gr-dataframe th,
+table th {
+    background-color: #0077BE !important;
+    color: #ffffff !important;
+}
+
+.gr-dataframe td,
+table td {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #333 !important;
+}
+
+.gr-dataframe tr:hover td,
+table tr:hover td {
+    background-color: #2a2d2e !important;
+}
+
+/* ================================
+   Progress Bar Overrides
+   ================================ */
+
+.gr-progress-bar {
+    background-color: #232526 !important;
+}
+
+.gr-progress-bar-fill {
+    background-color: #0077BE !important;
+}
+
+/* ================================
+   Loading Spinner Overrides
+   ================================ */
+
+.gr-loading {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.gr-spinner {
+    border-color: #0077BE !important;
+    border-top-color: transparent !important;
+}
+
+/* ================================
+   Error Message Overrides
+   ================================ */
+
+.gr-error {
+    background-color: rgba(255, 82, 82, 0.1) !important;
+    border: 1px solid #FF5252 !important;
+    color: #FF5252 !important;
+}
+
+/* ================================
+   Warning Message Overrides
+   ================================ */
+
+.gr-warning {
+    background-color: rgba(255, 179, 0, 0.1) !important;
+    border: 1px solid #FFB300 !important;
+    color: #FFB300 !important;
+}
+
+/* ================================
+   Info Message Overrides
+   ================================ */
+
+.gr-info {
+    background-color: rgba(0, 119, 190, 0.1) !important;
+    border: 1px solid #0077BE !important;
+    color: #0077BE !important;
+}
+
+/* ================================
+   Success Message Overrides
+   ================================ */
+
+.gr-success {
+    background-color: rgba(139, 195, 74, 0.1) !important;
+    border: 1px solid #8BC34A !important;
+    color: #8BC34A !important;
+}
+
+/* ================================
+   Modal/Dialog Overrides
+   ================================ */
+
+.gr-modal {
+    background-color: #000000 !important;
+    border: 2px solid #0077BE !important;
+}
+
+.gr-modal-header {
+    background-color: #0077BE !important;
+    color: #ffffff !important;
+}
+
+.gr-modal-body {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+}
+
+.gr-modal-footer {
+    background-color: #1a1d23 !important;
+}
+
+/* ================================
+   Tooltip Overrides
+   ================================ */
+
+.gr-tooltip {
+    background-color: #232526 !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #0077BE !important;
+}
+
+/* ================================
+   Context Menu Overrides
+   ================================ */
+
+.context-menu {
+    background-color: #232526 !important;
+    border: 1px solid #0077BE !important;
+}
+
+.context-menu-item {
+    color: #e0e0e0 !important;
+}
+
+.context-menu-item:hover {
+    background-color: #0077BE !important;
+    color: #ffffff !important;
+}
+
+/* ================================
+   Code Block Overrides
+   ================================ */
+
+pre,
+code {
+    background-color: #1a1d23 !important;
+    color: #8BC34A !important;
+    border: 1px solid #333 !important;
+}
+
+.gr-code {
+    background-color: #1a1d23 !important;
+}
+
+/* ================================
+   Markdown Overrides
+   ================================ */
+
+.gr-markdown {
+    color: #e0e0e0 !important;
+}
+
+.gr-markdown h1,
+.gr-markdown h2,
+.gr-markdown h3,
+.gr-markdown h4,
+.gr-markdown h5,
+.gr-markdown h6 {
+    color: #0077BE !important;
+}
+
+.gr-markdown a {
+    color: #0099FF !important;
+}
+
+.gr-markdown a:hover {
+    color: #00BBFF !important;
+}
+
+.gr-markdown blockquote {
+    border-left: 4px solid #0077BE !important;
+    background-color: rgba(0, 119, 190, 0.05) !important;
+}
+
+.gr-markdown code {
+    background-color: #1a1d23 !important;
+    color: #8BC34A !important;
+}
+
+/* ================================
+   JSON Display Overrides
+   ================================ */
+
+.gr-json {
+    background-color: #1a1d23 !important;
+    color: #e0e0e0 !important;
+}
+
+.gr-json-key {
+    color: #0077BE !important;
+}
+
+.gr-json-string {
+    color: #8BC34A !important;
+}
+
+.gr-json-number {
+    color: #FFB300 !important;
+}
+
+.gr-json-boolean {
+    color: #FF5252 !important;
+}
+
+.gr-json-null {
+    color: #6a6a6a !important;
+}
+
+/* ================================
+   COMPREHENSIVE DARK THEME OVERRIDE
+   ================================ */
+
+/* Force everything to be dark */
+*, *::before, *::after {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* All panels and containers get grey background */
+.gradio-panel, .gradio-box, .gradio-form, .gradio-padded, .gradio-group,
+.gradio-accordion, .gradio-tabs, .gradio-tab, .gradio-tabitem,
+.gradio-block, .gradio-row, .gradio-column,
+.sidebar-container, .chat-container, .file-management-section,
+.external-info-section, .cve-tracking-section, .forum-directory-section,
+.mitre-attack-section, .usage-instructions-section {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 8px 0 !important;
+}
+
+/* All text should be white */
+p, div, span, h1, h2, h3, h4, h5, h6, label, li, td, th, tr {
+    color: #ffffff !important;
+}
+
+/* Input fields should have dark backgrounds */
+input, textarea, select, .gradio-textbox, .gradio-dropdown {
+    background-color: #232526 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Buttons should maintain their styling but with white text */
+button, .gradio-button {
+    color: #ffffff !important;
+}
+
+/* Links should be blue */
+a, .gradio-link {
+    color: #0077BE !important;
+}
+
+/* Tables should have dark backgrounds */
+table, .gradio-dataframe {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+table th, .gradio-dataframe th {
+    background-color: #0077BE !important;
+    color: #ffffff !important;
+}
+
+table td, .gradio-dataframe td {
+    background-color: #232526 !important;
+    color: #ffffff !important;
+    border: 1px solid #333333 !important;
+}
