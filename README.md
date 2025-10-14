@@ -179,6 +179,8 @@ poetry run mkdocs build
 
 Apache 2.0 License - see [LICENSE](LICENSE) file
 
+This project is based on [PrivateGPT](https://github.com/zylon-ai/private-gpt) and has been heavily customized for cybersecurity workflows.
+
 ## 🆘 Support
 
 - [GitHub Issues](https://github.com/SecureYourGear/internal-assistant/issues)
