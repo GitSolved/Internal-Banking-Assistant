@@ -196,9 +196,9 @@ class ExternalInfoBuilder:
                 initial_cve_html = """
                 <div class='feed-content'>
                     <div style='text-align: center; color: #666; padding: 20px;'>
-                        <div>🔍 No Microsoft Security CVE data available</div>
+                        <div>🔍 No CVE data available</div>
                         <div style='font-size: 12px; margin-top: 8px;'>
-                            Click any time range button to load latest Microsoft Security vulnerabilities
+                            Click any time range button to load latest vulnerability information
                         </div>
                     </div>
                 </div>"""

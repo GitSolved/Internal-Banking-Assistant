@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-Log Management Utility for Internal Assistant
+Log Management Tool
 
-This unified script manages log files with multiple cleanup strategies:
-- Interactive mode: Manual cleanup with user confirmation
-- Automatic mode: Scheduled/startup cleanup with multiple criteria
-- Display mode: Show log file information and status
+Unified log file management with multiple cleanup strategies:
+- Status: Display log file information
+- Interactive: Manual cleanup with user confirmation
+- Auto: Automatic cleanup with multiple criteria (sessions, age, size)
 
-Replaces: cleanup_recent_logs.py + auto_cleanup_logs.py
+Usage:
+    poetry run python tools/maintenance/manage_logs.py --status
+    poetry run python tools/maintenance/manage_logs.py --interactive
+    poetry run python tools/maintenance/manage_logs.py --auto --dry-run
+    poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 10
 """
 
 import argparse

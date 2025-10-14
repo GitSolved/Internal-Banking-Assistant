@@ -43,44 +43,36 @@ class RSSFeedService:
 
     FEED_SOURCES = {
         # ========================================
-        # REGULATORY & COMPLIANCE FEEDS
-        # ========================================
-        "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
-        "SEC": "https://www.sec.gov/news/pressreleases.rss",
-        "FBI IC3": "https://www.ic3.gov/rss.xml",
-        # ========================================
         # CYBER THREAT INTELLIGENCE FEEDS
         # ========================================
         # Government Cyber Alerts
         "US-CERT": "https://www.us-cert.gov/ncas/alerts.xml",
-        # Vendor Security Updates
-        "Microsoft Security": "https://api.msrc.microsoft.com/update-guide/rss",
         # Security Research & Analysis
         "SANS ISC": "https://isc.sans.edu/rssfeed.xml",
         "NIST NVD": "https://nvd.nist.gov/vuln/data-feeds",
+        "CISA KEV": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
         # Malware Intelligence
         "ThreatFox": "https://threatfox-api.abuse.ch/export/csv/recent/",
         # ========================================
         # AI RESEARCH & DEVELOPMENT FEEDS
         # ========================================
-        "OpenAI Blog": "https://openai.com/blog/rss",
-        "Anthropic Research": "https://www.anthropic.com/research/rss",
-        "Google AI Blog": "https://ai.googleblog.com/feeds/posts/default",
         "DeepMind": "https://deepmind.com/blog/feed/basic/",
         # ========================================
         # AI SECURITY & ALIGNMENT FEEDS
         # ========================================
         "AI Alignment Forum": "https://www.alignmentforum.org/feed.xml",
-        "AI Snake Oil": "https://www.aisnakeoil.com/feed",
         "ML Security": "https://mlanswered.com/feed/",
-        "Adversarial ML": "https://adversa.ai/blog/feed/",
         # ========================================
         # CYBERSECURITY NEWS FEEDS
         # ========================================
-        "Krebs on Security": "https://krebsonsecurity.com/feed/",
         "The Hacker News": "https://thehackernews.com/feeds/posts/default",
         "Dark Reading": "https://www.darkreading.com/rss.xml",
         "BleepingComputer": "https://www.bleepingcomputer.com/feed/",
+        # ========================================
+        # REGULATORY & FINANCIAL INFORMATION
+        # ========================================
+        "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
+        "SEC": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&CIK=&type=&company=&dateb=&owner=include&start=0&count=40&output=atom",
         # MITRE ATT&CK Framework (API-based, not RSS)
         # Note: MITRE ATT&CK data is accessed via dedicated API endpoints
     }
@@ -90,25 +82,22 @@ class RSSFeedService:
         # ========================================
         # AI & MACHINE LEARNING
         # ========================================
-        "AI Research": ["OpenAI Blog", "Anthropic Research", "Google AI Blog", "DeepMind"],
-        "AI Security": ["AI Alignment Forum", "AI Snake Oil", "ML Security", "Adversarial ML"],
+        "AI Research": ["DeepMind"],
+        "AI Security": ["AI Alignment Forum", "ML Security"],
         # ========================================
         # CYBERSECURITY NEWS
         # ========================================
-        "Cybersecurity News": ["Krebs on Security", "The Hacker News", "Dark Reading", "BleepingComputer"],
-        # ========================================
-        # REGULATORY & COMPLIANCE
-        # ========================================
-        "Banking Regulations": ["Federal Reserve"],
-        "Securities & Markets": ["SEC"],
-        "Financial Crimes": ["FBI IC3"],
+        "Cybersecurity News": ["The Hacker News", "Dark Reading", "BleepingComputer"],
         # ========================================
         # CYBER THREAT INTELLIGENCE
         # ========================================
         "Government Alerts": ["US-CERT"],
-        "Vendor Security": ["Microsoft Security"],
-        "Security Research": ["SANS ISC", "NIST NVD"],
+        "Security Research": ["SANS ISC", "NIST NVD", "CISA KEV"],
         "Malware Intelligence": ["ThreatFox"],
+        # ========================================
+        # REGULATORY & FINANCIAL
+        # ========================================
+        "Regulatory": ["Federal Reserve", "SEC"],
     }
 
     # Enhanced priority system with clear separation
@@ -117,33 +106,26 @@ class RSSFeedService:
         # CRITICAL CYBER THREATS (Priority 1)
         # ========================================
         "US-CERT": 1,  # Critical government cyber alerts
-        "OpenAI Blog": 1,  # Leading AI research and safety updates
-        "Anthropic Research": 1,  # AI alignment and safety research
         # ========================================
         # HIGH PRIORITY THREATS & AI SECURITY (Priority 2)
         # ========================================
-        "Microsoft Security": 2,  # Vendor security updates
-        "FBI IC3": 2,  # Financial cyber crime intelligence
         "AI Alignment Forum": 2,  # AI safety and alignment discussions
-        "Krebs on Security": 2,  # Leading cybersecurity journalism
-        "Adversarial ML": 2,  # Adversarial machine learning research
         "The Hacker News": 2,  # Breaking cybersecurity news
         # ========================================
         # MEDIUM PRIORITY (Priority 3)
         # ========================================
         "SANS ISC": 3,  # Security research
         "NIST NVD": 3,  # Vulnerability database
-        "Google AI Blog": 3,  # Google AI research and updates
+        "CISA KEV": 3,  # Known exploited vulnerabilities catalog
         "DeepMind": 3,  # DeepMind research
-        "AI Snake Oil": 3,  # Critical AI analysis
         "ML Security": 3,  # Machine learning security
         "Dark Reading": 3,  # Cybersecurity news and analysis
         "BleepingComputer": 3,  # Technical cybersecurity news
         # ========================================
-        # REGULATORY UPDATES (Priority 4)
+        # REGULATORY & FINANCIAL (Priority 4)
         # ========================================
-        "Federal Reserve": 4,  # Banking supervision and guidance
-        "SEC": 4,  # Securities regulations
+        "Federal Reserve": 4,  # Federal Reserve press releases
+        "SEC": 4,  # Securities and Exchange Commission filings
         # ========================================
         # INTELLIGENCE FEEDS (Priority 5)
         # ========================================
@@ -159,39 +141,29 @@ class RSSFeedService:
         # ========================================
         # AI RESEARCH - TEAL/GREEN TONES
         # ========================================
-        "OpenAI Blog": "#00A67E",  # OpenAI teal
-        "Anthropic Research": "#D4B59F",  # Anthropic beige/tan
-        "Google AI Blog": "#4285F4",  # Google blue
         "DeepMind": "#0F9D58",  # DeepMind green
         # ========================================
         # AI SECURITY - PURPLE TONES
         # ========================================
         "AI Alignment Forum": "#9B59B6",  # Purple for AI safety
-        "AI Snake Oil": "#8E44AD",  # Dark purple for critical analysis
         "ML Security": "#A569BD",  # Light purple for ML security
-        "Adversarial ML": "#7D3C98",  # Deep purple for adversarial research
         # ========================================
         # CYBERSECURITY NEWS - RED/ORANGE TONES
         # ========================================
-        "Krebs on Security": "#E74C3C",  # Red for cybersecurity journalism
         "The Hacker News": "#FF6B35",  # Orange for breaking news
         "Dark Reading": "#C0392B",  # Dark red for analysis
         "BleepingComputer": "#E67E22",  # Orange for technical news
-        # ========================================
-        # HIGH PRIORITY THREATS - ORANGE
-        # ========================================
-        "Microsoft Security": "#FF6B35",  # Orange for security updates
-        "FBI IC3": "#FF6B35",  # Orange for financial cyber crime
         # ========================================
         # SECURITY RESEARCH - BLUE
         # ========================================
         "SANS ISC": "#0077BE",  # Blue for security research
         "NIST NVD": "#0077BE",  # Blue for vulnerability info
+        "CISA KEV": "#0077BE",  # Blue for vulnerability tracking
         # ========================================
-        # REGULATORY UPDATES - PURPLE
+        # REGULATORY & FINANCIAL - GOLD/YELLOW
         # ========================================
-        "Federal Reserve": "#6F42C1",  # Purple for banking regulations
-        "SEC": "#6F42C1",  # Purple for securities regulations
+        "Federal Reserve": "#D4AF37",  # Gold for Federal Reserve
+        "SEC": "#FFA500",  # Orange for SEC filings
         # ========================================
         # INTELLIGENCE FEEDS - GREEN
         # ========================================
@@ -213,14 +185,13 @@ class RSSFeedService:
 
     # Sources that are NOT threats (excluded from MITRE ATT&CK Active Threats panel)
     VULNERABILITY_SOURCES = [
-        "Microsoft Security",  # CVE announcements (bugs, not attack campaigns)
         "NIST NVD",  # Vulnerability database
+        "CISA KEV",  # Known exploited vulnerabilities
     ]
 
     REGULATORY_SOURCES = [
-        "Federal Reserve",  # Banking regulations and compliance
-        "SEC",  # Securities and markets compliance
-        "FBI IC3",  # Financial crime reporting
+        "Federal Reserve",  # Federal Reserve press releases and policy announcements
+        "SEC",  # Securities and Exchange Commission filings and enforcement actions
     ]
 
     INFORMATIONAL_SOURCES = [

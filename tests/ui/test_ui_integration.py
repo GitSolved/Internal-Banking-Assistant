@@ -1,11 +1,5 @@
 """Basic UI integration tests for RSS feed functionality."""
 
-import os
-import sys
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
-
 from unittest.mock import Mock
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService

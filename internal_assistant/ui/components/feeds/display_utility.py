@@ -5,10 +5,8 @@ This module contains display utility functions extracted from ui.py
 during Phase 1C.1 of the UI refactoring project.
 
 Extracted from ui.py lines:
-- _format_simple_forum_display() (lines 453-517)
 - _format_cve_display() (lines 597-743)
 - _format_mitre_display() (lines 744+)
-- _get_simple_forum_data() (lines 519-595)
 
 Author: UI Refactoring Team
 Date: 2025-01-19
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 class DisplayUtilityBuilder:
     """
     Builder class for display utility functions.
-    Handles formatting for forum, CVE, and MITRE displays.
+    Handles formatting for CVE and MITRE displays.
     """
 
     def __init__(self, feeds_service: RSSFeedService, threat_analyzer=None):
@@ -54,162 +52,6 @@ class DisplayUtilityBuilder:
                 logger.warning(f"Could not load ThreatIntelligenceAnalyzer: {e}")
                 self._threat_analyzer = None
 
-    def format_simple_forum_display(self) -> str:
-        """Format forum directory display with beautiful RSS feed-style styling."""
-        try:
-            # Get ALL forum data with no limits
-            forums_data = self.get_simple_forum_data()
-
-            if not forums_data:
-                return """
-                <div class='feed-content'>
-                    <div style='text-align: center; color: #666; padding: 20px;'>
-                        <div>🌐 No forum directory available</div>
-                        <div style='font-size: 12px; margin-top: 8px;'>
-                            Click the REFRESH button to load forum directory
-                        </div>
-                    </div>
-                </div>"""
-
-            # Beautiful header matching RSS feed style
-            total_count = len(forums_data)
-            html_content = f"""<div class='feed-content'>
-                <div class='feed-source-section'>
-                    <h4 class='feed-source-header' 
-                        style='color: #FF6B35; margin: 16px 0 8px 0; font-size: 18px; font-weight: bold;'>
-                        🌐 Tor Taxi ({total_count} forums)
-                    </h4>
-                </div>
-            """
-
-            # Display forums with beautiful RSS feed-style formatting
-            for forum in forums_data:
-                forum_name = forum.get("name", "Unknown Forum")
-                forum_url = forum.get("url", "")
-
-                if not forum_url:
-                    continue
-
-                # Condensed forum item styling - title and link on same line
-                html_content += f"""
-                <div class='feed-item' style='margin-bottom: 8px; padding: 8px; border-left: 3px solid #FF6B35; background: #1a1a1a;'>
-                    <div style='display: flex; align-items: center; gap: 12px;'>
-                        <span style='color: #FF6B35; font-weight: bold; font-size: 16px; min-width: 120px;'>
-                            🔗 {forum_name}
-                        </span>
-                        <span style='color: #666; font-family: monospace; font-size: 15px; flex: 1;'>
-                            {forum_url}
-                        </span>
-                    </div>
-                </div>"""
-
-            html_content += "</div>"
-
-            # Removed copy functionality - simplified display
-            html_content += ""
-
-            return html_content
-
-        except Exception as e:
-            logger.error(f"Error formatting forum directory: {e}")
-            return f"""
-            <div class='feed-content error'>
-                <div style='text-align: center; color: #d32f2f; padding: 20px;'>
-                    <div>⚠️ Error loading forum directory</div>
-                    <div style='font-size: 12px; margin-top: 8px;'>{str(e)}</div>
-                </div>
-            </div>"""
-
-    def get_simple_forum_data(self) -> List[Dict[str, str]]:
-        """Get forum data from the forum service or fallback to complete sample data."""
-        try:
-            # Try to get forum service from dependency injection
-            from internal_assistant.di import global_injector
-
-            try:
-                # Try the simple forum service first
-                from internal_assistant.server.feeds.simple_forum_service import (
-                    SimpleForumDirectoryService,
-                )
-
-                forum_service = global_injector.get(SimpleForumDirectoryService)
-                forums = forum_service.get_forums()
-
-                if forums:
-                    logger.info(
-                        f"Retrieved {len(forums)} forums from SimpleForumDirectoryService"
-                    )
-                    # Convert to the format expected by UI
-                    return [
-                        {
-                            "name": forum.get("name", "Unknown"),
-                            "url": forum.get("onion_link", ""),
-                        }
-                        for forum in forums
-                        if forum.get("onion_link")
-                    ]
-
-            except Exception as e:
-                logger.debug(f"SimpleForumDirectoryService not available: {e}")
-
-            try:
-                # Try the main forum directory service
-                from internal_assistant.server.feeds.forum_directory_service import (
-                    ForumDirectoryService,
-                )
-
-                forum_service = global_injector.get(ForumDirectoryService)
-                forums = forum_service.get_forums()
-
-                if forums:
-                    logger.info(
-                        f"Retrieved {len(forums)} forums from ForumDirectoryService"
-                    )
-                    # Convert ForumLink objects to dict format
-                    return [
-                        {
-                            "name": getattr(forum, "name", "Unknown"),
-                            "url": getattr(forum, "onion_link", "")
-                            or getattr(forum, "url", ""),
-                        }
-                        for forum in forums
-                    ]
-
-            except Exception as e:
-                logger.debug(f"ForumDirectoryService not available: {e}")
-
-        except Exception as e:
-            logger.warning(f"Could not access forum services: {e}")
-
-        # Fallback to complete sample data with ALL known forums
-        logger.info("Using fallback forum data with complete forum list")
-        return [
-            {
-                "name": "Dread",
-                "url": "dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion",
-            },
-            {
-                "name": "Pitch - 2",
-                "url": "n7vermpu3kwcgz527x265cpkwq4h2jtgynq7qdrvm3erdx7p4ifqd.onion",
-            },
-            {
-                "name": "NZ Darknet Market Forum",
-                "url": "nzmarketbf5k4z7b2xcdaovacm3kj2apcpw7yxjqggdwt5q2evtj55oad.onion",
-            },
-            {
-                "name": "Germania",
-                "url": "germaniadhqfm5cnqyc7jq7qcklbvdkk5r7nfq6g5whpvkpxhqtb4xd.onion",
-            },
-            {
-                "name": "EndChan",
-                "url": "enxx3byspwsdo446jujc52ucy2pf5urdbhqw3kbsfhlfjwmbpj5smdad.onion",
-            },
-            {
-                "name": "XSS.is",
-                "url": "xssforever4s7z6ennrfmyfkwq2qmbtmdpbclvfzqqrxzpcaxtpnqmpqad.onion",
-            },
-        ]
-
     def get_mitre_data(self) -> dict:
         """Get MITRE ATT&CK data using ThreatIntelligenceAnalyzer."""
         try:
@@ -234,21 +76,22 @@ class DisplayUtilityBuilder:
     ) -> str:
         """Format CVE data for display in the UI."""
         try:
-            # Get CVE data from feeds service, specifically Microsoft Security
+            # Get CVE data from feeds service - include CISA KEV and other vulnerability sources
             feeds = self._feeds_service.get_feeds(
-                "Microsoft Security", days_filter
-            )  # Get Microsoft Security feeds with time filter
+                None, days_filter
+            )  # Get all feeds with time filter
 
-            # Additional filter: Ensure ONLY Microsoft Security items
-            feeds = [f for f in feeds if f.get("source") == "Microsoft Security"]
+            # Filter to include only vulnerability-related sources
+            cve_sources = ["CISA KEV", "NIST NVD"]  # CVE tracking sources
+            feeds = [f for f in feeds if f.get("source") in cve_sources]
 
             if not feeds:
                 return """
                 <div class='feed-content'>
                     <div style='text-align: center; color: #666; padding: 20px;'>
-                        <div>🔍 No Microsoft Security CVE data available</div>
+                        <div>🔍 No CVE data available</div>
                         <div style='font-size: 12px; margin-top: 8px;'>
-                            Click the REFRESH button to load latest Microsoft Security vulnerabilities
+                            Click the REFRESH button to load latest vulnerability information
                         </div>
                     </div>
                 </div>"""
@@ -259,21 +102,18 @@ class DisplayUtilityBuilder:
             sources = {}
             for feed in feeds:
                 source = feed["source"]
-                # Double-check: ONLY Microsoft Security
-                if source != "Microsoft Security":
+                # Only include CVE tracking sources
+                if source not in cve_sources:
                     continue
                 if source not in sources:
                     sources[source] = []
                 sources[source].append(feed)
 
             for source, source_feeds in sources.items():
-                # Only show Microsoft Security for CVE panel (redundant but explicit)
-                if source != "Microsoft Security":
-                    continue
-
                 # Source header with CVE-specific styling
                 source_icons = {
-                    "Microsoft Security": "🔒",
+                    "CISA KEV": "🚨",
+                    "NIST NVD": "🔍",
                 }
                 source_icon = source_icons.get(source, "🔍")
 

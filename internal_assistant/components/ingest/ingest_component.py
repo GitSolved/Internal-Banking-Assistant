@@ -29,11 +29,6 @@ from internal_assistant.settings.settings import Settings
 
 logger = logging.getLogger(__name__)
 
-# VERSION MARKER - Change this with each fix to verify code is loaded
-CODE_VERSION = "v5_DIAGNOSTIC_LOGGING_2025-10-12"
-logger.info(f"🔧 [CODE_VERSION] ingest_component.py loaded: {CODE_VERSION}")
-logger.info(f"🔧 [CODE_VERSION] This version includes comprehensive diagnostic logging for persistence debugging")
-
 
 class BaseIngestComponent(abc.ABC):
     def __init__(
@@ -79,25 +74,6 @@ class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
     def _initialize_index(self) -> BaseIndex[IndexDict]:
         """Initialize or load index from storage."""
         try:
-            # DIAGNOSTIC: Check docstore file location and contents BEFORE load
-            logger.info(f"[LOAD_PATH] Storage context persist dir: {getattr(self.storage_context, 'persist_dir', 'NOT SET')}")
-            logger.info(f"[LOAD_PATH] Looking for docstore.json at: {local_data_path / 'docstore.json'}")
-
-            docstore_file = local_data_path / "docstore.json"
-            if docstore_file.exists():
-                logger.info(f"[LOAD_PATH] ✅ Docstore file exists, size: {docstore_file.stat().st_size} bytes")
-                # Load and count entries
-                import json
-                try:
-                    with open(docstore_file) as f:
-                        data = json.load(f)
-                        ref_doc_count = len(data.get("docstore/ref_doc_info", {}))
-                        logger.info(f"[LOAD_PATH] Docstore contains {ref_doc_count} ref_doc_info entries in file")
-                except Exception as e:
-                    logger.error(f"[LOAD_PATH] Failed to read docstore.json: {e}")
-            else:
-                logger.warning(f"[LOAD_PATH] ❌ Docstore file DOES NOT EXIST at {docstore_file}")
-
             index = load_index_from_storage(
                 storage_context=self.storage_context,
                 store_nodes_override=True,
@@ -106,10 +82,6 @@ class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
                 transformations=self.transformations,
             )
             logger.info("Loaded existing index from storage")
-
-            # DIAGNOSTIC: Check how many ref_doc_info entries actually loaded into memory
-            loaded_count = len(index.docstore.get_all_ref_doc_info())
-            logger.info(f"[LOAD_PATH] ✅ After load: index.docstore has {loaded_count} ref_doc_info entries in memory")
         except ValueError:
             logger.info("Creating new vector store index")
             index = VectorStoreIndex.from_documents(
@@ -124,72 +96,26 @@ class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
         return index
 
     def _save_index(self) -> None:
-        """Save index to disk - matches private-gpt implementation."""
+        """Save index to disk."""
         logger.debug("Persisting the index and docstore")
 
-        # DIAGNOSTIC: Log call stack to verify this method is being called
-        import traceback
-        logger.info(f"[PERSIST_CALLSTACK] _save_index() called from:")
-        for line in traceback.format_stack()[-5:-1]:
-            logger.info(f"[PERSIST_CALLSTACK]   {line.strip()}")
-
-        # DIAGNOSTIC: Log docstore state BEFORE persist
-        try:
-            ref_doc_count_before = len(self._index.docstore.get_all_ref_doc_info())
-            kvstore_before = self._index.docstore._kvstore._data
-            logger.info(f"[PERSIST_DEBUG] BEFORE persist:")
-            logger.info(f"[PERSIST_DEBUG]   - ref_doc_info count (API): {ref_doc_count_before}")
-            logger.info(f"[PERSIST_DEBUG]   - kvstore collections: {list(kvstore_before.keys())}")
-            for key in kvstore_before:
-                logger.info(f"[PERSIST_DEBUG]   - {key}: {len(kvstore_before[key])} items")
-        except Exception as e:
-            logger.warning(f"[PERSIST_DEBUG] Could not log before-persist state: {e}")
-
-        # DIAGNOSTIC: Log persist path
+        # Persist storage context and docstore
         docstore_path = local_data_path / "docstore.json"
-        logger.info(f"[PERSIST_PATH] Attempting to persist to: {docstore_path.absolute()}")
-        logger.info(f"[PERSIST_PATH] File exists before persist: {docstore_path.exists()}")
-        if docstore_path.exists():
-            logger.info(f"[PERSIST_PATH] File size before persist: {docstore_path.stat().st_size} bytes")
 
-        # Perform the persist with exception handling
+        # Persist storage context with exception handling
         try:
             self._index.storage_context.persist(persist_dir=str(local_data_path))
-            logger.info("[PERSIST_SUCCESS] ✅ storage_context.persist() succeeded")
         except Exception as e:
-            logger.error(f"[PERSIST_FAILURE] ❌ storage_context.persist() failed: {e}", exc_info=True)
+            logger.error(f"storage_context.persist() failed: {e}", exc_info=True)
             raise
 
         # CRITICAL FIX: Explicitly persist docstore separately
         # storage_context.persist() doesn't always persist docstore changes
         try:
             self._index.docstore.persist(persist_path=str(docstore_path))
-            logger.info(f"[PERSIST_SUCCESS] ✅ Explicitly persisted docstore to {docstore_path}")
         except Exception as e:
-            logger.error(f"[PERSIST_FAILURE] ❌ docstore.persist() failed: {e}", exc_info=True)
+            logger.error(f"docstore.persist() failed: {e}", exc_info=True)
             raise
-
-        # DIAGNOSTIC: Check file after persist
-        logger.info(f"[PERSIST_PATH] File exists after persist: {docstore_path.exists()}")
-        if docstore_path.exists():
-            file_size = docstore_path.stat().st_size
-            logger.info(f"[PERSIST_PATH] File size after persist: {file_size} bytes")
-            if file_size == 0:
-                logger.error(f"[PERSIST_PATH] ❌ WARNING: Docstore file is EMPTY (0 bytes)!")
-        else:
-            logger.error(f"[PERSIST_PATH] ❌ WARNING: Docstore file DOES NOT EXIST after persist!")
-
-        # DIAGNOSTIC: Log docstore state AFTER persist
-        try:
-            ref_doc_count_after = len(self._index.docstore.get_all_ref_doc_info())
-            kvstore_after = self._index.docstore._kvstore._data
-            logger.info(f"[PERSIST_DEBUG] AFTER persist:")
-            logger.info(f"[PERSIST_DEBUG]   - ref_doc_info count (API): {ref_doc_count_after}")
-            logger.info(f"[PERSIST_DEBUG]   - kvstore collections: {list(kvstore_after.keys())}")
-            for key in kvstore_after:
-                logger.info(f"[PERSIST_DEBUG]   - {key}: {len(kvstore_after[key])} items")
-        except Exception as e:
-            logger.warning(f"[PERSIST_DEBUG] Could not log after-persist state: {e}")
 
         logger.debug("Persisted the index and docstore")
 
@@ -315,9 +241,6 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
         CRITICAL FIX (2025-10-11): Must explicitly create ref_doc_info entries.
         LlamaIndex's insert() method does NOT automatically create ref_doc_info.
         Must use pattern: run_transformations() → insert_nodes() → set_document_hash()
-
-        This matches private-gpt's BatchIngestComponent pattern which explicitly
-        calls set_document_hash() to create ref_doc_info entries.
         """
         if not documents:
             return []
@@ -333,23 +256,6 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
         logger.info(f"Created {len(nodes)} nodes from {len(documents)} documents")
 
         with self._index_thread_lock:
-            # DIAGNOSTIC: Log document IDs being processed
-            doc_ids = [doc.get_doc_id() for doc in documents]
-            logger.info(f"[DEBUG] Processing document IDs: {doc_ids[:5]}{'...' if len(doc_ids) > 5 else ''}")
-
-            # DIAGNOSTIC: Check existing ref_doc_info BEFORE any operations
-            existing_ref_doc_info = self._index.docstore.get_all_ref_doc_info()
-            existing_ids = set(existing_ref_doc_info.keys())
-            logger.info(f"[DEBUG] BEFORE: Docstore has {len(existing_ids)} ref_doc_info entries")
-            logger.info(f"[DEBUG] BEFORE: Existing IDs sample: {list(existing_ids)[:3]}{'...' if len(existing_ids) > 3 else ''}")
-
-            # DIAGNOSTIC: Check for ID collision
-            collision_ids = set(doc_ids) & existing_ids
-            if collision_ids:
-                logger.warning(f"[DEBUG] ID COLLISION DETECTED: {len(collision_ids)} documents have existing IDs: {list(collision_ids)[:5]}")
-            else:
-                logger.info(f"[DEBUG] No ID collisions - all {len(doc_ids)} document IDs are new")
-
             # Insert nodes into vector store
             logger.info(f"Inserting {len(nodes)} nodes into index")
             self._index.insert_nodes(nodes, show_progress=True)
@@ -363,7 +269,6 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
 
                 # Get node IDs for this document
                 doc_node_ids = [node.node_id for node in nodes if node.ref_doc_id == doc_id]
-                logger.debug(f"[REFINFO] Document {doc_id} has {len(doc_node_ids)} nodes")
 
                 # Create RefDocInfo with node IDs and metadata
                 ref_info = RefDocInfo(
@@ -378,63 +283,10 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
                     ref_info.to_dict(),  # Convert to dict to avoid AttributeError: 'RefDocInfo' object has no attribute 'copy'
                     collection=self._index.docstore._ref_doc_collection
                 )
-                logger.debug(f"[REFINFO] Added ref_doc_info for {doc_id} with {len(doc_node_ids)} node IDs")
-
-            # DIAGNOSTIC: Check ref_doc_info AFTER manual population
-            after_manual_ref_doc_info = self._index.docstore.get_all_ref_doc_info()
-            after_manual_ids = set(after_manual_ref_doc_info.keys())
-            logger.info(f"[DEBUG] AFTER manual ref_doc_info population: count = {len(after_manual_ids)}")
-
-            # DIAGNOSTIC: Check if our IDs are now in ref_doc_info
-            found_new_ids = set(doc_ids) & after_manual_ids
-            logger.info(f"[DEBUG] Successfully added {len(found_new_ids)}/{len(doc_ids)} new document IDs to ref_doc_info")
-            if len(found_new_ids) < len(doc_ids):
-                missing_ids = set(doc_ids) - after_manual_ids
-                logger.error(f"[DEBUG] MISSING IDs not in ref_doc_info: {list(missing_ids)[:5]}")
-
-            logger.debug("[DEBUG] About to persist - checking ref_doc_info before persist")
-            before_persist_count = len(self._index.docstore.get_all_ref_doc_info())
-            logger.info(f"[DEBUG] BEFORE persist: ref_doc_info count = {before_persist_count}")
-
-            # DIAGNOSTIC: Check internal _kvstore._data structure
-            try:
-                kvstore_data = self._index.docstore._kvstore._data
-                logger.info(f"[KVSTORE_DEBUG] Available collections: {list(kvstore_data.keys())}")
-                for collection_key in kvstore_data.keys():
-                    collection_size = len(kvstore_data[collection_key])
-                    logger.info(f"[KVSTORE_DEBUG] Collection '{collection_key}': {collection_size} items")
-                    if collection_key == 'docstore/ref_doc_info':
-                        ref_doc_items = kvstore_data[collection_key]
-                        logger.info(f"[KVSTORE_DEBUG] ref_doc_info IDs: {list(ref_doc_items.keys())[:5]}{'...' if len(ref_doc_items) > 5 else ''}")
-            except Exception as e:
-                logger.warning(f"[KVSTORE_DEBUG] Could not inspect _kvstore._data: {e}")
 
             # CRITICAL: Use _save_index() which has the explicit docstore persistence fix
             self._save_index()
-
-            # DIAGNOSTIC: Check ref_doc_info AFTER persist
-            after_persist_ref_doc_info = self._index.docstore.get_all_ref_doc_info()
-            logger.info(f"[DEBUG] AFTER persist: ref_doc_info count = {len(after_persist_ref_doc_info)}")
             logger.debug("Persisted the index and nodes")
-
-            # DIAGNOSTIC: Final verification - read file back and check
-            docstore_path = local_data_path / "docstore.json"
-            if docstore_path.exists():
-                import json
-                try:
-                    with open(docstore_path) as f:
-                        data = json.load(f)
-                        file_ref_count = len(data.get("docstore/ref_doc_info", {}))
-                        logger.info(f"[DEBUG] FINAL VERIFICATION: docstore.json on disk has {file_ref_count} ref_doc_info entries")
-
-                        if file_ref_count != len(after_persist_ref_doc_info):
-                            logger.error(f"[DEBUG] ❌ MISMATCH: Memory has {len(after_persist_ref_doc_info)} but file has {file_ref_count}")
-                        else:
-                            logger.info(f"[DEBUG] ✅ Memory and disk counts MATCH: {file_ref_count}")
-                except Exception as e:
-                    logger.error(f"[DEBUG] Failed to verify persisted file: {e}")
-            else:
-                logger.error(f"[DEBUG] ❌ docstore.json does not exist after persist!")
 
         return documents
 

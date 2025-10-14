@@ -1,13 +1,23 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
 title: Internal Assistant
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
-authors: []
-repository-code: 'https://github.com/user/internal-assistant'
+authors:
+  - name: "SecureYourGear"
+repository-code: 'https://github.com/SecureYourGear/internal-assistant'
+url: 'https://github.com/SecureYourGear/internal-assistant'
 license: Apache-2.0
+version: "0.6.2"
 date-released: '2025-01-17'
+keywords:
+  - cybersecurity
+  - artificial-intelligence
+  - llm
+  - rag
+  - threat-intelligence
+  - privacy
+  - local-ai
+  - ollama
+  - foundation-sec

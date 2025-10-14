@@ -1,12 +1,6 @@
 """Tests for expanded RSS feed sources."""
 
 import asyncio
-import os
-import sys
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
-
 from datetime import UTC
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService

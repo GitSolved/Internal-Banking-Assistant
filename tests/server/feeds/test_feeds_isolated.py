@@ -1,12 +1,6 @@
 """Isolated unit tests for RSS feeds service without Internal Assistant imports."""
 
-import os
-import sys
 from datetime import UTC, datetime, timedelta
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
-
 
 from internal_assistant.server.feeds.feeds_service import FeedItem, RSSFeedService
 

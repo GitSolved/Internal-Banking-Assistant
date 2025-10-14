@@ -273,12 +273,12 @@ poetry run python tools/maintenance/cleanup_qdrant.py
 
 ### Getting Help
 
-1. Check the [troubleshooting guide](../user/troubleshooting/)
-2. Review [configuration documentation](../user/configuration/)
-3. Check [Status_Update.json](../../../Status_Update.json) for current project status
+1. Check the [troubleshooting guide](../../user/installation/troubleshooting.md)
+2. Review [configuration documentation](../../user/configuration/settings.md)
+3. See the [architecture overview](../architecture/overview.md)
 
 ## Next Steps
 
-- Review [architecture documentation](../architecture/)
-- Check [testing guide](../testing/)
-- Explore [deployment options](../deployment/)
+- Review [architecture documentation](../architecture/overview.md)
+- Explore [package structure](package-structure.md)
+- Read [documentation guidelines](documentation-guidelines.md)

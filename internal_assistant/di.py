@@ -12,15 +12,6 @@ def create_application_injector() -> Injector:
 
     _injector.binder.bind(RSSFeedService, to=RSSFeedService(), scope=singleton)
 
-    # Bind Simple Forum Directory service as singleton to maintain cache across requests
-    from internal_assistant.server.feeds.simple_forum_service import (
-        SimpleForumDirectoryService,
-    )
-
-    _injector.binder.bind(
-        SimpleForumDirectoryService, to=SimpleForumDirectoryService(), scope=singleton
-    )
-
     return _injector
 
 

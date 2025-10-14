@@ -4,7 +4,7 @@ inputs:
   python_version:
     required: true
     type: string
-    default: "3.11.4"
+    default: "3.11.9"
   poetry_version:
     required: true
     type: string
@@ -25,6 +25,6 @@ runs:
         python-version: ${{ inputs.python_version }}
         cache: "poetry"
     - name: Install Dependencies
-      run: poetry install --extras "ui vector-stores-qdrant" --no-root
+      run: poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant" --no-root
       shell: bash
 

@@ -4,533 +4,346 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Internal Assistant is a cybersecurity intelligence platform built on PrivateGPT technology. It provides local, privacy-focused AI for threat analysis and security research using the Foundation-Sec-8B model via Ollama.
+**Internal Assistant** is a privacy-focused cybersecurity intelligence platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for threat analysis and security research using the Foundation-Sec-8B model.
+
+**Key Technologies:**
+- Python 3.11.9 (exact version required)
+- FastAPI (API layer)
+- LlamaIndex (RAG pipeline)
+- Gradio (Web UI)
+- Ollama (LLM management) with Foundation-Sec-8B-q4_k_m
+- HuggingFace (embeddings) with nomic-embed-text-v1.5
+- Qdrant (vector store)
 
 ## Essential Commands
 
-**Note:** This project uses Poetry 2.0+ with modern `poetry run` execution. The deprecated `poetry shell` command is no longer available.
-
-### Development
+### Running the Application
 ```bash
-# Start the application
-poetry run make run
+make run              # Start application (port 8001)
+make dev              # Development mode with auto-reload
+make production       # Production mode (port 8000, secure)
+```
 
-# Development mode with auto-reload
-poetry run make dev
-poetry run make dev-windows  # Windows-specific development mode
-
-# Interactive development (alternative)
-poetry env activate          # Activate environment
-make run                     # Run commands directly
-deactivate                   # Deactivate when done
-
-# Run tests
-poetry run make test
-
-# Run specific test file
-poetry run pytest tests/path/to/test_file.py -v
-
-# Run specific test directory
-poetry run pytest tests/ui/
-
-# Run tests with coverage
-poetry run make test-coverage
-
-# Run a single test by name
-poetry run pytest -k "test_name" -v
+### Testing
+```bash
+make test             # Run all tests
+make test-coverage    # Run tests with coverage report
+poetry run pytest tests/server/feeds/  # Run specific test directory
+poetry run pytest tests/ui/test_ui.py::test_name  # Run single test
 ```
 
 ### Code Quality
 ```bash
-# Format code (black + ruff)
-poetry run make format
-
-# Type checking
-poetry run make mypy
-
-# Full quality check (format + mypy + compatibility)
-poetry run make check
-
-# Check dependency compatibility
-poetry run make compatibility-check
-
-# Security validation
-poetry run make security-check
+make format           # Format code (black + ruff)
+make mypy             # Type checking
+make check            # Full quality check (format + mypy + compatibility)
+make compatibility-check  # Check dependency versions
 ```
 
-### Utilities
+### Data Management
 ```bash
-# Clean up old logs (keeps 7 most recent)
-poetry run make log-cleanup
-
-# Analyze model files for duplicates
-poetry run make analyze-models
-
-# Generate API documentation
-poetry run make api-docs
-
-# Database statistics
-poetry run make stats
-
-# Production mode (secure, no debug)
-poetry run make production
+make ingest path/to/docs  # Ingest documents into RAG
+make stats            # Show database statistics
+make analyze-models   # Analyze model files
+make wipe             # Delete all data (requires confirmation)
 ```
 
-## Critical Dependency Constraints
-
-This project has **strict version requirements** that are automatically validated on startup:
-
-- **Python**: 3.11.9 (exact version)
-- **FastAPI**: >=0.108.0,<0.115.0
-- **Pydantic**: >=2.8.0,<2.9.0
-- **Gradio**: >=4.15.0,<4.39.0
-
-**Never modify these version constraints** without comprehensive testing. Violations will cause Pydantic schema generation errors and FastAPI integration issues.
+### Documentation
+```bash
+poetry run mkdocs serve   # Serve docs at http://localhost:8000
+poetry run mkdocs build   # Build static docs site
+make api-docs         # Generate OpenAPI documentation
+```
 
 ## Architecture Overview
 
-### Project Structure
+### Component Structure
 ```
 internal_assistant/
-├── components/       # Core AI components (LLM, embeddings, vector store)
-├── server/          # FastAPI routers and services
-│   ├── chat/        # Chat endpoint and service
-│   ├── feeds/       # RSS and threat intelligence feeds
-│   ├── ingest/      # Document ingestion
-│   └── threat_intelligence/  # MITRE ATT&CK integration
+├── components/       # Core components (LLM, embeddings, vector store)
+│   ├── embedding/   # Embedding model implementations
+│   ├── llm/         # LLM implementations
+│   ├── vector_store/ # Vector store implementations
+│   ├── node_store/  # Node storage implementations
+│   └── ingest/      # Document ingestion pipeline
+├── server/          # FastAPI API endpoints
+│   ├── chat/        # Chat endpoints
+│   ├── feeds/       # RSS/threat intelligence feeds
+│   ├── ingest/      # Document ingestion API
+│   ├── health/      # Health check endpoints
+│   └── ...
 ├── ui/              # Gradio web interface
-│   ├── components/  # Modular UI components (Phase 1+ refactoring)
-│   ├── core/        # Core UI utilities
-│   └── services/    # UI service layer
+│   ├── components/  # UI components (chat, documents, feeds, sidebar, settings)
+│   ├── core/        # Core UI infrastructure (component registry, event router)
+│   ├── layout/      # Theme and layout management
+│   ├── services/    # Service facades for API interaction
+│   └── ui.py        # Main UI application
 ├── settings/        # Configuration management
-└── utils/           # Shared utilities
-
-config/              # Configuration files (Phase 2A restructure)
-├── app/            # Core settings (settings.yaml, settings_backup.yaml)
-├── environments/   # Environment-specific configs (local.yaml, test.yaml, docker.yaml)
-├── model-configs/  # Model-specific configurations (ollama.yaml, foundation-sec.yaml, etc.)
-└── deployment/     # Deployment configs (docker/, development/)
-
-tests/              # Test suite
-├── fixtures/       # Test fixtures and helpers
-├── server/         # API endpoint tests
-└── ui/             # UI component tests
+└── di.py           # Dependency injection setup
 ```
 
-### Feed & Threat Intelligence Architecture
-Understanding the feed system requires reading multiple files:
+### Dependency Injection Pattern
+The application uses **Injector** for dependency injection:
+- Global injector created in `di.py` via `create_application_injector()`
+- All services bound as singletons (e.g., `RSSFeedService`)
+- Request-scoped injector available via `request.state.injector`
+- Access services in endpoints: `service = request.state.injector.get(ServiceClass)`
 
-**Feed Processing Pipeline:**
-1. **Feed Storage & Parsing** (`feeds_service.py`): RSS parsing, feed storage, metadata management
-2. **Background Updates** (`background_refresh.py`): Scheduled feed refreshing using FastAPI BackgroundTasks
-3. **Forum Scraping** (`forum_parser.py`): Custom parser for security forums (handles non-standard RSS)
-4. **Directory Service** (`forum_directory_service.py`): Forum feed discovery and management
+### Application Lifecycle
+1. `internal_assistant/main.py` - Entry point that imports `app` from `launcher.py`
+2. `internal_assistant/launcher.py` - Creates FastAPI app with `create_app(global_injector)`
+3. `internal_assistant/di.py` - Sets up dependency injection container
+4. Lifespan events manage background services (RSS feed refresh runs every 60min)
+5. API routers and UI mounted via FastAPI
 
-**Threat Intelligence Integration:**
-- **MITRE ATT&CK Service** (`mitre_attack_service.py`): ATT&CK framework API integration
-- **Threat Analyzer** (`threat_analyzer.py`): Cross-references threats with MITRE tactics/techniques
-- **Routers**: Separate FastAPI routers for feeds, forums, and threat intelligence endpoints
+### Data Flow
+- **Document Ingestion**: Upload → Text Extraction → Chunking → Embedding → Vector Storage (Qdrant)
+- **Query Processing**: User Query → Embedding → Vector Search → Context Retrieval → LLM Response
+- **Threat Intelligence**: RSS/Forum Feeds → Content Parsing → Threat Analysis → Dashboard
 
-**Key Integration Point:** The `background_refresh_service()` in `background_refresh.py` orchestrates all automated feed updates.
+## Import Conventions
 
-### Key Components
+**CRITICAL**: Always use full package imports. Never use relative imports or the old 'src' reference.
 
-**LLM Stack:**
-
-**REQUIRED (Always Installed):**
-- ✅ LLM: `llama-index-llms-ollama` with Foundation-Sec-8B-q4_k_m.gguf
-- ✅ Embeddings: `llama-index-embeddings-huggingface` with nomic-embed-text-v1.5
-- ✅ Vector Store: `llama-index-vector-stores-qdrant` (local disk-based)
-- ✅ UI: `gradio` web interface (v4.15.0-4.39.0)
-
-**USED BUT OPTIONAL:**
-- `llama-index-llms-llama-cpp`: Model file management and settings
-- `llama-index-llms-openai-like`: OpenAI-compatible API support
-
-**NOT USED (Available but not configured):**
-- Other vector stores: Chroma, PostgreSQL, ClickHouse, Milvus
-- Other LLMs: OpenAI, Azure OpenAI, Google Gemini, AWS Sagemaker
-- Other embeddings: OpenAI, Azure, Gemini, Sagemaker, Ollama embeddings
-- PostgreSQL nodestore (using simple nodestore instead)
-- Reranking: Disabled in settings.yaml for performance
-
-**Installation Command:**
-```bash
-poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
-```
-
-**High-Level Architecture:**
-The application follows a layered architecture with dependency injection:
-
-1. **FastAPI Layer** ([internal_assistant/launcher.py](internal_assistant/launcher.py)): Creates the app, registers all routers
-   - Application created via `create_app(root_injector)` function
-   - **Lifecycle management** (launcher.py:44-73):
-     - `@asynccontextmanager` lifespan function controls startup/shutdown
-     - Startup: Initializes BackgroundRefreshService for RSS feeds (60-minute interval)
-     - Shutdown: Gracefully stops background service
-   - All routers registered in launcher.py:80-93
-   - Injector attached to each request via `request.state.injector` (launcher.py:75-76)
-   - **Gradio compatibility patches** applied automatically (launcher.py:113-144):
-     - Boolean schema handling fix for gradio_client
-     - Pydantic compatibility configuration
-     - GRADIO_ANALYTICS_ENABLED set to "False"
-
-2. **Router Layer** ([internal_assistant/server/*/](internal_assistant/server/)): Each module has its own router defining API endpoints
-   - All routers registered in launcher.py:80-93
-   - Core: completions, chat, chunks, ingest, embeddings, summarize
-   - Intelligence: feeds, simple_forum, threat_intelligence, mitre_attack
-   - System: health, system, metadata, status
-   - Example: [chat_router.py](internal_assistant/server/chat/chat_router.py), [feeds_router.py](internal_assistant/server/feeds/feeds_router.py)
-   - Health endpoint: [health_router.py](internal_assistant/server/health/health_router.py) provides `/health` for monitoring
-
-3. **Service Layer** ([internal_assistant/server/*/*_service.py](internal_assistant/server/)): Business logic, injected as singletons
-   - Services implement core business logic and are bound in di.py
-   - Singletons: RSSFeedService, SimpleForumDirectoryService (maintain cache across requests)
-   - Example: [chat_service.py](internal_assistant/server/chat/chat_service.py), [ingest_service.py](internal_assistant/server/ingest/ingest_service.py)
-
-4. **Component Layer** ([internal_assistant/components/](internal_assistant/components/)): Core AI components (LLM, embeddings, vector store)
-
-5. **UI Layer** ([internal_assistant/ui/](internal_assistant/ui/)): Gradio interface that interacts with the FastAPI backend
-   - Created via dependency injection: `root_injector.get(InternalAssistantUI)` (launcher.py:154)
-   - Mounted at `settings.ui.path` when `settings.ui.enabled` is true (launcher.py:159)
-   - Gradio compatibility patches applied automatically (launcher.py:113-143)
-
-**Dependency Injection Flow:**
-- Container: [internal_assistant/di.py](internal_assistant/di.py) creates the global injector
-- Services are bound as singletons (e.g., RSSFeedService, SimpleForumDirectoryService)
-- The injector is attached to each request via `request.state.injector` in launcher.py
-- Access injector in routers: `injector = request.state.injector`
-
-**Configuration System:**
-- **Primary config**: [config/settings.yaml](config/settings.yaml) (default profile at root of config/)
-- Settings class: [internal_assistant/settings/settings.py](internal_assistant/settings/settings.py)
-- Loader: [internal_assistant/settings/settings_loader.py](internal_assistant/settings/settings_loader.py)
-- Override via `PGPT_PROFILES` env var (e.g., `PGPT_PROFILES=local,test`)
-- Phase 2A restructure: Additional specialized configs in subdirectories
-  - [config/environments/](config/environments/): local.yaml, test.yaml, docker.yaml
-  - [config/model-configs/](config/model-configs/): ollama.yaml, foundation-sec.yaml, openai.yaml, gemini.yaml, etc.
-  - [config/deployment/](config/deployment/): docker/, development/
-  - [config/app/](config/app/): settings_backup.yaml
-
-**Important Configuration Values:**
-- RAG settings: `similarity_top_k: 8`, `similarity_value: 0.1` (optimized for document coverage)
-- LLM settings: `max_new_tokens: 1000`, `context_window: 8192` (optimized for large responses)
-- These values are optimized for cybersecurity intelligence workflows
-- Always check `config/settings.yaml` for current values before troubleshooting
-
-## Important Patterns
-
-### Package Imports
-Always use absolute imports from the `internal_assistant` package:
 ```python
-# Correct
-from internal_assistant.components.llm import LLMComponent
-from internal_assistant.server.chat.chat_service import ChatService
+# ✅ CORRECT
+from internal_assistant.components.vector_store.vector_store_component import VectorStoreComponent
+from internal_assistant.server.feeds.feeds_service import RSSFeedService
+from internal_assistant.settings.settings import Settings
+from internal_assistant.paths import local_data_path
+from internal_assistant.di import global_injector
 
-# Incorrect
-from components.llm import LLMComponent
-from ..server.chat import ChatService
+# ❌ WRONG - Don't use these patterns
+from ..components.vector_store.vector_store_component import VectorStoreComponent  # No relative imports
+from src.components.vector_store import VectorStoreComponent  # No 'src' reference
 ```
 
-### Testing
-- Tests use `pytest` with async support (`asyncio_mode = "auto"`)
-- Fixtures in `tests/fixtures/` provide mock injectors and helpers
-- Use `tests/fixtures/mock_injector.py` for dependency injection in tests
-- Test environment automatically uses `test` profile from `config/environments/test.yaml`
+Package configuration in `pyproject.toml`:
+```toml
+packages = [{ include = "internal_assistant" }]
+```
 
-### Configuration
-**File Structure (Phase 2A completed):**
+## Configuration Management
+
+### Configuration Structure (Phase 2A)
 ```
 config/
-├── settings.yaml              # ⭐ PRIMARY config file (default profile, at root)
-├── app/                       # Core application settings
-│   └── settings_backup.yaml   # Backup copy
-├── environments/              # Environment-specific configs
-│   ├── local.yaml             # Local development overrides
-│   ├── test.yaml              # Test environment
-│   └── docker.yaml            # Docker deployment
-├── model-configs/             # Model-specific configurations
-│   ├── ollama.yaml            # Ollama settings
-│   ├── foundation-sec.yaml    # Foundation-Sec model config
-│   ├── openai.yaml            # OpenAI config (not currently used)
-│   ├── gemini.yaml            # Gemini config (not currently used)
-│   └── sagemaker.yaml         # Sagemaker config (not currently used)
-└── deployment/                # Deployment configs
-    ├── docker/                # Docker configuration
-    │   └── docker-compose.yaml
-    └── development/           # Development-specific
-        └── pre-commit-config.yaml
+├── settings.yaml              # Base configuration (always loaded)
+├── app/
+│   ├── settings_backup.yaml  # Backup settings
+├── model-configs/
+│   ├── foundation-sec.yaml   # Foundation-Sec model config
+│   └── ollama.yaml           # Ollama-specific settings
+├── environments/
+│   ├── local.yaml            # Local development
+│   ├── test.yaml             # Testing environment
+│   └── docker.yaml           # Docker deployment
+└── deployment/
+    └── docker/               # Docker configs
 ```
 
-**Python Module:**
-- Settings class: `internal_assistant/settings/settings.py` (untouched for stability)
-- Config loading: `internal_assistant/settings/settings_loader.py`
+**Active Configuration**:
+- LLM: `llm.mode = ollama` (Foundation-Sec-8B-q4_k_m)
+- Embeddings: `embedding.mode = huggingface` (nomic-embed-text-v1.5)
+- Vector Store: `vectorstore.database = qdrant`
+- Node Store: `nodestore.database = simple`
+- Reranking: `rag.rerank.enabled = false` (disabled for performance)
 
-**Environment Variables:**
-- Prefixed with `PGPT_` (e.g., `PGPT_PROFILES`, `PGPT_LOG_LEVEL`)
-- `HF_TOKEN`: HuggingFace token for embedding models (optional but recommended)
-- `GRADIO_ANALYTICS_ENABLED`: Set to "False" by default (launcher.py:141)
-- Example: `PGPT_PROFILES=local,test` to merge multiple profiles
+Configuration loaded via `internal_assistant/settings/settings.py` using YAML files.
 
-### Logging
-- Session-based logs in `local_data/logs/SessionLogN.log`
-- Automatic cleanup keeps 7 most recent sessions
-- Log level: Controlled by `PGPT_LOG_LEVEL` env var (default: INFO)
+## Storage Directories
 
-### UI Refactoring (Phase 1-3 Substantially Complete)
-The UI has been successfully modularized from a monolithic `ui.py` file:
-- **Phase 1A**: ✅ Chat interface extraction (completed)
-- **Phase 1B**: ✅ Document management extraction (1,963 lines, completed)
-- **Phase 1C**: ✅ Feed handlers extraction (completed)
-- **Phase 1D**: ✅ Settings, sidebar, and core utilities (completed)
+### Ephemeral Data (regenerable, safe to delete)
+- `local_data/` - Runtime data: logs, session data, vector DB cache
+  - `local_data/internal_assistant/qdrant/` - Vector database files
+  - `local_data/logs/` - Application logs (auto-cleanup via `make log-cleanup`)
 
-**Progress Summary:**
-- Original `ui.py`: ~6,258 lines
-- Current `ui.py`: **3,515 lines** (44% reduction achieved!)
-- Components extracted: Chat, Documents, Feeds, Settings, Sidebar
-- All extracted components: <600 lines each for maintainability
+### Persistent Data (must preserve)
+- `data/` - User data: models, documents, processed content
+- `models/cache/` - Cached HuggingFace models
 
-**⚠️ Important: Working with UI Code**
-- Prefer working with modular components in `internal_assistant/ui/components/` when available
-- Use `Read` with specific line ranges when reading `ui.py`: `offset` and `limit` parameters
-- Use `Grep` to find specific patterns/functions before reading
-- Each modular component is <600 lines and follows the builder pattern
+## Dependency Management
 
-When working on UI code:
-1. Check `internal_assistant/ui/components/` for existing modular components
-2. Follow the builder pattern used in existing components
-3. Create strategic backups before major changes if refactoring further
+**Critical Version Requirements**:
+- Python: 3.11.9 (exact version, validated on startup)
+- FastAPI: >=0.108.0,<0.115.0 (Pydantic compatibility)
+- Pydantic: >=2.8.0,<2.9.0 (LlamaIndex compatibility)
+- Gradio: >=4.15.0,<4.39.0 (FastAPI integration compatibility)
 
-## Storage Structure
+**Poetry 2.0+ Usage**:
+```bash
+poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
+poetry run <command>          # Run commands in virtual environment
+```
 
-Two distinct storage directories with different purposes:
+**Active Dependencies** (currently used):
+- `llama-index-llms-ollama` - LLM integration (Foundation-Sec via Ollama)
+- `llama-index-embeddings-huggingface` - Embeddings (nomic-embed-text-v1.5)
+- `llama-index-vector-stores-qdrant` - Vector storage
+- `gradio` - Web UI framework
+- `feedparser`, `aiohttp`, `beautifulsoup4` - RSS feed processing
 
-**`local_data/`** - Ephemeral application runtime data (regenerable):
-- Logs, session data, vector database cache
-- Can be safely deleted and regenerated
+## Testing Strategy
 
-**`data/`** - Critical persistent user data (must preserve):
-- Models, documents, processed content
-- Expensive to recreate, requires backup
+### Test Organization
+```
+tests/
+├── conftest.py              # Pytest configuration
+├── fixtures/                # Shared test fixtures
+│   ├── mock_injector.py    # Mock dependency injection
+│   ├── auto_close_qdrant.py # Qdrant cleanup
+│   └── ingest_helper.py    # Ingestion test helpers
+├── server/                  # API endpoint tests
+│   ├── feeds/              # Feed service tests
+│   ├── ingest/             # Ingestion tests
+│   └── ...
+├── ui/                      # UI component tests
+├── integration/             # Full integration tests
+└── components/              # Component unit tests
+```
 
-## Development Workflows
+### Test Execution
+```bash
+# Run all tests
+poetry run pytest tests -v
+
+# Run specific test file
+poetry run pytest tests/server/feeds/test_feeds_service.py -v
+
+# Run single test function
+poetry run pytest tests/ui/test_ui.py::test_ui_creation -v
+
+# Run with coverage
+poetry run pytest tests --cov=internal_assistant --cov-report=html
+```
+
+### Test Configuration (`pytest.ini_options` in `pyproject.toml`)
+- Async mode: `asyncio_mode = "auto"`
+- Import mode: `--import-mode=importlib`
+- Logs saved to: `local_data/logs/pytest.log`
+
+## UI Architecture
+
+### Modular UI System (44% code reduction from refactoring)
+The UI uses a component-based architecture with:
+- **Component Registry**: Centralized component management
+- **Event Router**: Decoupled event handling between components
+- **Service Facades**: Clean API abstraction layer
+- **Layout Manager**: Theme and layout configuration
+
+### Key UI Components
+- `ChatComponent` - Chat interface and message handling
+- `DocumentComponent` - Document upload and management
+- `FeedComponent` - RSS feed display and threat intelligence
+- `SidebarComponent` - Navigation and settings
+- `SettingsComponent` - Application configuration
+
+### UI Development Pattern
+Components inherit from `UIComponent` base class and register via `ComponentRegistry`. Events flow through `EventRouter` for loose coupling.
+
+## Common Development Tasks
 
 ### Adding a New API Endpoint
-1. Create router in `internal_assistant/server/<module>/<module>_router.py`
-2. Create service in `internal_assistant/server/<module>/<module>_service.py`
-3. Bind service in `internal_assistant/di.py` if it needs singleton scope
-4. Register router in `internal_assistant/launcher.py:79-92`
-5. Add tests in `tests/server/<module>/`
+1. Create router in `internal_assistant/server/<feature>/<feature>_router.py`
+2. Define service in `internal_assistant/server/<feature>/<feature>_service.py`
+3. Register router in `internal_assistant/launcher.py` via `app.include_router()`
+4. Add tests in `tests/server/<feature>/`
 
 ### Adding a New UI Component
-1. Create component in `internal_assistant/ui/components/<category>/`
-2. Follow the builder pattern (see chat/chat_component.py or documents/)
-3. Import and integrate in `internal_assistant/ui/ui.py`
-4. Add tests in `tests/ui/`
+1. Create component in `internal_assistant/ui/components/<name>/`
+2. Inherit from `UIComponent` base class
+3. Register in `ComponentRegistry`
+4. Wire events through `EventRouter`
+5. Add tests in `tests/ui/`
 
-### Running with Different Profiles
+### Modifying Configuration
+1. Update base config in `config/settings.yaml`
+2. Update settings schema in `internal_assistant/settings/settings.py`
+3. Environment-specific overrides in `config/environments/<env>.yaml`
+4. Restart application for changes to take effect
+
+### Running Single Tests During Development
 ```bash
-# Use local environment config
-PGPT_PROFILES=local poetry run make run
+# Run specific test with verbose output
+poetry run pytest tests/server/feeds/test_feeds_service.py::test_parse_feed -v -s
 
-# Use multiple profiles (merged in order)
-PGPT_PROFILES=default,local poetry run make run
+# Run all tests in a directory
+poetry run pytest tests/ui/ -v
+
+# Run with coverage for specific module
+poetry run pytest tests/server/feeds/ --cov=internal_assistant.server.feeds
 ```
-
-## Tools Directory
-
-The `tools/` directory contains maintenance and utility scripts organized by category. See [tools/README.md](tools/README.md) for complete documentation.
-
-**Categories:**
-- **Maintenance** (`tools/maintenance/`): Cleanup, log management, model optimization
-- **System** (`tools/system/`): Configuration, compatibility checking, monitoring
-- **Data** (`tools/data/`): Document ingestion and data processing
-- **Development** (`tools/development/`): Testing and debugging utilities
-- **Analysis** (`tools/analysis/`): Dependency analysis, code metrics
-- **Performance** (`tools/performance/`): Profiling and benchmarking
-- **Storage** (`tools/storage/`): Database admin and recovery operations
-- **Javascript** (`tools/Javascript/`): **[PRODUCTION DEPENDENCY]** - UI module management
-
-**⚠️ Important**: The `Javascript/` directory is imported by `ui.py` and cannot be modified without breaking the UI.
-
-**Usage Pattern:**
-```bash
-# 1. ALWAYS prefer Makefile commands when available (most common case)
-make compatibility-check    # ✅ Use this (cleaner, validated)
-make log-cleanup           # ✅ Use this (automatic, safe)
-make test                  # ✅ Use this (configured correctly)
-make format                # ✅ Use this (black + ruff)
-
-# 2. Direct tool usage ONLY when:
-#    - No Makefile equivalent exists
-#    - You need specific tool arguments not exposed in Makefile
-#    - You're debugging a specific tool
-poetry run python tools/<category>/<script>.py
-
-# Examples of direct tool usage:
-poetry run python tools/storage/storage_admin.py diagnose       # Storage diagnostics
-poetry run python tools/data/ingest_folder.py /path/to/docs    # Custom ingestion
-poetry run python tools/maintenance/manage_logs.py --interactive  # Interactive mode
-
-# 3. Check available Makefile commands first
-make list                  # Shows all available commands
-```
-
-**Common Makefile Commands:**
-- `make run`: Start application (includes automatic log cleanup)
-- `make test`: Run test suite
-- `make format`: Format code (black + ruff)
-- `make check`: Full quality check (format + mypy + compatibility)
-- `make compatibility-check`: Verify dependency versions
-- `make log-cleanup`: Clean old logs (keeps 7 most recent)
-- `make analyze-models`: Check for duplicate model files
-- `make production`: Start in production mode (secure)
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Pydantic/FastAPI schema errors:**
-- Verify dependency versions match constraints in `pyproject.toml`
-- The application includes automatic Gradio compatibility patches (launcher.py:113-143)
-- Patches applied: boolean schema handling fix + Pydantic compatibility configuration
-
-**Import errors:**
-- Ensure using absolute imports from `internal_assistant` package
-- Never use relative imports like `from ..server.chat import ChatService`
-
-**Test failures:**
-- Check that test environment is properly configured with `config/environments/test.yaml`
-- Verify pytest is using `asyncio_mode = "auto"` (configured in pyproject.toml)
-
-**UI not loading:**
-- Verify Gradio is installed: `poetry install --extras ui`
-- Check logs for Gradio compatibility patch status
-- Ensure `settings.ui.enabled: true` in config/settings.yaml
-
-**Model not found:**
-- Ensure Ollama is running: `ollama list`
-- Verify Foundation-Sec-8B model exists: should show `foundation-sec-q4km:latest`
-- Check model file path in config: `ollama.llm_model: foundation-sec-q4km:latest`
-
-**Windows-specific:**
-- Use `poetry run make dev-windows` for development mode
-- Path separators are handled automatically by Python pathlib
-
-**Feed refresh not working:**
-- Background service starts during app lifespan (launcher.py:44-71)
-- Verify `RSSFeedService` is bound as singleton in di.py:13
-- Check logs for "🚀 Starting background RSS feed refresh service" entries
-- Default refresh interval: 60 minutes (configurable in launcher.py:54)
-
-**Document not appearing after upload:**
-Two storage systems must both be updated:
-1. **Qdrant vector store**: Check `local_data/internal_assistant/qdrant/` directory exists
-2. **DocStore index**: Check logs for "ingest_service.py" entries showing successful indexing
-3. **Debug path**: Read `ingest_service.py:ingest()` method to see where process fails
-
-**"Clear All Documents" connection errors:** Three potential causes and fixes:
-
-1. **Missing Qdrant collection**: If document deletion fails with "Collection not found":
-   ```bash
-   # Recreate collection by adding a test document
-   curl -X POST http://localhost:8001/v1/ingest/text \
-     -H "Content-Type: application/json" \
-     -d '{"file_name": "test.txt", "text": "test"}'
-   ```
-
-2. **SIGALRM health check failures on Windows**: Fixed in `chat_service_facade.py` by replacing Unix-specific signal handling with `ThreadPoolExecutor` timeout.
-
-3. **Gradio queue 422 errors**: Caused by malformed JavaScript event handlers. Use standard Gradio event binding without custom JS confirmation dialogs.
-
-**Health check timeouts:** The application uses cross-platform timeout mechanisms. If you see "Chat service health check timed out", this is normal and doesn't affect functionality.
-
-**MITRE ATT&CK data not loading:**
-- Service fetches from public MITRE ATT&CK API (requires internet connection)
-- Check `mitre_attack_service.py` for API endpoint configuration
-- Verify no firewall blocking https://raw.githubusercontent.com (MITRE data source)
-- Check logs for "mitre_attack" entries to see connection errors
-
-**Test failures with embedding dimension errors:**
-- **Symptom**: `ValueError: could not broadcast input array from shape (384,) into shape (768,)`
-- **Root cause**: Mock embeddings were hardcoded to 384 dimensions while production uses 768 (nomic-embed-text-v1.5)
-- **Fixed in**: `internal_assistant/components/embedding/embedding_component.py:148-152`
-- **Solution**: Mock embeddings now dynamically use `settings.embedding.embed_dim` from config
-- **Impact**: If you change `embed_dim` in `config/settings.yaml`, tests automatically adjust to match
-- **Regression test**: `tests/components/test_embedding_dimension.py` validates mock matches config
-- **Validation**: All ingestion tests now pass without dimension mismatch errors
-
-**Supported File Formats:**
-The system supports the following file formats for document ingestion:
-- **Text**: .txt, .md
-- **Documents**: .pdf, .docx, .hwp, .epub
-- **Presentations**: .pptx, .ppt, .pptm
-- **Data**: .csv, .json
-- **Code**: .ipynb
-- **Media**: .jpg, .png, .jpeg, .mp3, .mp4
-- **Email**: .mbox
-
-**Configuration**: `internal_assistant/components/ingest/ingest_helper.py:FILE_READER_CLS` (lines 56-71)
-**Validation**: `tests/server/ingest/test_txt_support.py` ensures .txt files are properly handled
-
-**Test assertion patterns:**
-- **Best practice**: Use `assert` statements with descriptive error messages, not `return True/False`
-- **Pytest convention**: Test functions should return `None`, not boolean values
-- **Example conversion**:
-  ```python
-  # Incorrect (pytest warning)
-  def test_something():
-      if condition:
-          return False
-      return True
-
-  # Correct (proper assertion)
-  def test_something():
-      assert condition, "Descriptive error message explaining what failed"
-  ```
-- **Benefit**: Assertions provide detailed failure information and expose hidden bugs that `return False` would silently ignore
-- **Reference**: `tests/ui/test_ui_feeds_isolated.py` shows proper assertion-based testing pattern
-
-## Documentation
-
-Full documentation is built with **MkDocs** and available in [docs/](docs/):
-- User guides: [docs/user/](docs/user/)
-- Architecture: [docs/developer/architecture/](docs/developer/architecture/)
-- Development guides: [docs/developer/development/](docs/developer/development/)
-- API reference: [docs/api/](docs/api/)
-
-### Building Documentation
+**"No module named 'internal_assistant'"**
 ```bash
-# Serve docs locally with auto-reload (recommended for development)
-poetry run mkdocs serve
-# Access at http://localhost:8000
-
-# Build static site (generates site/ folder)
-poetry run mkdocs build
-
-# View built site
-start site/index.html  # Windows
-open site/index.html   # macOS/Linux
+poetry install  # Reinstall package
+cd /path/to/internal-assistant && poetry run python -m internal_assistant
 ```
 
-### Documentation Features
-- **Full-text search** with 25 language support (powered by lunr.js)
-- **Material Design** theme with dark/light mode toggle
-- **Navigation** with automatic breadcrumbs and tabs
-- **Mobile responsive** design
-- **Fast build** (4-5 seconds for complete site, 21 pages, ~3.7MB)
-- **Git integration** (automatic creation/modification dates)
+**Version mismatch errors on startup**
+```bash
+make compatibility-check  # Verify dependency versions
+poetry install --sync     # Sync dependencies to pyproject.toml
+```
 
-### Documentation Guidelines
-When adding documentation:
-- Follow existing structure in [docs/](docs/) directory
-- Use Markdown with [Material for MkDocs extensions](https://squidfunk.github.io/mkdocs-material/)
-- Test locally with `mkdocs serve` before committing
-- Configuration: [mkdocs.yml](mkdocs.yml)
-- See [docs/developer/development/documentation-guidelines.md](docs/developer/development/documentation-guidelines.md) for detailed guidelines
+**Qdrant lock file issues**
+```bash
+# Windows
+cmd /c if exist "local_data\internal_assistant\qdrant\.lock" del /F "local_data\internal_assistant\qdrant\.lock"
 
-### Key Documentation Files
-- **Architecture**: [overview.md](docs/developer/architecture/overview.md), [refactoring-guide.md](docs/developer/architecture/refactoring-guide.md)
-- **Development**: [setup.md](docs/developer/development/setup.md), [package-structure.md](docs/developer/development/package-structure.md)
-- **Installation**: [installation.md](docs/user/installation/installation.md), [troubleshooting.md](docs/user/installation/troubleshooting.md)
-- **Configuration**: [settings.md](docs/user/configuration/settings.md), [llms.md](docs/user/configuration/llms.md)
+# Linux/Mac
+rm -f local_data/internal_assistant/qdrant/.lock
+```
+
+**Gradio/Pydantic schema errors**
+The application automatically applies Gradio compatibility patches in `launcher.py` (lines 115-142).
+
+### Health Checks
+```bash
+make health-check  # Check if app is running (curl http://localhost:8001/health)
+ollama list        # Verify Ollama models
+make stats         # Check database statistics
+```
+
+## Code Quality Standards
+
+### Formatting and Linting
+- **Black**: Code formatting (target-version = py311)
+- **Ruff**: Linting (pycodestyle, flake8, pydocstyle)
+- **MyPy**: Type checking (strict mode, exclude tests)
+
+### Conventions
+- Use Google-style docstrings
+- Type hints required (mypy strict mode)
+- Absolute imports only (no relative imports)
+- Ban relative imports via ruff configuration
+
+### Pre-commit Workflow
+```bash
+make format  # Auto-format code
+make mypy    # Type check
+make test    # Run tests
+make check   # Full quality check before commit
+```
+
+## Key Files Reference
+
+- `internal_assistant/main.py` - Application entry point
+- `internal_assistant/launcher.py` - FastAPI app factory
+- `internal_assistant/di.py` - Dependency injection setup
+- `internal_assistant/settings/settings.py` - Configuration schema
+- `config/settings.yaml` - Base configuration file
+- `pyproject.toml` - Project metadata, dependencies, tool configs
+- `Makefile` - Development commands
+- `tests/conftest.py` - Pytest configuration
+
+## Security Notes
+
+- **100% Local Processing**: No data sent to external services
+- **Authentication**: Configurable via `server.auth.enabled` in settings.yaml
+- **CORS**: Configured via `server.cors.*` settings
+- **Privacy-First Design**: All models and data stored locally

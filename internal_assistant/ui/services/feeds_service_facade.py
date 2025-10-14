@@ -129,30 +129,6 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
             logger.error(f"Failed to get MITRE data: {e}")
             return {"techniques": [], "tactics": [], "groups": [], "error": str(e)}
 
-    @ServiceFacade.with_cache(ttl=3600, key_func=lambda self: "forum_data")
-    @ServiceFacade.with_retry(max_retries=2, base_delay=1.0)
-    def get_forum_data(self) -> List[Dict[str, Any]]:
-        """
-        Get dark web forum directory data with caching.
-
-        Returns:
-            List of forum entries
-        """
-        try:
-            logger.debug("Fetching forum directory data")
-
-            if hasattr(self.service, "get_forum_data"):
-                forum_data = self.service.get_forum_data()
-            else:
-                # Return empty list if not available
-                forum_data = []
-
-            logger.info(f"Retrieved {len(forum_data)} forum entries")
-            return forum_data
-
-        except Exception as e:
-            logger.error(f"Failed to get forum data: {e}")
-            return []
 
     @ServiceFacade.with_retry(max_retries=1, base_delay=2.0)
     def refresh_feeds(self, force: bool = False) -> Dict[str, Any]:
@@ -385,7 +361,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
             key
             for key in self._cache.keys()
             if key.startswith("feeds:")
-            or key in ["cve_data", "mitre_data", "forum_data"]
+            or key in ["cve_data", "mitre_data"]
         ]
 
         with self._lock:
@@ -447,7 +423,6 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
                 "rss_feeds": True,
                 "cve_tracking": True,
                 "mitre_attack": True,
-                "forum_directory": True,
                 "background_refresh": True,
                 "threat_categorization": True,
             },

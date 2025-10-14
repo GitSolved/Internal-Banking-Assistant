@@ -397,34 +397,6 @@ class UISettings(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class ForumAccessTypes(BaseModel):
-    """Forum access type configuration."""
-
-    clearnet: bool = Field(
-        True,
-        description="Show clearnet forums accessible via standard browsers"
-    )
-    darkweb: bool = Field(
-        False,
-        description="Show dark web forums (require Tor Browser)"
-    )
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-class ForumDirectorySettings(BaseModel):
-    """Forum directory feature configuration."""
-
-    enabled: bool = Field(
-        True,
-        description="Enable or disable forum directory feature"
-    )
-    access_types: ForumAccessTypes = Field(
-        default_factory=lambda: ForumAccessTypes(clearnet=True, darkweb=False),
-        description="Forum access types to display"
-    )
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
 class RerankSettings(BaseModel):
     enabled: bool = Field(
         False,
@@ -654,7 +626,6 @@ class Settings(BaseModel):
     nodestore: NodeStoreSettings
     rag: RagSettings
     summarize: SummarizeSettings
-    forum_directory: ForumDirectorySettings | None = None
     qdrant: QdrantSettings | None = None
     postgres: PostgresSettings | None = None
     clickhouse: ClickHouseSettings | None = None

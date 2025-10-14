@@ -1,11 +1,11 @@
 # Architecture Overview
 
-This document provides an overview of the Internal Assistant architecture.
+Internal Assistant is a cybersecurity intelligence platform built on FastAPI and LlamaIndex, designed for local, privacy-focused threat analysis.
 
 **Related Documentation:**
-- [Package Structure Guide](../development/package-structure.md) - Implementation details
-- [Refactoring Guide](refactoring-guide.md) - Detailed codebase analysis and improvement plan
-- [Document Categorization](document-categorization.md) - System feature documentation
+- [Package Structure Guide](../development/package-structure.md) - Code organization and imports
+- [Data Lifecycle](data-lifecycle.md) - Data management strategy
+- [Development Setup](../development/setup.md) - Getting started with development
 
 ## System Architecture
 
@@ -75,19 +75,19 @@ Internal Assistant is a cybersecurity intelligence platform evolved from open-so
 ### 4. Data Layer
 
 #### Models
-- **Location**: `models/` directory
-- **Content**: Foundation-Sec-8B model file (4.7GB)
-- **Future**: Will move to `data/models/files/`
+- **Location**: `local_data/models/` directory
+- **Content**: Foundation-Sec-8B model file (~4.7GB)
+- **Management**: Ollama handles model storage
 
 #### Storage
-- **Location**: `data/persistent/storage/`
+- **Location**: `local_data/internal_assistant/`
 - **Content**: Vector embeddings, document metadata
 - **Technology**: Qdrant database files
 
 #### Logs
 - **Location**: `local_data/logs/`
 - **Content**: Application logs, session logs
-- **Management**: Automatic cleanup (keep last 7 sessions)
+- **Management**: Automatic cleanup via `make log-cleanup`
 
 ## Data Flow
 
@@ -121,15 +121,11 @@ Internal Assistant is a cybersecurity intelligence platform evolved from open-so
 
 ## Configuration Management
 
-### Environment-Based Configuration
-- **Local Development**: `config/environments/local.yaml`
-- **Testing**: `config/environments/test.yaml`
-- **Production**: `config/environments/docker.yaml`
-
-### Model Configuration
-- **LLM Settings**: `config/model-configs/foundation-sec.yaml`
-- **Embedding Settings**: `config/model-configs/ollama.yaml`
-- **Vector Store**: `config/model-configs/qdrant.yaml`
+### Configuration Files (Phase 2A Structure)
+- **Base**: `config/settings.yaml` (always loaded)
+- **Model-specific**: `config/model-configs/foundation-sec.yaml`, `ollama.yaml`
+- **Environment**: `config/environments/local.yaml`, `test.yaml`, `docker.yaml`
+- **Deployment**: `config/deployment/docker/docker-compose.yaml`
 
 ## Performance Characteristics
 
@@ -162,16 +158,10 @@ internal_assistant/
 - **UI Tests**: Interface functionality testing
 - **Performance Tests**: Load and stress testing
 
-## Future Architecture
+## Future Enhancements
 
-### Planned Improvements
-- **Modular UI**: Refactor monolithic ui.py (8,618 lines) - IN PROGRESS (49 lines extracted in Phase 1A.1)
-- **AI Agent Collaboration**: Multi-agent system for threat analysis
-- **Enhanced Intelligence**: Advanced threat detection algorithms
-- **Real-time Feeds**: Live threat intelligence updates
-
-### Scalability Roadmap
-- **Distributed Processing**: Multi-node deployment
-- **Cloud Integration**: Optional cloud-based components
-- **Advanced Analytics**: Machine learning threat detection
-- **API Ecosystem**: Third-party integrations
+- **Multi-agent Collaboration**: Distributed threat analysis
+- **Enhanced Intelligence**: Advanced pattern detection
+- **Real-time Updates**: Live threat intelligence streaming
+- **Cloud Integration**: Optional hybrid deployment
+- **Advanced Analytics**: ML-based threat prediction

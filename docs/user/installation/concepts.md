@@ -1,70 +1,76 @@
-# Main Concepts
+# Core Concepts
 
-Internal Assistant is a service that wraps a set of AI RAG primitives in a complete set of APIs providing a private, secure, and customizable GenAI development framework.
+Internal Assistant is a cybersecurity intelligence platform that provides a private, secure AI system for threat analysis and security research. It wraps RAG (Retrieval Augmented Generation) capabilities in a complete API framework.
 
-It uses FastAPI and LLamaIndex as its core frameworks. Those can be customized by changing the codebase itself.
+The platform uses FastAPI for the API layer and LlamaIndex as the core RAG framework. It supports multiple LLM providers, embedding models, and vector stores that can be configured without code changes.
 
-It supports a variety of LLM providers, embeddings providers, and vector stores, both local and remote. Those can be easily changed without changing the codebase.
+## Configurable Components
 
-## Different Setups support
+Internal Assistant has three main configurable components:
 
-### Setup configurations available
-You get to decide the setup for these 3 main components:
-- **LLM**: the large language model provider used for inference. It can be local, or remote, or even OpenAI.
-- **Embeddings**: the embeddings provider used to encode the input, the documents and the users' queries. Same as the LLM, it can be local, or remote, or even OpenAI.
-- **Vector store**: the store used to index and retrieve the documents.
+- **LLM**: The large language model used for inference. Can be local (Ollama, LlamaCPP) or cloud-based (OpenAI, Azure, Gemini, Sagemaker).
+- **Embeddings**: The model used to encode documents and queries. Can be local (HuggingFace, Ollama) or cloud-based.
+- **Vector Store**: The database used to index and retrieve documents (Qdrant, Milvus, Chroma, PostgreSQL, ClickHouse).
 
-There is an extra component that can be enabled or disabled: the UI. It is a Gradio UI that allows to interact with the API through a web interface.
+An optional **Gradio web UI** is available for easy interaction with the platform through a web interface.
 
-!!! warning "UI Client"
-    A working **Gradio UI client** is provided to test the API, together with a set of useful tools such as bulk
-    model download script, ingestion script, documents folder watch, etc. Please refer to the [User Guide](../usage/quickstart.md) page for more information.
+## Dependencies and Installation
 
-### Setups and Dependencies
-Your setup will be the combination of the different options available. You'll find recommended setups in the [installation](./installation.md) section.
-Internal Assistant uses poetry to manage its dependencies. You can install the dependencies for the different setups by running `poetry install --extras "<extra1> <extra2>..."`.
-Extras are the different options available for each component. For example, to install the dependencies for a a local setup with UI and qdrant as vector database, Ollama as LLM and local embeddings, you would run:
+Internal Assistant uses Poetry for dependency management. Install only the components you need using extras:
 
 ```bash
-poetry install --extras "ui vector-stores-qdrant llms-ollama embeddings-ollama"
+poetry install --extras "ui vector-stores-qdrant llms-ollama embeddings-huggingface"
 ```
 
-Refer to the [installation](./installation.md) section for more details.
+See the [Installation Guide](./installation.md) for recommended setup combinations.
 
-### Setups and Configuration
-Internal Assistant uses yaml to define its configuration in files named `settings-<profile>.yaml`.
-Different configuration files can be created in the root directory of the project.
-Internal Assistant will load the configuration at startup from the profile specified in the `PGPT_PROFILES` environment variable.
-For example, running:
+## Configuration
+
+Configuration is managed through YAML files in the `config/` directory. The system supports multiple profiles that can be loaded using the `PGPT_PROFILES` environment variable.
+
+**Example:**
 ```bash
 PGPT_PROFILES=ollama make run
 ```
-will load the configuration from `settings.yaml` and `settings-ollama.yaml`.
-- `settings.yaml` is always loaded and contains the default configuration.
-- `settings-ollama.yaml` is loaded if the `ollama` profile is specified in the `PGPT_PROFILES` environment variable. It can override configuration from the default `settings.yaml`
 
-## About Fully Local Setups
-In order to run Internal Assistant in a fully local setup, you will need to run the LLM, Embeddings and Vector Store locally.
+This loads:
+1. `config/settings.yaml` - Base configuration (always loaded)
+2. `config/model-configs/ollama.yaml` - Ollama-specific settings
 
-### LLM
-For local LLM there are two options:
-* (Recommended) You can use the 'ollama' option in Internal Assistant, which will connect to your local Ollama instance. Ollama simplifies a lot the installation of local LLMs.
-* You can use the 'llms-llama-cpp' option in Internal Assistant, which will use LlamaCPP. It works great on Mac with Metal most of the times (leverages Metal GPU), but it can be tricky in certain Linux and Windows distributions, depending on the GPU. In the installation document you'll find guides and troubleshooting.
+Profile-specific settings override base settings.
 
-In order for LlamaCPP powered LLM to work (the second option), you need to download the LLM model to the `local_data/models` folder. You can do so by running the compatibility check:
+## Fully Local Setup
+
+For a completely local, privacy-focused deployment:
+
+### LLM Options
+
+**Ollama (Recommended)**
+- Simplifies local model management
+- Handles GPU acceleration automatically
+- Install: `poetry install --extras "llms-ollama"`
+
+**LlamaCPP**
+- Direct model file execution
+- Best for macOS with Metal GPU
+- May require GPU-specific configuration on Linux/Windows
+- Install: `poetry install --extras "llms-llama-cpp"`
+
+For LlamaCPP, download models using:
 ```bash
 poetry run python tools/system/manage_compatibility.py --check
 ```
 
-### Embeddings
-For local Embeddings there are two options:
-* (Recommended) You can use the 'ollama' option in Internal Assistant, which will connect to your local Ollama instance. Ollama simplifies a lot the installation of local LLMs.
-* You can use the 'embeddings-huggingface' option in Internal Assistant, which will use HuggingFace.
+### Embeddings Options
 
-In order for HuggingFace LLM to work (the second option), you need to download the embeddings model to the `local_data/models` folder. You can do so by running the compatibility check:
-```bash
-poetry run python tools/system/manage_compatibility.py --check
-```
+**HuggingFace (Recommended for local)**
+- Local embeddings with no external API calls
+- Install: `poetry install --extras "embeddings-huggingface"`
 
-### Vector stores
-The vector stores supported (Qdrant, Milvus, ChromaDB and Postgres) run locally by default.
+**Ollama**
+- If using Ollama for LLM, can also handle embeddings
+- Install: `poetry install --extras "embeddings-ollama"`
+
+### Vector Stores
+
+All supported vector stores (Qdrant, Milvus, Chroma, PostgreSQL) can run locally. Qdrant is the recommended default.

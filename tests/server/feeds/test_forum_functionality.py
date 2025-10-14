@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Comprehensive functionality testing for Forum Directory Backend
-This is a standalone test suite for static analysis without server startup
+"""Comprehensive functionality testing for Forum Directory Backend.
+
+This is a standalone test suite for static analysis without server startup.
 """
 
 import asyncio
-import sys
 from datetime import UTC, datetime, timedelta
 
-# Import modules to test
-sys.path.append(".")
 from internal_assistant.server.feeds.forum_directory_service import (
     ForumDirectoryService,
 )
@@ -23,16 +21,16 @@ def test_forum_link_functionality():
     valid_link = ForumLink(
         "Tech Forum", "https://techforum.onion", "Technology discussions", "Technology"
     )
-    assert valid_link.is_valid() == True
+    assert valid_link.is_valid() is True
     assert valid_link.to_dict()["name"] == "Tech Forum"
     assert valid_link.to_dict()["category"] == "Technology"
 
     # Invalid links
     invalid_name = ForumLink("", "https://example.com")
-    assert invalid_name.is_valid() == False
+    assert invalid_name.is_valid() is False
 
     invalid_url = ForumLink("Test", "ftp://invalid.com")
-    assert invalid_url.is_valid() == False
+    assert invalid_url.is_valid() is False
 
     print("+ ForumLink validation working correctly")
 
@@ -44,17 +42,17 @@ def test_forum_parser_safety():
     parser = ForumDirectoryParser()
 
     # Test exclusion patterns
-    assert parser._is_excluded_section("Drug Marketplace") == True
-    assert parser._is_excluded_section("Weapon Sales") == True
-    assert parser._is_excluded_section("General Discussion") == False
-    assert parser._is_excluded_section("Tech Forum") == False
+    assert parser._is_excluded_section("Drug Marketplace") is True
+    assert parser._is_excluded_section("Weapon Sales") is True
+    assert parser._is_excluded_section("General Discussion") is False
+    assert parser._is_excluded_section("Tech Forum") is False
 
     # Test forum safety validation
     safe_forum = ForumLink("Tech Discussion", "https://tech.onion", "Technology forum")
     unsafe_forum = ForumLink("Drug Market", "https://drugs.onion", "Buy drugs here")
 
-    assert parser._is_safe_forum(safe_forum) == True
-    assert parser._is_safe_forum(unsafe_forum) == False
+    assert parser._is_safe_forum(safe_forum) is True
+    assert parser._is_safe_forum(unsafe_forum) is False
 
     print("+ Safety filtering working correctly")
 
@@ -126,16 +124,16 @@ def test_forum_service_initialization():
     assert service._session is None
 
     # Test cache validity
-    assert service.is_cache_valid() == False
+    assert service.is_cache_valid() is False
 
     # Simulate cache with data
     service.forums_cache = [ForumLink("Test", "https://test.onion")]
     service.last_refresh = datetime.now(UTC)
-    assert service.is_cache_valid() == True
+    assert service.is_cache_valid() is True
 
     # Simulate expired cache
     service.last_refresh = datetime.now(UTC) - timedelta(hours=7)
-    assert service.is_cache_valid() == False
+    assert service.is_cache_valid() is False
 
     print("+ Service initialization and cache validation working")
 

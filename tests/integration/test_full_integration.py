@@ -2,12 +2,8 @@
 
 import asyncio
 import os
-import sys
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 
 class TestFullIntegration:

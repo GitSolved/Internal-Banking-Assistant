@@ -1,109 +1,64 @@
-# Documentation Index
+# Internal Assistant Documentation
 
-## METADATA
-- **document_type**: "documentation_navigation_hub"
-- **section**: "docs/"
-- **purpose**: "documentation_landing_page"
-- **target_audience**: ["users", "developers", "system_administrators"]
-- **last_updated**: "current"
-- **maintainer**: "documentation_team"
+Welcome to the Internal Assistant documentation. This guide will help you install, configure, and use the cybersecurity intelligence platform.
 
-## DOCUMENTATION_OVERVIEW
-- **total_sections**: 3
-- **documentation_type**: "comprehensive_project_docs"
-- **search_available**: true
-- **navigation_type**: "hierarchical"
+## Quick Start
 
-## QUICK_NAVIGATION
-- **for_new_users**: "user/installation/installation.md"
-- **for_developers**: "developer/development/setup.md"
-- **for_api_users**: "api/reference/api-reference.md"
-- **for_troubleshooting**: "user/installation/troubleshooting.md"
+**New Users**: Start with the [Installation Guide](user/installation/installation.md) to get Internal Assistant running on your system.
 
-## DOCUMENTATION_SECTIONS
+**Developers**: Check out the [Development Setup](developer/development/setup.md) to contribute to the project.
 
-### User Documentation (`user/`)
-- **purpose**: "end_user_guides"
-- **audience**: "non_technical_users"
-- **documents**:
-  - **installation**: "user/installation/installation.md"
-    - **difficulty**: "beginner"
-    - **estimated_time**: "10_minutes"
-  - **configuration**: "user/configuration/settings.md"
-    - **difficulty**: "beginner"
-    - **prerequisites**: ["installation_complete"]
-  - **usage**: "user/usage/quickstart.md"
-    - **difficulty**: "beginner"
-    - **prerequisites**: ["installation_complete", "configuration_complete"]
-  - **troubleshooting**: "user/installation/troubleshooting.md"
-    - **difficulty**: "intermediate"
-    - **use_case**: "problem_resolution"
+**API Users**: See the [API Reference](api/reference/api-reference.md) for endpoint documentation.
 
-### API Documentation (`api/`)
-- **purpose**: "technical_reference"
-- **audience**: "developers"
-- **documents**:
-  - **api_reference**: "api/reference/api-reference.md"
-    - **difficulty**: "intermediate"
-    - **content_type**: "endpoint_specifications"
-  - **sdks**: "api/reference/sdks.md"
-    - **difficulty**: "intermediate"
-    - **content_type**: "client_libraries"
+**Troubleshooting**: Visit the [Troubleshooting Guide](user/installation/troubleshooting.md) if you encounter issues.
 
-### Developer Documentation (`developer/`)
-- **purpose**: "development_guides"
-- **audience**: "contributors"
-- **documents**:
-  - **architecture**: "developer/architecture/overview.md"
-    - **difficulty**: "advanced"
-    - **content_type**: "system_design"
-  - **development_setup**: "developer/development/setup.md"
-    - **difficulty**: "intermediate"
-    - **prerequisites**: ["git", "python_3.9+"]
-  - **component_integration**: "developer/development/component-integration.md"
-    - **difficulty**: "advanced"
-    - **content_type**: "development_guide"
+## Documentation Sections
 
-## NAVIGATION_PATTERNS
-- **learning_path**: "installation → configuration → usage → troubleshooting"
-- **development_path**: "architecture → setup → integration"
-- **reference_path**: "api_reference → sdks"
+### User Documentation
 
-## SEARCH_AND_DISCOVERY
-- **search_keywords**: ["installation", "configuration", "api", "development", "troubleshooting"]
-- **common_queries**:
-  - "how to install": "user/installation/installation.md"
-  - "api endpoints": "api/reference/api-reference.md"
-  - "development setup": "developer/development/setup.md"
-  - "error solutions": "user/installation/troubleshooting.md"
+Guides for end users to install, configure, and use Internal Assistant.
 
-## DOCUMENTATION_PREREQUISITES
-- **reading_level**: "technical_beginner"
-- **required_knowledge**: ["basic_command_line", "python_fundamentals"]
-- **optional_knowledge**: ["docker", "api_development", "machine_learning"]
+- [Installation](user/installation/installation.md) - Step-by-step installation instructions
+- [Concepts](user/installation/concepts.md) - Core concepts and architecture
+- [Configuration](user/configuration/settings.md) - Settings and profiles
+- [LLM Configuration](user/configuration/llms.md) - Model configuration options
+- [Quick Start](user/usage/quickstart.md) - Get started quickly
+- [Document Ingestion](user/usage/ingestion.md) - Manage documents
+- [Ingestion Reset](user/usage/ingestion-reset.md) - Clear ingested documents
+- [Summarization](user/usage/summarize.md) - Document summarization features
+- [Troubleshooting](user/installation/troubleshooting.md) - Common issues and solutions
 
-## DOCUMENTATION_STRUCTURE
-```
-docs/
-├── index.md (this file)
-├── user/
-│   ├── installation/
-│   ├── configuration/
-│   └── usage/
-├── api/
-│   └── reference/
-└── developer/
-    ├── architecture/
-    └── development/
-```
+### API Documentation
 
-## QUICK_ACCESS_COMMANDS
-- **find_documentation**: "Use search function or browse sections"
-- **report_issues**: "Create issue in project repository"
-- **suggest_improvements**: "Submit pull request with documentation updates"
+Technical reference for API endpoints and integration.
 
-## DOCUMENTATION_METRICS
-- **total_pages**: 15+
-- **average_reading_time**: "5-15_minutes_per_page"
-- **update_frequency**: "monthly"
-- **review_cycle**: "quarterly"
+- [API Reference](api/reference/api-reference.md) - REST API endpoint documentation
+
+### Developer Documentation
+
+Guides for contributors and developers working on Internal Assistant.
+
+- [Architecture Overview](developer/architecture/overview.md) - System architecture and design
+- [Data Lifecycle](developer/architecture/data-lifecycle.md) - Data management strategy
+- [Development Setup](developer/development/setup.md) - Setting up your dev environment
+- [Package Structure](developer/development/package-structure.md) - Code organization and imports
+- [Documentation Guidelines](developer/development/documentation-guidelines.md) - Documentation standards
+
+## Learning Path
+
+### For New Users
+1. Read [Concepts](user/installation/concepts.md) to understand the platform
+2. Follow the [Installation Guide](user/installation/installation.md)
+3. Configure your setup using [Configuration](user/configuration/settings.md)
+4. Try the [Quick Start](user/usage/quickstart.md) examples
+
+### For Developers
+1. Review the [Architecture Overview](developer/architecture/overview.md)
+2. Set up your environment with [Development Setup](developer/development/setup.md)
+3. Understand the [Package Structure](developer/development/package-structure.md)
+
+## Getting Help
+
+- **Issues**: Report bugs or request features on the project repository
+- **Questions**: Check the troubleshooting guide or open a discussion
+- **Contributions**: See the development documentation for contribution guidelines

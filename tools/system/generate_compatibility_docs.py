@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-Generate comprehensive compatibility documentation for Internal Assistant.
-This script creates documentation that future processes can use to understand
-version requirements and ensure compatibility.
+Compatibility Documentation Generator
+
+Generates comprehensive compatibility documentation for Internal Assistant
+including version requirements, system checks, and constraints.
+
+Usage:
+    poetry run python tools/system/generate_compatibility_docs.py
 """
 
 import json
 import sys
 from pathlib import Path
 
-# Add the project root to the path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -30,7 +33,7 @@ def generate_markdown_docs():
 
 ## Overview
 This document provides comprehensive compatibility information for Internal Assistant.
-All version requirements are validated by the version check system in `src/utils/version_check.py`.
+All version requirements are validated by the version check system.
 
 ## Application Version
 - **Current Version**: {report['application_version']}
@@ -98,11 +101,10 @@ poetry run python -c "from internal_assistant.utils.version_check import generat
 ```
 
 ## Notes
-- All version constraints are defined in `src/utils/version_check.py`
-- The version check system validates these constraints at startup
-- Critical packages are marked for immediate attention if incompatible
-- Wildcard versions (*) indicate any version is acceptable
-- This document is auto-generated and should be updated when dependencies change
+- All version constraints are defined in the version check system
+- Constraints are validated at application startup
+- Critical packages require immediate attention if incompatible
+- This document is auto-generated - update when dependencies change
 """
 
     return md_content
@@ -133,10 +135,10 @@ def main():
 
     # Generate pyproject.toml constraints
     constraints = export_version_constraints()
-    print(f"👾✅ Generated compatibility documentation:")
-    print(f"   📄 {md_file}")
-    print(f"   📊 {json_file}")
-    print(f"\n📖 View the compatibility guide at: {md_file}")
+    print("Generated compatibility documentation:")
+    print(f"  Markdown: {md_file}")
+    print(f"  JSON: {json_file}")
+    print(f"\nView the guide at: {md_file}")
 
 
 if __name__ == "__main__":

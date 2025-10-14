@@ -63,7 +63,15 @@
       "Bash(if exist \"local_data\\internal_assistant\\qdrant\\.lock\" del /F \"local_data\\internal_assistant\\qdrant\\.lock\")",
       "Bash(git clone:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Read(//d/internal-assistant/**)",
+      "Bash(test:*)",
+      "Bash(git config:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git mv:*)",
+      "Bash(grep:*)",
+      "Bash(xargs:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": [],

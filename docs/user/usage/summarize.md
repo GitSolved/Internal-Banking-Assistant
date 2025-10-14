@@ -1,75 +1,39 @@
 # Document Summarization
 
-The Summarize feature provides a method to extract concise summaries from ingested documents or text using Internal Assistant. This tool is particularly useful for quickly understanding large volumes of information by distilling key points and main ideas.
+Generate concise summaries from ingested documents or text.
 
 ## Overview
 
-Document summarization helps you:
+The Summarize feature extracts key information from documents, saving time and improving comprehension of large content volumes.
 
-- **Extract Key Information**: Get the main points from lengthy documents
-- **Save Time**: Quickly understand content without reading entire texts
-- **Customize Output**: Control summary length and focus areas
-- **Stream Processing**: Get real-time summaries for large documents
-
-## Use Cases
-
-The Summarize tool is ideal for:
-
-- **Research Papers**: Extract key findings and conclusions
-- **News Articles**: Get main points and developments
-- **Business Reports**: Understand executive summaries and recommendations
-- **Legal Documents**: Identify key clauses and requirements
-- **Technical Documentation**: Extract important concepts and procedures
-- **Academic Papers**: Summarize methodology and results
-
-## Key Features
-
-### 1. Ingestion-Compatible
-Summarize works with both:
-- **Direct Text Input**: Paste text directly for summarization
-- **Ingested Documents**: Summarize documents already in your knowledge base
-
-### 2. Customizable Summaries
-Control summary generation with:
-- **Instructions**: Guide the model on summary focus
-- **Prompts**: Custom prompts for specific summary types
-- **Length Control**: Specify desired summary length
-- **Style Options**: Technical, casual, or formal summaries
-
-### 3. Streaming Support
-- **Real-time Generation**: Get summaries as they're generated
-- **Large Document Handling**: Process lengthy documents efficiently
-- **Immediate Feedback**: See progress during summarization
+**Use Cases:**
+- Research papers - Extract findings and conclusions
+- Business reports - Get executive summaries
+- Legal documents - Identify key clauses
+- Technical documentation - Understand main concepts
+- Security reports - Highlight critical threats
 
 ## Usage
 
-### Via Web UI
+### Web UI
 
-1. **Navigate to Summarize Tab**:
-   - Go to http://localhost:8001
-   - Click on the "Summarize" tab
+1. Navigate to http://localhost:8001
+2. Click "Summarize" tab
+3. Choose input source:
+   - **Direct Text**: Paste content directly
+   - **Ingested Document**: Select from document library
+4. Configure options:
+   - Summary length (short, medium, long)
+   - Custom instructions
+   - Summary style
+5. Click "Generate Summary"
+6. Copy or download results
 
-2. **Select Content Source**:
-   - **Direct Input**: Paste text in the input field
-   - **Ingested Documents**: Select from your document library
+### API
 
-3. **Configure Summary Options**:
-   - Set summary length (short, medium, long)
-   - Add custom instructions
-   - Choose summary style
-
-4. **Generate Summary**:
-   - Click "Generate Summary"
-   - View real-time progress
-   - Copy or download the result
-
-### Via API
-
-#### Basic Summarization
-
+**Basic Summarization:**
 ```bash
 curl -X POST "http://localhost:8001/v1/summarize" \
-  -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Your document text here...",
@@ -77,11 +41,9 @@ curl -X POST "http://localhost:8001/v1/summarize" \
   }'
 ```
 
-#### Advanced Summarization
-
+**With Custom Instructions:**
 ```bash
 curl -X POST "http://localhost:8001/v1/summarize" \
-  -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Your document text here...",
@@ -91,11 +53,9 @@ curl -X POST "http://localhost:8001/v1/summarize" \
   }'
 ```
 
-#### Streaming Summarization
-
+**Streaming Mode:**
 ```bash
 curl -X POST "http://localhost:8001/v1/summarize/stream" \
-  -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Your document text here...",
@@ -105,19 +65,16 @@ curl -X POST "http://localhost:8001/v1/summarize/stream" \
 
 ## Configuration Options
 
-### Summary Parameters
-
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
 | `text` | string | Text to summarize | Required |
-| `max_length` | integer | Maximum summary length in words | 200 |
-| `instructions` | string | Custom instructions for summarization | - |
-| `style` | string | Summary style (technical, casual, formal) | "general" |
-| `focus_areas` | array | Specific areas to focus on | - |
+| `max_length` | integer | Maximum summary length (words) | 200 |
+| `instructions` | string | Custom instructions | - |
+| `style` | string | Summary style (technical, executive, academic) | "general" |
 
-### Summary Styles
+## Summary Styles
 
-#### Technical Style
+**Technical:**
 ```json
 {
   "style": "technical",
@@ -125,15 +82,15 @@ curl -X POST "http://localhost:8001/v1/summarize/stream" \
 }
 ```
 
-#### Executive Style
+**Executive:**
 ```json
 {
   "style": "executive",
-  "instructions": "Provide high-level overview with key business implications"
+  "instructions": "High-level overview with key business implications"
 }
 ```
 
-#### Academic Style
+**Academic:**
 ```json
 {
   "style": "academic",
@@ -141,171 +98,79 @@ curl -X POST "http://localhost:8001/v1/summarize/stream" \
 }
 ```
 
+**Security-Focused (for threat reports):**
+```json
+{
+  "style": "security",
+  "instructions": "Highlight threats, vulnerabilities, indicators of compromise, and recommended actions"
+}
+```
+
 ## Examples
 
-### Research Paper Summary
+### Security Report Summary
 
-**Input**: Long research paper on machine learning
+**Input:** CVE vulnerability report
 
-**Configuration**:
+**Configuration:**
 ```json
 {
-  "max_length": 300,
-  "style": "academic",
-  "instructions": "Focus on methodology, key findings, and implications"
+  "max_length": 250,
+  "style": "security",
+  "instructions": "Focus on vulnerability severity, affected systems, and mitigation steps"
 }
 ```
 
-**Output**: "This study investigates the effectiveness of transformer-based models for natural language processing tasks. The research employed a comparative analysis of BERT, GPT, and T5 models on benchmark datasets. Key findings include a 15% improvement in accuracy using fine-tuned BERT models and significant performance gains with larger model sizes. The study concludes that transformer architectures show promising results for NLP applications."
-
-### Business Report Summary
-
-**Input**: Quarterly business report
-
-**Configuration**:
-```json
-{
-  "max_length": 200,
-  "style": "executive",
-  "instructions": "Highlight financial performance, key metrics, and strategic initiatives"
-}
-```
-
-**Output**: "Q3 2024 showed strong revenue growth of 23% year-over-year, driven by increased market share in the cloud services segment. Key achievements include launching three new product features and expanding to two new markets. Strategic initiatives focus on AI integration and customer experience improvements."
+**Output:** "CVE-2024-1234 is a critical remote code execution vulnerability in Apache Framework 2.x affecting versions 2.0-2.8. CVSS score 9.8. Attackers can exploit via crafted HTTP requests to gain unauthorized system access. Affects approximately 50,000 internet-exposed servers. Immediate patching to version 2.9 required. No workarounds available."
 
 ## Best Practices
 
-### 1. Content Preparation
+### Content Preparation
+- Remove formatting artifacts
+- Ensure logical text flow
+- Consider breaking very long documents into sections
 
-- **Clean Text**: Remove formatting artifacts before summarization
-- **Structure**: Maintain logical flow in input text
-- **Length**: Consider breaking very long documents into sections
+### Configuration
+- Match summary length to use case
+- Be specific in instructions
+- Choose appropriate style for audience
 
-### 2. Summary Configuration
-
-- **Length**: Match summary length to use case
-- **Style**: Choose appropriate style for your audience
-- **Instructions**: Be specific about what to focus on
-
-### 3. Quality Control
-
-- **Review**: Always review generated summaries
-- **Iterate**: Adjust parameters for better results
-- **Validate**: Cross-check with original content
-
-### 4. Performance Optimization
-
-- **Batch Processing**: Summarize multiple documents efficiently
-- **Caching**: Cache summaries for frequently accessed content
-- **Streaming**: Use streaming for large documents
-
-## Advanced Features
-
-### Multi-Document Summarization
-
-Summarize multiple documents together:
-
-```bash
-curl -X POST "http://localhost:8001/v1/summarize/batch" \
-  -H "Authorization: Bearer your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "documents": [
-      {"id": "doc1", "text": "First document..."},
-      {"id": "doc2", "text": "Second document..."}
-    ],
-    "max_length": 400,
-    "instructions": "Create a complete summary covering all documents"
-  }'
-```
-
-### Comparative Summarization
-
-Compare multiple documents:
-
-```bash
-curl -X POST "http://localhost:8001/v1/summarize/compare" \
-  -H "Authorization: Bearer your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "documents": [
-      {"id": "doc1", "text": "Document A..."},
-      {"id": "doc2", "text": "Document B..."}
-    ],
-    "instructions": "Highlight similarities and differences between documents"
-  }'
-```
+### Quality Control
+- Always review generated summaries
+- Cross-check with original content
+- Iterate on parameters for better results
 
 ## Troubleshooting
 
-### Common Issues
-
-**Poor Summary Quality**
-- Increase `max_length` for more detailed summaries
+### Poor Summary Quality
+- Increase `max_length` for more detail
 - Provide more specific `instructions`
-- Check input text quality and structure
+- Check input text quality
 
-**Slow Performance**
-- Reduce `max_length` for faster processing
-- Use streaming for large documents
-- Consider breaking documents into smaller sections
+### Slow Performance
+- Reduce `max_length`
+- Use streaming mode for large documents
+- Break documents into smaller sections
 
-**Memory Issues**
+### Memory Issues
 - Process documents in smaller batches
-- Use streaming mode for large texts
+- Use streaming mode
 - Monitor system resources
-
-### Error Handling
-
-**API Errors**
-```json
-{
-  "error": "Text too long for summarization",
-  "max_supported_length": 50000,
-  "provided_length": 75000
-}
-```
-
-**Solutions**
-- Break text into smaller sections
-- Use document-level summarization
-- Implement progressive summarization
 
 ## Integration
 
-### With Other Features
+**With Document Ingestion:**
+- Automatically summarize documents after ingestion
+- Create summary metadata for search
+- Index summaries for quick retrieval
 
-**Document Ingestion**
-- Summarize documents after ingestion
-- Create summary metadata for documents
-- Index summaries for search
+**With Chat:**
+- Use summaries as context for responses
+- Generate on-demand summaries during conversations
+- Include summary references in chat responses
 
-**Chat Integration**
-- Use summaries as context for chat responses
-- Generate summaries on-demand during conversations
-- Include summary references in responses
+## Next Steps
 
-**API Integration**
-- Integrate summarization into your applications
-- Build custom summarization workflows
-- Create automated summary generation
-
-## Contributing
-
-If you have ideas for improving the Summarize feature or want to add new capabilities, we welcome contributions!
-
-### Ways to Contribute
-
-1. **Feature Requests**: Submit ideas for new summarization features
-2. **Bug Reports**: Report issues and suggest improvements
-3. **Code Contributions**: Submit pull requests with enhancements
-4. **Documentation**: Help improve documentation and examples
-
-### Getting Started
-
-1. **Fork the Repository**: [GitHub Repository](https://github.com/your-org/internal-assistant)
-2. **Create Feature Branch**: `git checkout -b feature/summarize-enhancement`
-3. **Make Changes**: Implement your improvements
-4. **Submit Pull Request**: Create a PR with detailed description
-
-For more information on contributing, see the [Development Guide](../../developer/development/setup.md).
+- [Document Ingestion](./ingestion.md) - Upload documents to summarize
+- [Configuration](../configuration/settings.md) - Adjust summarization settings
+- [API Reference](../../api/reference/api-reference.md) - Full API documentation

@@ -1,11 +1,11 @@
 site_name: Internal Assistant
 site_description: Private, secure, customizable GenAI development framework
 site_author: Internal Assistant Team
-site_url: https://your-org.github.io/internal-assistant
+site_url: https://secureyourgear.github.io/internal-assistant
 
 # Repository
-repo_name: your-org/internal-assistant
-repo_url: https://github.com/your-org/internal-assistant
+repo_name: SecureYourGear/internal-assistant
+repo_url: https://github.com/SecureYourGear/internal-assistant
 edit_uri: edit/main/docs/
 
 # Theme
@@ -45,10 +45,7 @@ nav:
       - Troubleshooting: user/installation/troubleshooting.md
     - Configuration:
       - Settings: user/configuration/settings.md
-      - Vector Database: user/configuration/vectordb.md
-      - Node Store: user/configuration/nodestore.md
       - LLMs: user/configuration/llms.md
-      - Reranker: user/configuration/reranker.md
     - Usage:
       - Quickstart: user/usage/quickstart.md
       - Ingestion: user/usage/ingestion.md
@@ -58,30 +55,14 @@ nav:
   - Compatibility Guide: compatibility/compatibility_guide.md
   - API Reference:
     - Overview: api/reference/api-reference.md
-    - SDKs: api/reference/sdks.md
   - Developer:
     - Architecture:
       - Overview: developer/architecture/overview.md
-      - UI Refactoring:
-        - Architecture: developer/architecture/ui-refactoring-architecture.md
-        - Roadmap: developer/architecture/ui-refactoring-roadmap.md
-        - Status: developer/architecture/ui-refactoring-status.md
-        - Dependency Map: developer/architecture/ui-dependency-map.md
-        - Risk Assessment: developer/architecture/extraction-risk-assessment.md
-      - Refactoring Guide: developer/architecture/refactoring-guide.md
-      - Document Categorization: developer/architecture/document-categorization.md
       - Data Lifecycle: developer/architecture/data-lifecycle.md
     - Development:
       - Setup: developer/development/setup.md
       - Package Structure: developer/development/package-structure.md
-      - Import Quick Reference: developer/development/import-quick-reference.md
-    - Reports:
-      - Phase 0C Completion: developer/reports/phase-0c-completion-report.md
-      - Phase 0C Corrections: developer/reports/phase-0c-corrections-summary.md
-      - Phase 1A.1 Completion: developer/reports/phase-1a1-completion-report.md
-      - Folder Status: developer/reports/folder-status-report.md
-      - Documentation Cleanup: developer/reports/documentation-cleanup.md
-      - Documentation Strategy: developer/reports/documentation-strategy.md
+      - Documentation Guidelines: developer/development/documentation-guidelines.md
 
 # Plugins
 plugins:

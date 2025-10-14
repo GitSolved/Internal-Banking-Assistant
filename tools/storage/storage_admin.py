@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """
-Storage Administration Tool for Internal Assistant
+Storage Administration Tool
 
-Provides administrative access to storage recovery and management functions.
+Administrative access to storage recovery, diagnosis, and management operations.
+
+Usage:
+    poetry run python tools/storage/storage_admin.py diagnose
+    poetry run python tools/storage/storage_admin.py check-consistency --repair
+    poetry run python tools/storage/storage_admin.py backup --name my_backup
+    poetry run python tools/storage/storage_admin.py restore /path/to/backup --force --yes
 """
 
 import argparse

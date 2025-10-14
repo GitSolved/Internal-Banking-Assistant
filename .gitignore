@@ -1,37 +1,22 @@
-.venv
+# ============================================
+# Claude Code Configuration (keep private)
+# ============================================
+CLAUDE.md
+
+# ============================================
+# Python Environment
+# ============================================
+.venv/
+venv/
 .env
-venv
+*.env
+.python-version
 
-settings-me.yaml
-
-.ruff_cache
-.pytest_cache
-.mypy_cache
-
-# byte-compiled / optimized / DLL files
+# ============================================
+# Python Artifacts
+# ============================================
 __pycache__/
 *.py[cod]
-
-# unit tests / coverage reports
-/tests-results.xml
-/.coverage
-/coverage.xml
-/htmlcov/
-
-# pyenv
-/.python-version
-
-# IDE
-.idea/
-.vscode/
-/.run/
-.fleet/
-
-# macOS
-.DS_Store
-
-# Build artifacts and generated files
-site/
 *.pyc
 *.pyo
 *.pyd
@@ -41,26 +26,73 @@ site/
 *.egg-info/
 dist/
 build/
-.coverage.*
 
-# Internal Assistant sensitive data - NEVER commit these
+# ============================================
+# Testing & Coverage
+# ============================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tests-results.xml
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ============================================
+# IDE & Editors
+# ============================================
+.idea/
+.vscode/
+.run/
+.fleet/
+*.swp
+*~
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+Thumbs.db
+
+# ============================================
+# Internal Assistant Runtime Data (NEVER COMMIT)
+# ============================================
 local_data/
 data/
-DemoData/
-external/
-pgptvenv/
-*.log
-*.db
-*.sqlite
-*.env
+storage/
+models/
+
+# ============================================
+# Secrets & Credentials (NEVER COMMIT)
+# ============================================
 *.token
 HF_TOKEN
 OPENAI_API_KEY
 GOOGLE_API_KEY
 AZ_OPENAI_API_KEY
+*.key
+*.pem
+credentials.json
 
-# Tools - generated results and analysis files
+# ============================================
+# Generated Documentation & Build Artifacts
+# ============================================
+site/
+
+# ============================================
+# Logs & Databases
+# ============================================
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Tools - Generated Analysis Files
+# ============================================
 tools/**/*-results.json
 tools/**/results.json
 tools/**/baseline-*.json
 tools/**/dependency-*.json
+.claude/settings.local.json

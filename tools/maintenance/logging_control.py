@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """
-Logging Control Utility for Internal Assistant
+Logging Control Tool
 
-This script helps you control logging levels and manage log files.
+Controls logging levels and manages log files for Internal Assistant.
+
+Usage:
+    poetry run python tools/maintenance/logging_control.py set-level INFO
+    poetry run python tools/maintenance/logging_control.py show
+    poetry run python tools/maintenance/logging_control.py cleanup --keep-days 7
+    poetry run python tools/maintenance/logging_control.py tail
 """
 
 import argparse

@@ -4,62 +4,68 @@ Collection of utilities for system maintenance, configuration, and development t
 
 ## Tool Categories
 
-### 🧹 [Maintenance & Cleanup Tools](./maintenance/)
+### 🧹 [Maintenance](./maintenance/)
 **Purpose**: System maintenance, cleanup, and optimization
 - `analyze_models.py` - Analyzes and removes duplicate model files
-- `cleanup_unused_models.py` - Removes unused model directories  
-- `cleanup_qdrant.py` - Cleans up Qdrant database locks and stale processes
-- `manage_logs.py` - Manages log files with cleanup strategies
-- `logging_control.py` - Controls logging levels and log file management
+- `cleanup_unused_models.py` - Removes unused model directories
+- `manage_logs.py` - Unified log file management (status, interactive, auto cleanup)
+- `logging_control.py` - Controls logging levels and log file operations
 
-### 🔧 [System Management & Configuration Tools](./system/)
+### 🔧 [System Management](./system/)
 **Purpose**: System configuration, monitoring, and management
-- `manage_compatibility.py` - Manages dependency compatibility and version enforcement
+- `manage_compatibility.py` - Dependency compatibility management (check, enforce, fix)
 - `generate_compatibility_docs.py` - Generates compatibility documentation
 - `check_model.py` - Checks current model configuration and status
-- `utils.py` - Database utilities (stats, wipe operations)
+- `extract_openapi.py` - Extracts OpenAPI specification from FastAPI app
+- `utils.py` - Database utilities (stats, wipe operations for vector/node stores)
 
-### 📥 [Data Processing Tools](./data/)
+### 📥 [Data Processing](./data/)
 **Purpose**: Data ingestion and processing utilities
-- `ingest_folder.py` - Ingests documents from folders into the system
+- `ingest_folder.py` - Bulk document ingestion with retry logic and checkpointing
 
-### 🧪 [Development & Testing Tools](./development/)
-**Purpose**: Development utilities and test execution
-- `testing/run_tests.py` - Test execution utilities
-
-### 📊 [Analysis Tools](./analysis/)
-**Purpose**: Code and dependency analysis
-- Analysis and diagnostic utilities for project health
-
-### ⚡ [Performance Tools](./performance/)
-**Purpose**: Performance profiling and optimization
-- Performance measurement and benchmarking utilities
-
-### 💾 [Storage Management Tools](./storage/)
+### 💾 [Storage Management](./storage/)
 **Purpose**: Storage administration and recovery
-- `storage_admin.py` - Administrative access to storage recovery and management
-- `direct_cleanup.py` - Direct storage cleanup operations
+- `storage_admin.py` - Storage diagnosis, consistency checking, backup/restore operations
+
+### 🧪 [Development & Testing](./development/)
+**Purpose**: Development utilities and test execution
+- `testing/run_tests.py` - Poetry-enforced test runner
 
 ### 🎨 [JavaScript Integration](./Javascript/) **[PRODUCTION DEPENDENCY]**
 **Purpose**: JavaScript module management for Gradio UI
-- `js_manager.py` - JavaScript module loading and injection (imported in ui.py)
+- `js_manager.py` - JavaScript module loading and injection (imported by ui.py)
 - `modules/*.js` - Client-side JavaScript modules for UI functionality
 
-**⚠️ CRITICAL**: This directory is actively used in production code and cannot be deleted.
+**⚠️ CRITICAL**: This directory is actively used in production and cannot be modified.
 
 ## Usage
 
-All tools should be run from the project root using Poetry:
-
+**IMPORTANT**: Always prefer Makefile commands when available:
 ```bash
-# General pattern
-poetry run python tools/{category}/{tool_name}.py [arguments]
+# Use Makefile commands (recommended)
+make compatibility-check    # Instead of manage_compatibility.py --check
+make log-cleanup           # Instead of manage_logs.py --auto
+make test                  # Instead of run_tests.py
+make format                # Black + ruff formatting
+```
 
-# Examples
-poetry run python tools/maintenance/cleanup_qdrant.py
+For tools without Makefile equivalents, run from project root using Poetry:
+```bash
+# Maintenance
+poetry run python tools/maintenance/analyze_models.py
+poetry run python tools/maintenance/cleanup_unused_models.py
+poetry run python tools/maintenance/manage_logs.py --status
+
+# System
 poetry run python tools/system/check_model.py
+poetry run python tools/system/extract_openapi.py internal_assistant.launcher:app
+poetry run python tools/system/utils.py stats
+
+# Data & Storage
 poetry run python tools/data/ingest_folder.py /path/to/documents
 poetry run python tools/storage/storage_admin.py diagnose
+
+# Development
 poetry run python tools/development/testing/run_tests.py
 ```
 
@@ -72,18 +78,29 @@ poetry run python tools/development/testing/run_tests.py
 
 ## Adding New Tools
 
-When adding new development tools:
+When adding new tools:
 
-1. Determine the primary purpose:
+1. **Check if a Makefile command would be more appropriate** - prefer Makefile for common operations
+2. Determine the category:
    - **Maintenance**: Cleanup, log management, model optimization
    - **System**: Configuration, compatibility, monitoring
    - **Data**: Document ingestion, data processing
-   - **Development**: Testing, debugging utilities
-   - **Analysis**: Dependency analysis, code metrics
-   - **Performance**: Profiling, benchmarking
    - **Storage**: Database admin, recovery operations
-2. Place in the appropriate category directory
-3. Update the category's README.md (if it exists)
-4. Follow the existing naming conventions
-5. Include proper docstrings and usage instructions
-6. **Never modify Javascript/** - it's a production dependency imported by ui.py
+   - **Development**: Testing, debugging utilities
+3. Place in the appropriate category directory
+4. Follow naming conventions (snake_case)
+5. Include comprehensive docstring with:
+   - Purpose description
+   - Usage examples with `poetry run python tools/...` commands
+6. Add proper error handling and clear output messages
+7. **Never modify Javascript/** - production dependency used by ui.py
+
+## Best Practices
+
+- Always use absolute imports: `from internal_assistant.xxx import yyy`
+- Add `#!/usr/bin/env python3` shebang to all scripts
+- Use argparse with clear help messages and examples
+- Include descriptive error messages
+- Log important operations
+- Support dry-run mode for destructive operations
+- Return appropriate exit codes (0 for success, non-zero for errors)

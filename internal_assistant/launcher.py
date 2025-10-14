@@ -16,7 +16,6 @@ from internal_assistant.server.chunks.chunks_router import chunks_router
 from internal_assistant.server.completions.completions_router import completions_router
 from internal_assistant.server.embeddings.embeddings_router import embeddings_router
 from internal_assistant.server.feeds.feeds_router import feeds_router
-from internal_assistant.server.feeds.simple_forum_router import simple_forum_router
 from internal_assistant.server.feeds.threat_intelligence_router import (
     threat_intelligence_router,
 )
@@ -84,9 +83,8 @@ def create_app(root_injector: Injector) -> FastAPI:
     app.include_router(summarize_router)
     app.include_router(embeddings_router)
     app.include_router(feeds_router)
-    app.include_router(simple_forum_router)  # Simple forum directory endpoints
-    app.include_router(threat_intelligence_router)  # NEW: Threat Intelligence endpoints
-    app.include_router(mitre_attack_router)  # NEW: MITRE ATT&CK endpoints
+    app.include_router(threat_intelligence_router)  # Threat Intelligence endpoints
+    app.include_router(mitre_attack_router)  # MITRE ATT&CK endpoints
     app.include_router(health_router)
     app.include_router(system_router)
     app.include_router(metadata_router)

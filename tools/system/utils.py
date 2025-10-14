@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+"""
+Database Utility Tool
+
+Provides database management operations for vector stores and node stores:
+- wipe: Clear all data from storage
+- stats: Display storage statistics
+
+Usage:
+    poetry run python tools/system/utils.py wipe
+    poetry run python tools/system/utils.py stats
+"""
+
 import argparse
 import os
 import shutil
@@ -8,19 +21,22 @@ from internal_assistant.settings.settings import settings
 
 
 def wipe_file(file: str) -> None:
+    """Delete a single file if it exists."""
     if os.path.isfile(file):
         os.remove(file)
-        print(f" - Deleted {file}")
+        print(f"Deleted: {file}")
 
 
 def wipe_tree(path: str) -> None:
+    """Recursively delete all files in a directory except .gitignore."""
     if not os.path.exists(path):
-        print(f"Warning: Path not found {path}")
+        print(f"Warning: Path not found: {path}")
         return
-    print(f"Wiping {path}...")
-    all_files = os.listdir(path)
 
-    files_to_remove = [file for file in all_files if file != ".gitignore"]
+    print(f"Wiping: {path}")
+    all_files = os.listdir(path)
+    files_to_remove = [f for f in all_files if f != ".gitignore"]
+
     for file_name in files_to_remove:
         file_path = os.path.join(path, file_name)
         try:
@@ -28,12 +44,11 @@ def wipe_tree(path: str) -> None:
                 os.remove(file_path)
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
-            print(f" - Deleted {file_path}")
-        except PermissionError:
-            print(
-                f"PermissionError: Unable to remove {file_path}. It is in use by another process."
-            )
-            continue
+            print(f"Deleted: {file_path}")
+        except PermissionError as e:
+            print(f"Permission denied: {file_path} (in use by another process)")
+        except Exception as e:
+            print(f"Error removing {file_path}: {e}")
 
 
 class Postgres:
@@ -122,27 +137,27 @@ class Qdrant:
         self.client = QdrantClient(**settings().qdrant.model_dump(exclude_none=True))
 
     def wipe(self, store_type: str) -> None:
+        """Delete Qdrant collection."""
         assert store_type == "vectorstore"
         try:
             self.client.delete_collection(self.COLLECTION)
-            print("Collection dropped successfully.")
+            print("Qdrant collection dropped successfully")
         except Exception as e:
-            print("Error dropping collection:", e)
+            print(f"Error dropping Qdrant collection: {e}")
 
     def stats(self, store_type: str) -> None:
-        print(f"Storage for Qdrant {store_type}.")
+        """Display Qdrant collection statistics."""
+        print(f"Qdrant {store_type} statistics:")
         try:
             collection_data = self.client.get_collection(self.COLLECTION)
             if collection_data:
-                # Collection Info
-                # https://qdrant.tech/documentation/concepts/collections/
-                print(f"\tPoints:        {collection_data.points_count:,}")
-                print(f"\tVectors:       {collection_data.vectors_count:,}")
-                print(f"\tIndex Vectors: {collection_data.indexed_vectors_count:,}")
+                print(f"  Points: {collection_data.points_count:,}")
+                print(f"  Vectors: {collection_data.vectors_count:,}")
+                print(f"  Indexed Vectors: {collection_data.indexed_vectors_count:,}")
                 return
         except ValueError:
             pass
-        print("\t- Qdrant collection not found or empty")
+        print("  Collection not found or empty")
 
 
 class Command:
@@ -176,9 +191,28 @@ class Command:
             self.for_each_store(cmd)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("mode", help="select a mode to run", choices=["wipe", "stats"])
-    args = parser.parse_args()
+def main():
+    parser = argparse.ArgumentParser(
+        description="Database utility tool for vector and node stores",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Display storage statistics
+    python utils.py stats
 
+    # Wipe all data (WARNING: destructive!)
+    python utils.py wipe
+        """
+    )
+    parser.add_argument(
+        "mode",
+        choices=["wipe", "stats"],
+        help="Operation mode: wipe (clear all data) or stats (show statistics)"
+    )
+
+    args = parser.parse_args()
     Command().execute(args.mode.lower())
+
+
+if __name__ == "__main__":
+    main()

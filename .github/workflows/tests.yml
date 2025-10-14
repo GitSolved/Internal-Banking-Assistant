@@ -24,8 +24,7 @@ jobs:
     strategy:
       matrix:
         quality-command:
-          - black
-          - ruff
+          - format
           - mypy
     steps:
       - uses: actions/checkout@v4

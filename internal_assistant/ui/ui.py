@@ -1030,13 +1030,6 @@ class InternalAssistantUI:
             source_filter, days_filter
         )
 
-    def _format_simple_forum_display(self) -> str:
-        """Format forum directory display using DisplayUtilityBuilder."""
-        return self._display_utility_builder.format_simple_forum_display()
-
-    def _get_simple_forum_data(self) -> list:
-        """Get forum data using DisplayUtilityBuilder."""
-        return self._display_utility_builder.get_simple_forum_data()
 
     def _format_cve_display(
         self,
@@ -1453,7 +1446,7 @@ class InternalAssistantUI:
 
         Returns:
             Tuple of (feed_status, feed_display, cve_status, cve_display,
-                     ai_feed_status, ai_feed_display, forum_status, forum_display)
+                     ai_feed_status, ai_feed_display)
         """
         try:
             logger.info("Auto-refreshing all panels on startup...")
@@ -1463,7 +1456,6 @@ class InternalAssistantUI:
                 self._feeds_event_builder.get_handler().refresh_feeds(),
                 self._feeds_event_builder.get_handler().refresh_cve_data(),
                 self._feeds_service.refresh_feeds(),  # Refresh for AI feeds
-                self._feeds_event_builder.get_handler().refresh_simple_forum_directory()
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -1481,14 +1473,13 @@ class InternalAssistantUI:
                 results[0][0], results[0][1],  # feed_status, feed_display
                 results[1][0], results[1][1],  # cve_status, cve_display
                 ai_feed_status_html, ai_feed_html,  # ai_feed_status, ai_feed_display
-                results[3][0], results[3][1],  # forum_status, forum_display
             )
         except Exception as e:
             logger.error(f"Auto-refresh failed: {e}", exc_info=True)
             error_msg = f"⚠️ Auto-refresh failed: {str(e)}"
             empty_html = "<div style='padding: 20px; text-align: center; color: #666;'>Please click refresh manually</div>"
-            # Return error for all 4 panels
-            return (error_msg, empty_html) * 4
+            # Return error for all 3 panels
+            return (error_msg, empty_html) * 3
 
     def _check_mitre_update_status(self) -> tuple[str, str]:
         """
@@ -2342,7 +2333,7 @@ class InternalAssistantUI:
                                     elem_classes=["model-selector"],
                                 )
 
-                                # Writing Style Selection (Claude Desktop style)
+                                # Writing Style Selection
                                 writing_style = gr.Radio(
                                     choices=[
                                         "Balanced",
@@ -2483,11 +2474,11 @@ class InternalAssistantUI:
                     self._register_components_with_message_bus(all_state_components)
                     logger.info("✅ MessageBus registration completed")
 
-                    # AI & Security Intelligence Feed Section
-                    logger.info("🤖 Building AI & Security Intelligence Feed section...")
+                    # Industry News and Updates Section
+                    logger.info("📰 Building Industry News and Updates section...")
                     with gr.Group(elem_classes=["ai-security-feed-section"]):
                         gr.HTML(
-                            "<div class='file-section-title'>🤖 AI & Security Intelligence Feed</div>"
+                            "<div class='file-section-title'>📰 Industry News and Updates</div>"
                         )
 
                         # Filter Controls Row
@@ -2574,70 +2565,6 @@ class InternalAssistantUI:
                             '<div class="feed-resize-handle" id="ai-feed-resize-handle"></div>'
                         )
 
-                    # Forum Directory Section - Enhanced Panel
-                    with gr.Group(elem_classes=["external-info-section"]):
-                        gr.HTML(
-                            "<div class='file-section-title'>Security Forums & Communities Directory</div>"
-                        )
-
-                        # Enhanced Controls Row
-                        with gr.Row():
-                            # Refresh Button
-                            forum_refresh_btn = gr.Button(
-                                "Refresh",
-                                size="sm",
-                                elem_classes=["filter-btn"],
-                                scale=1,
-                            )
-                            # Filter Dropdown
-                            forum_filter_dropdown = gr.Dropdown(
-                                choices=[
-                                    "All",
-                                    "Professional",
-                                    "Dark Web",
-                                    "CTF & Training",
-                                    "Bug Bounty",
-                                    "Specialized",
-                                ],
-                                value="All",
-                                label="Filter",
-                                elem_classes=["filter-dropdown"],
-                                scale=2,
-                            )
-                            # Export Button
-                            forum_export_btn = gr.Button(
-                                "Export List",
-                                size="sm",
-                                elem_classes=["filter-btn"],
-                                scale=1,
-                            )
-
-                        # Forum Status Display
-                        forum_status = gr.HTML(
-                            "<div class='feed-status'>Loading forum directory...</div>",
-                            elem_classes=["feed-status-display"],
-                        )
-
-                        # Simple Forum Display
-                        try:
-                            initial_forums_html = self._format_simple_forum_display()
-                        except Exception as e:
-                            initial_forums_html = """
-                            <div class='feed-content'>
-                                <div style='text-align: center; color: #666; padding: 20px;'>
-                                    <div>🌐 Forum directory unavailable</div>
-                                    <div style='font-size: 12px; margin-top: 8px;'>
-                                        Click the REFRESH button to load forum directory
-                                    </div>
-                                </div>
-                            </div>"""
-
-                        forum_display = gr.HTML(
-                            value=initial_forums_html,
-                            elem_classes=["file-list-container"],
-                        )
-
-                        # No resize handle for simple forum panel
 
             # Mode change handler for explanation update - now handled by SettingsEventHandler
             # Advanced Settings Event Handlers - now handled by SettingsEventHandler
@@ -3241,34 +3168,13 @@ class InternalAssistantUI:
                 outputs=[ai_feed_status, ai_feed_display]
             )
 
-            # Wire up Forum Directory handlers
-            forum_refresh_btn.click(
-                fn=self._feeds_event_builder.create_refresh_forum_handler(),
-                outputs=[forum_status, forum_display],
-            )
-
-            # Filter dropdown handler
-            forum_filter_dropdown.change(
-                fn=self._feeds_event_builder.create_filter_forum_handler(),
-                inputs=[forum_filter_dropdown],
-                outputs=[forum_status, forum_display],
-            )
-
-            # Export button handler
-            forum_export_btn.click(
-                fn=self._feeds_event_builder.create_export_forum_handler(),
-                inputs=[forum_filter_dropdown],
-                outputs=[forum_status],
-            )
-
             # Auto-refresh all panels on UI startup (no cached data)
             blocks.load(
                 fn=self._auto_refresh_all_panels_on_startup,
                 outputs=[
                     feed_status, feed_display,
                     cve_status, cve_display,
-                    ai_feed_status, ai_feed_display,
-                    forum_status, forum_display
+                    ai_feed_status, ai_feed_display
                 ]
             )
 

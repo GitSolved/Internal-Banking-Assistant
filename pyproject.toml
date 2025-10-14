@@ -32,15 +32,20 @@
 [tool.poetry]
 name = "internal-assistant"
 version = "0.6.2"
-description = "Internal Cybersecurity Intelligence Platform built on PrivateGPT technology"
-authors = []
+description = "Internal Cybersecurity Intelligence Platform"
+authors = ["SecureYourGear"]
+repository = "https://github.com/SecureYourGear/internal-assistant"
+homepage = "https://github.com/SecureYourGear/internal-assistant"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["cybersecurity", "ai", "llm", "rag", "threat-intelligence", "privacy", "local-ai", "ollama"]
 packages = [
     { include = "internal_assistant" }
 ]
 
 [tool.poetry.dependencies]
 python = "3.11.9"
-# PrivateGPT
+# Core dependencies
 fastapi = { extras = ["all"], version = ">=0.108.0,<0.115.0" }
 python-multipart = "^0.0.10"
 injector = "^0.22.0"

@@ -1,12 +1,7 @@
 """Tests for background RSS feed refresh service."""
 
 import asyncio
-import os
-import sys
 from unittest.mock import AsyncMock, patch
-
-# Add the project root to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 from internal_assistant.server.feeds.background_refresh import BackgroundRefreshService
 from internal_assistant.server.feeds.feeds_service import RSSFeedService

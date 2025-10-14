@@ -399,10 +399,12 @@ class FeedsDisplayBuilder:
             List of CVE feed items
         """
         try:
-            # Get Microsoft Security feeds specifically
-            feeds = self._feeds_service.get_feeds("Microsoft Security", 30)
+            # Get all feeds and filter to CVE tracking sources
+            all_feeds = self._feeds_service.get_feeds(None, 30)
+            cve_sources = ["CISA KEV", "NIST NVD"]
+            feeds = [f for f in all_feeds if f.get("source") in cve_sources]
             logger.info(
-                f"Retrieved {len(feeds)} Microsoft Security feed items for CVE data"
+                f"Retrieved {len(feeds)} CVE feed items from {', '.join(cve_sources)}"
             )
             return feeds or []
         except Exception as e:

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Compatibility Management Utility for Internal Assistant
+Dependency Compatibility Management Tool
 
-This unified script manages dependency compatibility with multiple modes:
-- Check mode: Analyze current dependency versions for compatibility issues
-- Enforce mode: Verify versions against strict requirements and pyproject.toml
-- Fix mode: Auto-fix compatibility issues where possible
+Manages dependency compatibility with multiple modes:
+- Check: Analyze current versions for compatibility issues
+- Enforce: Strict version verification against requirements
+- Fix: Auto-fix compatibility issues where possible
 
-Replaces: check_compatibility.py + enforce_versions.py
+Usage:
+    poetry run python tools/system/manage_compatibility.py --check
+    poetry run python tools/system/manage_compatibility.py --enforce
+    poetry run python tools/system/manage_compatibility.py --fix
 """
 
 import sys
@@ -312,10 +315,8 @@ def display_results(results: Dict[str, any]) -> int:
                 print(f"  {issue}")
 
             print("\nRECOMMENDATIONS:")
-            print("  1. Run: python dev/scripts/manage_compatibility.py --fix")
-            print("  2. Or manually update versions in pyproject.toml")
-            print("  3. Run: poetry lock && poetry install")
-            print("  4. Test application after updates")
+            print("  1. Run: poetry run python tools/system/manage_compatibility.py --fix")
+            print("  2. Or manually: poetry lock && poetry install")
             return 1
         else:
             print("\nOK All dependencies are compatible!")
@@ -343,13 +344,9 @@ def display_results(results: Dict[str, any]) -> int:
             return 0
         else:
             print("ERROR Version requirements not met!")
-            print("\n To fix:")
-            print(
-                "   1. Run: poetry run python dev/scripts/manage_compatibility.py --fix"
-            )
-            print("   2. Or manually: poetry lock && poetry install")
-            print("   3. Ensure Python 3.11.9 is installed")
-            print("   4. Run this script again to verify")
+            print("\nTo fix:")
+            print("   1. Run: poetry run python tools/system/manage_compatibility.py --fix")
+            print("   2. Ensure Python 3.11.9 is installed")
             return 1
 
     elif results["mode"] == "fix":

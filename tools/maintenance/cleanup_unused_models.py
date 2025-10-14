@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """
-Cleanup Unused Models Utility for Internal Assistant
+Unused Model Directory Cleanup Tool
 
-This script removes completely unused model directories after duplicate cleanup.
+Removes completely unused model directories to free disk space.
+Identifies active models from configuration and safely removes only unused ones.
+
+Usage:
+    poetry run python tools/maintenance/cleanup_unused_models.py
+    poetry run python tools/maintenance/cleanup_unused_models.py --dry-run
+    poetry run python tools/maintenance/cleanup_unused_models.py --cleanup
 """
 
 import argparse
@@ -185,9 +191,9 @@ def main():
     if args.cleanup or args.dry_run:
         cleanup_unused_models(args.models_dir, dry_run=args.dry_run)
     else:
-        print(f"\n💡 To remove unused directories, run:")
-        print(f"   poetry run python dev/scripts/cleanup_unused_models.py --dry-run")
-        print(f"   poetry run python dev/scripts/cleanup_unused_models.py --cleanup")
+        print(f"\nTo remove unused directories:")
+        print(f"  poetry run python tools/maintenance/cleanup_unused_models.py --dry-run")
+        print(f"  poetry run python tools/maintenance/cleanup_unused_models.py --cleanup")
 
 
 if __name__ == "__main__":

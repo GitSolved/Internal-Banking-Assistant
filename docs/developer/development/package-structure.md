@@ -1,17 +1,12 @@
 # Package Structure and Import Conventions
 
-## Overview
-
-This document describes the package structure and import conventions for the Internal Assistant project to prevent import issues and ensure consistency across the codebase.
+This guide explains the project structure and import patterns for Internal Assistant.
 
 **Related Documentation:**
 - [System Architecture Overview](../architecture/overview.md) - High-level architecture
-- [Refactoring Guide](../architecture/refactoring-guide.md) - Detailed project structure and metrics
-- [Import Quick Reference](import-quick-reference.md) - Common import patterns
+- [Development Setup](setup.md) - Environment setup guide
 
 ## Package Structure
-
-For the complete project structure with detailed descriptions, see the [Refactoring Guide - Project Structure](../architecture/refactoring-guide.md#complete-project-structure).
 
 ### Key Directories
 - `internal_assistant/` - Main Python package (renamed from 'src')

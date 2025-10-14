@@ -76,14 +76,9 @@ All successful responses follow this format:
 }
 ```
 
-## SDKs
+## Client Libraries
 
-We provide official SDKs for popular programming languages:
-
-- [Python SDK](sdks.md#python)
-- [JavaScript/TypeScript SDK](sdks.md#javascript)
-- [Go SDK](sdks.md#go)
-- [Rust SDK](sdks.md#rust)
+Use any OpenAI-compatible client library to interact with the API. The API follows OpenAI's specification for compatibility.
 
 ## Examples
 
@@ -125,4 +120,8 @@ with open("document.pdf", "rb") as f:
 print(response.json())
 ```
 
-For more detailed examples and SDK usage, see the [SDKs documentation](sdks.md).
+## Additional Resources
+
+- [Quick Start Guide](../../user/usage/quickstart.md) - Get started with Internal Assistant
+- [Configuration](../../user/configuration/settings.md) - Configure the API
+- [Developer Setup](../../developer/development/setup.md) - Set up development environment

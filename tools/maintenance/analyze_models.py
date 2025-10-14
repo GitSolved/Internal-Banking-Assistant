@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """
-Model Analysis and Cleanup Utility for Internal Assistant
+Model File Analysis and Deduplication Tool
 
-This script analyzes model files and identifies duplicates for cleanup.
+Analyzes model files in the models directory and identifies duplicates
+that can be safely removed to free up disk space.
+
+Usage:
+    poetry run python tools/maintenance/analyze_models.py
+    poetry run python tools/maintenance/analyze_models.py --dry-run
+    poetry run python tools/maintenance/analyze_models.py --cleanup
 """
 
 import argparse
@@ -190,9 +196,9 @@ def main():
     if args.cleanup or args.dry_run:
         cleanup_duplicates(hash_groups, dry_run=args.dry_run)
     else:
-        print(f"\n💡 To clean up duplicates:")
-        print(f"   poetry run python dev/scripts/analyze_models.py --dry-run")
-        print(f"   poetry run python dev/scripts/analyze_models.py --cleanup")
+        print(f"\nTo clean up duplicates:")
+        print(f"  poetry run python tools/maintenance/analyze_models.py --dry-run")
+        print(f"  poetry run python tools/maintenance/analyze_models.py --cleanup")
 
 
 if __name__ == "__main__":

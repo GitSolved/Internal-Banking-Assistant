@@ -1,213 +1,277 @@
 # Documentation Guidelines
 
-## METADATA
-- **document_type**: "development_guidelines"
-- **purpose**: "documentation_creation_standards"
-- **target_audience**: ["developers", "contributors", "documentation_writers"]
-- **difficulty_level**: "intermediate"
-- **estimated_time**: "10_minutes_read"
-- **last_updated**: "current"
-- **maintainer**: "documentation_team"
+Standards for creating and maintaining documentation.
 
-## PREREQUISITES
-- **required_knowledge**: ["markdown_syntax", "project_structure", "git_basics"]
-- **optional_knowledge**: ["mkdocs", "technical_writing", "user_experience"]
-- **tools_needed**: ["text_editor", "git_client", "markdown_previewer"]
+## Writing Style
 
-## DOCUMENTATION_STANDARDS
+- **Tone**: Professional and clear
+- **Audience**: Technical but accessible
+- **Format**: Structured and scannable
+- **Length**: Concise but complete
 
-### WRITING_STYLE
-- **tone**: "professional_and_clear"
-- **audience**: "technical_but_accessible"
-- **format**: "structured_and_scannable"
-- **length**: "concise_but_complete"
+## Documentation Types
 
-### CONTENT_ORGANIZATION
-- **structure**: "logical_hierarchy"
-- **navigation**: "clear_progression"
-- **cross_references**: "explicit_links"
-- **examples**: "practical_and_relevant"
+### User Documentation (`docs/user/`)
 
-## AGENT_OPTIMIZATION_REQUIREMENT
+**Purpose**: End-user guides for installation, configuration, and usage
 
-### MANDATORY_TRANSFORMATION
-- **requirement**: "ALL_NEW_DOCUMENTATION_MUST_BE_AGENT_OPTIMIZED"
-- **prompt_location**: "docs/developer/guides/documentation-transformation-prompt.md"
-- **transformation_command**: "transform {filename}"
-- **validation**: "verify_agent_readability"
+**Required Sections**:
+- Overview
+- Prerequisites
+- Step-by-step instructions
+- Troubleshooting
+- Examples
 
-### TRANSFORMATION_PROCESS
-1. **create_initial_draft**: "Write human-readable documentation"
-2. **apply_transformation**: "Use docs/developer/guides/documentation-transformation-prompt.md"
-3. **validate_output**: "Ensure machine_readability"
-4. **finalize_document**: "Review_and_approve"
+**Example**: [Installation Guide](../../user/installation/installation.md)
 
-### TRANSFORMATION_INSTRUCTIONS
+### API Documentation (`docs/api/`)
+
+**Purpose**: Technical reference for developers
+
+**Required Sections**:
+- Endpoint descriptions
+- Request/response formats
+- Authentication
+- Error codes
+- Examples
+
+**Example**: [API Reference](../../api/reference/api-reference.md)
+
+### Developer Documentation (`docs/developer/`)
+
+**Purpose**: Guides for contributors
+
+**Required Sections**:
+- Architecture overview
+- Setup instructions
+- Coding standards
+- Testing guidelines
+- Contribution process
+
+**Example**: [Development Setup](setup.md)
+
+## File Naming
+
+Use lowercase with hyphens: `installation-guide.md`, `api-reference.md`
+
+**Good**: `installation-guide.md`, `quick-start.md`
+
+**Bad**: `Installation Guide.md`, `quick_start.md`, `QuickStart.md`
+
+## Content Structure
+
+### Required Sections
+
+1. **Title** - Clear, descriptive heading
+2. **Overview** - Brief introduction (1-2 paragraphs)
+3. **Main Content** - Organized by topic with clear headings
+4. **Related Links** - Cross-references to related docs
+
+### Optional Sections
+
+- **Prerequisites** - Required knowledge or setup
+- **Examples** - Practical demonstrations
+- **Troubleshooting** - Common issues and solutions
+- **Next Steps** - Where to go after this guide
+
+## Markdown Standards
+
+### Headers
+
+Use ATX-style headers (`#`, `##`, `###`):
+
+```markdown
+# Main Title
+## Section
+### Subsection
 ```
-IMPORTANT: Before committing any new documentation file, you MUST:
 
-1. Reference the documentation transformation prompt:
-   File: docs/developer/guides/documentation-transformation-prompt.md
-   
-2. Apply the transformation by saying:
-   "transform {filename}"
-   
-3. Verify the output follows the agent-optimized format with:
-   - METADATA section
-   - PREREQUISITES section
-   - Structured content
-   - Machine-readable formatting
-   
-4. Only commit documentation that has been transformed
+### Code Blocks
+
+Always specify language for syntax highlighting:
+
+````markdown
+```python
+def example():
+    return "Hello"
 ```
 
-## DOCUMENTATION_TYPES_AND_REQUIREMENTS
+```bash
+poetry run make test
+```
+````
 
-### USER_DOCUMENTATION
-- **location**: "docs/user/"
-- **audience**: "end_users"
-- **format**: "step_by_step_guides"
-- **required_sections**:
-  - METADATA
-  - PREREQUISITES
-  - INSTALLATION_STEPS
-  - CONFIGURATION_OPTIONS
-  - TROUBLESHOOTING
+### Links
 
-### API_DOCUMENTATION
-- **location**: "docs/api/"
-- **audience**: "developers"
-- **format**: "reference_documentation"
-- **required_sections**:
-  - METADATA
-  - API_ENDPOINTS
-  - REQUEST_FORMATS
-  - RESPONSE_FORMATS
-  - ERROR_CODES
+Use descriptive link text:
 
-### DEVELOPER_DOCUMENTATION
-- **location**: "docs/developer/"
-- **audience**: "contributors"
-- **format**: "technical_guides"
-- **required_sections**:
-  - METADATA
-  - PREREQUISITES
-  - ARCHITECTURE_OVERVIEW
-  - DEVELOPMENT_SETUP
-  - CONTRIBUTION_GUIDELINES
+**Good**: See the [Installation Guide](../../user/installation/installation.md)
 
-## FILE_NAMING_CONVENTIONS
+**Bad**: Click [here](../../user/installation/installation.md)
 
-### NAMING_RULES
-- **format**: "lowercase_with_hyphens.md"
-- **descriptive**: "clear_purpose_indication"
-- **consistent**: "follow_existing_patterns"
-- **avoid**: "spaces_underscores_camelCase"
+### Lists
 
-### EXAMPLES
-- ✅ **good**: "installation-guide.md", "api-reference.md", "development-setup.md"
-- ❌ **bad**: "Installation Guide.md", "api_reference.md", "DevelopmentSetup.md"
+Use `-` for unordered lists, `1.` for ordered:
 
-## CONTENT_STRUCTURE_REQUIREMENTS
+```markdown
+- Item one
+- Item two
 
-### MANDATORY_SECTIONS
-1. **METADATA** - Document properties and relationships
-2. **PREREQUISITES** - Dependencies and requirements
-3. **MAIN_CONTENT** - Primary information organized by topic
-4. **NAVIGATION_STRUCTURE** - Links and relationships
+1. First step
+2. Second step
+```
 
-### OPTIONAL_SECTIONS
-- **TROUBLESHOOTING** - Common issues and solutions
-- **EXAMPLES** - Practical usage examples
-- **REFERENCES** - Related documentation and resources
-- **CHANGELOG** - Version history and updates
+## MkDocs Integration
 
-## QUALITY_ASSURANCE
+### Building Documentation
 
-### PRE_COMMIT_CHECKS
-- **agent_optimization**: "Documentation transformed using prompt"
-- **formatting**: "Consistent markdown formatting"
-- **links**: "All internal links valid"
-- **spelling**: "No spelling errors"
-- **grammar**: "Clear and professional language"
+```bash
+# Local development server
+poetry run mkdocs serve
 
-### REVIEW_CRITERIA
-- **completeness**: "All necessary information included"
-- **accuracy**: "Information is current and correct"
-- **clarity**: "Easy to understand and follow"
-- **usability**: "Practical and actionable content"
+# Build static site
+poetry run mkdocs build
+```
 
-## WORKFLOW_PROCESS
+### Navigation
 
-### CREATION_WORKFLOW
-1. **plan_content**: "Define purpose and audience"
-2. **create_draft**: "Write initial human-readable version"
-3. **apply_transformation**: "Use docs/developer/guides/documentation-transformation-prompt.md"
-4. **review_output**: "Verify agent-optimized format"
-5. **test_navigation**: "Ensure links and structure work"
-6. **commit_changes**: "Add to version control"
+Edit `mkdocs.yml` to add pages to navigation:
 
-### UPDATE_WORKFLOW
-1. **identify_changes**: "Determine what needs updating"
-2. **modify_content**: "Update the documentation"
-3. **reapply_transformation**: "Ensure agent-optimization maintained"
-4. **validate_consistency**: "Check with existing documentation"
-5. **commit_updates**: "Version control changes"
+```yaml
+nav:
+  - Home: index.md
+  - User Guide:
+    - Installation: user/installation/installation.md
+    - Configuration: user/configuration/settings.md
+```
 
-## TOOLS_AND_RESOURCES
+### Material Theme Features
 
-### REQUIRED_TOOLS
-- **text_editor**: "VS Code, Sublime Text, or similar"
-- **markdown_previewer**: "Built-in or extension"
-- **git_client**: "For version control"
-- **transformation_prompt**: "docs/developer/guides/documentation-transformation-prompt.md"
+- **Admonitions**: Notes, warnings, tips
+  ```markdown
+  !!! note "Title"
+      Content here
 
-### HELPFUL_RESOURCES
-- **markdown_guide**: "GitHub Markdown Guide"
-- **mkdocs_docs**: "MkDocs Documentation"
-- **style_guide**: "Project-specific conventions"
-- **examples**: "Existing documentation files"
+  !!! warning
+      Important warning
+  ```
 
-## COMMON_PITFALLS
+- **Code Copy Buttons**: Automatic for all code blocks
+- **Search**: Full-text search enabled by default
+- **Dark Mode**: Theme switcher included
 
-### AVOID_THESE_MISTAKES
-- **skipping_transformation**: "Always use the transformation prompt"
-- **inconsistent_formatting**: "Follow established patterns"
-- **broken_links**: "Verify all internal references"
-- **outdated_information**: "Keep content current"
-- **unclear_structure**: "Use logical organization"
+## Quality Checklist
 
-### BEST_PRACTICES
-- **start_with_outline**: "Plan structure before writing"
-- **write_for_audience**: "Consider who will read this"
-- **include_examples**: "Practical usage demonstrations"
-- **test_navigation**: "Verify links and structure"
-- **get_feedback**: "Review with team members"
+Before committing documentation:
 
-## ENFORCEMENT
+- ✅ All links work (no broken references)
+- ✅ Code examples tested and working
+- ✅ Spelling and grammar checked
+- ✅ Follows style guidelines
+- ✅ Builds without errors (`mkdocs build`)
+- ✅ Cross-references added where appropriate
+- ✅ Examples relevant to Internal Assistant
 
-### COMPLIANCE_REQUIREMENTS
-- **mandatory**: "All documentation must be agent-optimized"
-- **validation**: "Automated checks for transformation compliance"
-- **review**: "Peer review for quality assurance"
-- **training**: "Team education on guidelines"
+## Common Pitfalls
 
-### MONITORING
-- **regular_audits**: "Periodic documentation reviews"
-- **quality_metrics**: "Track documentation effectiveness"
-- **user_feedback**: "Collect reader input"
-- **continuous_improvement**: "Update guidelines based on experience"
+### Avoid
 
-## SUPPORT_AND_CONTACT
+- Broken links to non-existent files
+- Outdated information
+- Excessive verbosity
+- Inconsistent formatting
+- Missing code block language tags
+- Relative links that don't work in MkDocs
 
-### GETTING_HELP
-- **documentation_team**: "Primary contact for questions"
-- **transformation_issues**: "Reference docs/developer/guides/documentation-transformation-prompt.md"
-- **formatting_questions**: "Check existing documentation examples"
-- **technical_issues**: "Consult development team"
+### Best Practices
 
-### FEEDBACK_CHANNELS
-- **issue_tracker**: "Report documentation problems"
-- **pull_requests**: "Suggest improvements"
-- **team_meetings**: "Discuss documentation strategy"
-- **user_surveys**: "Collect reader feedback"
+- Start with an outline
+- Write for your audience
+- Include practical examples
+- Test all commands and code
+- Link to related documentation
+- Keep content current
+
+## Review Process
+
+1. **Self-review**: Check against guidelines
+2. **Build test**: Run `mkdocs build --strict`
+3. **Peer review**: Get feedback from team
+4. **Update**: Address review comments
+5. **Commit**: Push to repository
+
+## Tools
+
+### Recommended
+
+- **Editor**: VS Code with Markdown extensions
+- **Preview**: Built-in markdown preview or MkDocs serve
+- **Spell check**: VS Code extension or grammarly
+- **Link checker**: `mkdocs build --strict`
+
+### MkDocs Commands
+
+```bash
+# Start development server
+poetry run mkdocs serve
+
+# Build static site
+poetry run mkdocs build
+
+# Build with warnings as errors
+poetry run mkdocs build --strict
+
+# Deploy to GitHub Pages
+poetry run mkdocs gh-deploy
+```
+
+## Examples
+
+### Good Documentation Example
+
+```markdown
+# Installing Internal Assistant
+
+Internal Assistant requires Python 3.11.9 and Poetry 2.0+.
+
+## Prerequisites
+
+- Python 3.11.9 installed
+- Poetry installed
+- Git installed
+
+## Installation Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SecureYourGear/internal-assistant
+   cd internal-assistant
+   ```
+
+2. Install dependencies:
+   ```bash
+   poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
+   ```
+
+3. Run the application:
+   ```bash
+   poetry run make run
+   ```
+
+## Next Steps
+
+- [Configuration Guide](../configuration/settings.md)
+- [Quick Start](../usage/quickstart.md)
+```
+
+## Getting Help
+
+- **Questions**: Ask in project discussions
+- **Issues**: Report documentation problems via GitHub issues
+- **Improvements**: Submit pull requests with fixes
+
+## References
+
+- [MkDocs Documentation](https://www.mkdocs.org/)
+- [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
+- [Markdown Guide](https://www.markdownguide.org/)
