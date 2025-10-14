@@ -97,40 +97,44 @@ This document outlines the data management strategy for the Internal Assistant p
 
 ### Backup Commands
 ```bash
-# Daily backup
-poetry run python tools/maintenance/backup_data.py --daily
+# Manual backup using standard tools
+tar -czf backup-$(date +%Y%m%d).tar.gz local_data/ config/
 
-# Weekly backup
-poetry run python tools/maintenance/backup_data.py --weekly
-
-# Manual backup
-poetry run python tools/maintenance/backup_data.py --full
+# Or use rsync for incremental backups
+rsync -av --progress local_data/ /path/to/backup/local_data/
+rsync -av --progress config/ /path/to/backup/config/
 ```
 
 ## Cleanup Operations
 
-### Automated Cleanup
+### Available Maintenance Tools
 ```bash
-# Clean old logs (older than 30 days)
+# Manage application logs
 poetry run python tools/maintenance/manage_logs.py --cleanup
 
-# Clean unused cache files
-poetry run python tools/maintenance/cleanup_cache.py
+# Control logging levels
+poetry run python tools/maintenance/logging_control.py
 
-# Clean Qdrant locks
-poetry run python tools/maintenance/cleanup_qdrant.py
+# Analyze model files and storage
+poetry run python tools/maintenance/analyze_models.py
+
+# Clean up unused model files
+poetry run python tools/maintenance/cleanup_unused_models.py
 ```
 
 ### Manual Cleanup
 ```bash
-# Remove all cached data
+# Remove all cached data (if cache directory exists)
 rm -rf local_data/cache/*
 
 # Remove old logs
 rm -rf local_data/logs/*.log
 
-# Reset vector database
-rm -rf local_data/internal_assistant/vector_store/
+# Reset vector database (use with caution)
+rm -rf local_data/internal_assistant/qdrant/
+
+# Remove Qdrant lock files (if database won't start)
+rm -f local_data/internal_assistant/qdrant/.lock
 ```
 
 ## Docker Deployment
@@ -155,21 +159,24 @@ PGPT_SETTINGS_FOLDER=/app/config
 
 ### Health Checks
 ```bash
-# Check data integrity
-poetry run python tools/maintenance/check_data_integrity.py
+# Check application health
+curl http://localhost:8001/health
 
-# Monitor disk usage
-poetry run python tools/maintenance/monitor_disk_usage.py
+# Check disk usage
+du -sh local_data/*
 
-# Check cache health
-poetry run python tools/maintenance/check_cache_health.py
+# Analyze model files
+poetry run python tools/maintenance/analyze_models.py
+
+# Check logs
+tail -f local_data/logs/*.log
 ```
 
 ### Performance Monitoring
-- Monitor vector database size
-- Track cache hit rates
-- Monitor log file growth
-- Check model file integrity
+- Monitor vector database size with `du -sh local_data/internal_assistant/qdrant/`
+- Check log file growth with `ls -lh local_data/logs/`
+- Analyze model storage with the analyze_models.py tool
+- Use application health endpoint for system status
 
 ## Recovery Procedures
 
@@ -188,8 +195,8 @@ poetry run python -m internal_assistant
 
 ### Database Recovery
 ```bash
-# Reset vector database
-rm -rf local_data/internal_assistant/vector_store/
+# Reset vector database (Qdrant)
+rm -rf local_data/internal_assistant/qdrant/
 poetry run python -m internal_assistant
 ```
 
@@ -235,15 +242,11 @@ PGPT_MAX_CACHE_SIZE=1GB
 ```yaml
 # config/settings.yaml
 data:
-  cache_dir: "local_data/cache"
-  models_dir: "local_data/models"
-  logs_dir: "local_data/logs"
-  vector_store_dir: "local_data/internal_assistant/vector_store"
+  local_data_folder: local_data/internal_assistant
 
-maintenance:
-  log_retention_days: 30
-  cache_cleanup_interval: 24h
-  backup_frequency: daily
+# Vector store is managed by Qdrant
+# Logs are in local_data/logs/
+# Models are cached in local_data/models/cache/
 ```
 
 ## Troubleshooting
@@ -257,7 +260,7 @@ maintenance:
 ### Diagnostic Commands
 ```bash
 # Check data directory structure
-tree local_data/
+find local_data -type d -maxdepth 3
 
 # Check disk usage
 du -sh local_data/*
@@ -265,8 +268,8 @@ du -sh local_data/*
 # Check file permissions
 ls -la local_data/
 
-# Verify cache integrity
-poetry run python tools/maintenance/verify_cache.py
+# Analyze models and storage
+poetry run python tools/maintenance/analyze_models.py
 ```
 
 ---

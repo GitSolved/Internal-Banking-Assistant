@@ -105,3 +105,8 @@ tools/**/results.json
 tools/**/baseline-*.json
 tools/**/dependency-*.json
 .claude/settings.local.json
+
+# ============================================
+# Documentation - Generated Files
+# ============================================
+docs/compatibility/compatibility_report.json
