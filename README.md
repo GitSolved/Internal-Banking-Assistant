@@ -83,15 +83,6 @@ While sharing the foundational RAG infrastructure (~30-40% code overlap), Intern
 **License:** Apache 2.0 (maintained from original)
 **Copyright:** See [LICENSE](LICENSE) file
 
----
-
-This project is based on [PrivateGPT](https://github.com/zylon-ai/private-gpt) and has been heavily customized for cybersecurity workflows.
-
-## 🆘 Support
-- **Issues:** [GitHub Issues](https://github.com/SecureYourGear/internal-assistant/issues)
-- **Documentation:** [https://secureyourgear.github.io/internal-assistant/](https://secureyourgear.github.io/internal-assistant/)
-
----
 
 ## 📊 Project Stats
 - **Version:** 0.6.2
