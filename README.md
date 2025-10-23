@@ -24,15 +24,15 @@ AI RAG Platform for Banking: Cybersecurity, Compliance, and Risk Management
 
 ### Option 1: Docker (Recommended)
 ```bash
-git clone https://github.com/SecureYourGear/internal-assistant.git
-cd internal-assistant/config/deployment/docker
+git clone https://github.com/GitSolved/Internal-Banking-Assistant.git
+cd Internal-Banking-Assistant/config/deployment/docker
 docker-compose up -d
 ```
 
 ### Option 2: Manual Installation
 ```bash
-git clone https://github.com/SecureYourGear/internal-assistant.git
-cd internal-assistant
+git clone https://github.com/GitSolved/Internal-Banking-Assistant.git
+cd Internal-Banking-Assistant
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -86,4 +86,4 @@ While sharing the foundational RAG infrastructure (~30-40% code overlap), Intern
 - **Version:** 0.6.2
 - **Python:** 3.11.9 (required)
 - **License:** Apache 2.0
-- **Repository:** [SecureYourGear/internal-assistant](https://github.com/SecureYourGear/internal-assistant)
+- **Repository:** [GitSolved/Internal-Banking-Assistant](https://github.com/GitSolved/Internal-Banking-Assistant)
