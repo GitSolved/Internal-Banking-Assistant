@@ -49,12 +49,10 @@ ollama pull foundation-sec-8b
 | **General LLM Mode** | Fast threat assessments and security queries | 6-12 seconds |
 | **RAG Mode** | Document-based compliance research and analysis | 12-20 seconds |
 | **Feed Monitoring** | Real-time security news and vulnerability tracking | Auto-refresh (60min) |
-| **MITRE Analysis** | Threat technique identification and attack chain mapping | On-demand |
 
 ### Technology Stack
 - **Foundation-Sec-8B Model:** Cybersecurity-trained AI (q4_k_m quantization, 5.06 GB)
 - **14+ Security Feeds:** CISA KEV, US-CERT, SANS ISC, NIST NVD, The Hacker News, Dark Reading, and more
-- **MITRE ATT&CK Integration:** Automated threat pattern detection and technique mapping
 - **CVE Tracking:** Real-time vulnerability monitoring with severity filtering
 - **Threat Intelligence:** Automated threat analysis, security recommendations, APT tracking
 - **100% Private:** All processing happens locally—no data leaves your infrastructure
