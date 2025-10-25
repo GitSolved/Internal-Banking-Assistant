@@ -1,45 +1,40 @@
-"""
-UI Service Integration
+"""UI Service Integration
 
 Provides integration layer between the UI and service facades,
 replacing direct service dependencies with orchestrated facades.
 """
 
 import logging
-from typing import Optional, Any, Dict, List, Tuple
-from pathlib import Path
+from typing import Any
 
-from .service_orchestrator import ServiceOrchestrator, ServiceStatus
-from .service_factory import ServiceFactory
 from .chat_service_facade import ChatServiceFacade
 from .document_service_facade import DocumentServiceFacade
 from .feeds_service_facade import FeedsServiceFacade
+from .service_factory import ServiceFactory
+from .service_orchestrator import ServiceOrchestrator, ServiceStatus
 
 logger = logging.getLogger(__name__)
 
 
 class UIServiceIntegration:
-    """
-    Integration layer that provides clean service access for the UI layer.
+    """Integration layer that provides clean service access for the UI layer.
     Replaces direct service injection with orchestrated facade access.
     """
 
     def __init__(self, injector=None):
-        """
-        Initialize UI service integration.
+        """Initialize UI service integration.
 
         Args:
             injector: Optional dependency injector
         """
-        self._orchestrator: Optional[ServiceOrchestrator] = None
+        self._orchestrator: ServiceOrchestrator | None = None
         self._injector = injector
         self._initialization_completed = False
 
         logger.info("UI Service Integration initialized")
 
     def initialize(self) -> bool:
-        """
-        Initialize the service orchestrator and all services.
+        """Initialize the service orchestrator and all services.
 
         Returns:
             True if initialization successful
@@ -79,29 +74,28 @@ class UIServiceIntegration:
         ]
 
     @property
-    def chat_service(self) -> Optional[ChatServiceFacade]:
+    def chat_service(self) -> ChatServiceFacade | None:
         """Get chat service facade."""
         if not self._orchestrator:
             return None
         return self._orchestrator.get_service("chat")
 
     @property
-    def document_service(self) -> Optional[DocumentServiceFacade]:
+    def document_service(self) -> DocumentServiceFacade | None:
         """Get document service facade."""
         if not self._orchestrator:
             return None
         return self._orchestrator.get_service("document")
 
     @property
-    def feeds_service(self) -> Optional[FeedsServiceFacade]:
+    def feeds_service(self) -> FeedsServiceFacade | None:
         """Get feeds service facade."""
         if not self._orchestrator:
             return None
         return self._orchestrator.get_service("feeds")
 
-    def get_service_status(self) -> Dict[str, Any]:
-        """
-        Get comprehensive service status information.
+    def get_service_status(self) -> dict[str, Any]:
+        """Get comprehensive service status information.
 
         Returns:
             Dictionary with service status details
@@ -120,9 +114,8 @@ class UIServiceIntegration:
             "metrics": self._orchestrator.get_comprehensive_metrics(),
         }
 
-    def perform_health_checks(self) -> Dict[str, Any]:
-        """
-        Perform health checks on all services.
+    def perform_health_checks(self) -> dict[str, Any]:
+        """Perform health checks on all services.
 
         Returns:
             Health check results
@@ -141,8 +134,7 @@ class UIServiceIntegration:
 
 
 class ServiceCompatibilityLayer:
-    """
-    Compatibility layer that provides the same interface as direct service injection
+    """Compatibility layer that provides the same interface as direct service injection
     but uses the service facades underneath.
 
     This allows gradual migration from direct service usage to facade-based access.
@@ -230,8 +222,7 @@ class ServiceCompatibilityLayer:
 
 
 def create_ui_service_integration(injector=None) -> UIServiceIntegration:
-    """
-    Factory function to create and initialize UI service integration.
+    """Factory function to create and initialize UI service integration.
 
     Args:
         injector: Optional dependency injector

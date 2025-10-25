@@ -1,5 +1,4 @@
-"""
-State Integration Utilities
+"""State Integration Utilities
 
 This module provides utilities for integrating the new centralized state management
 system with existing UI components and migrating from scattered state variables.
@@ -9,23 +8,23 @@ Author: UI Refactoring Team
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Callable, Set
+from typing import Any
+
 from internal_assistant.ui.state.app_state import (
     ApplicationState,
     ChatMessage,
     DocumentMetadata,
-    FeedItem,
-    CVEInfo,
-    create_default_application_state,
     create_application_state_from_legacy,
-)
-from internal_assistant.ui.state.state_manager import (
-    StateStore,
-    StateObserver,
-    StateChange,
+    create_default_application_state,
 )
 from internal_assistant.ui.state.selectors import register_all_selectors
+from internal_assistant.ui.state.state_manager import (
+    StateChange,
+    StateObserver,
+    StateStore,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +33,7 @@ class UIStateObserver(StateObserver):
     """Observer that updates UI components when state changes."""
 
     def __init__(self, update_callback: Callable[[str, Any, Any], None]):
-        """
-        Initialize UI state observer.
+        """Initialize UI state observer.
 
         Args:
             update_callback: Function to call when state changes
@@ -55,16 +53,14 @@ class UIStateObserver(StateObserver):
 
 
 class StateIntegrationManager:
-    """
-    Manages integration between the new state system and existing UI components.
+    """Manages integration between the new state system and existing UI components.
 
     This class provides a bridge between the centralized state management system
     and the scattered Gradio components throughout the existing UI.
     """
 
-    def __init__(self, initial_state: Optional[ApplicationState] = None):
-        """
-        Initialize the state integration manager.
+    def __init__(self, initial_state: ApplicationState | None = None):
+        """Initialize the state integration manager.
 
         Args:
             initial_state: Optional initial application state
@@ -73,12 +69,12 @@ class StateIntegrationManager:
         self.state_store = StateStore(self.app_state.dict())
 
         # Component reference mapping
-        self._component_refs: Dict[str, Any] = {}
-        self._state_to_component_map: Dict[str, List[str]] = {}
-        self._component_to_state_map: Dict[str, str] = {}
+        self._component_refs: dict[str, Any] = {}
+        self._state_to_component_map: dict[str, list[str]] = {}
+        self._component_to_state_map: dict[str, str] = {}
 
         # UI update callbacks
-        self._ui_observers: List[UIStateObserver] = []
+        self._ui_observers: list[UIStateObserver] = []
 
         # Register all selectors
         register_all_selectors(self.state_store)
@@ -86,10 +82,9 @@ class StateIntegrationManager:
         logger.info("StateIntegrationManager initialized")
 
     def register_component(
-        self, component_name: str, component_ref: Any, state_path: Optional[str] = None
+        self, component_name: str, component_ref: Any, state_path: str | None = None
     ) -> None:
-        """
-        Register a UI component with the state system.
+        """Register a UI component with the state system.
 
         Args:
             component_name: Name/ID of the component
@@ -110,8 +105,7 @@ class StateIntegrationManager:
     def register_ui_observer(
         self, callback: Callable[[str, Any, Any], None]
     ) -> UIStateObserver:
-        """
-        Register a UI observer callback.
+        """Register a UI observer callback.
 
         Args:
             callback: Function to call when state changes
@@ -131,8 +125,7 @@ class StateIntegrationManager:
     def bind_component_to_state(
         self, component_name: str, state_path: str, bidirectional: bool = True
     ) -> None:
-        """
-        Bind a component to a state path for automatic updates.
+        """Bind a component to a state path for automatic updates.
 
         Args:
             component_name: Name of the component to bind
@@ -171,8 +164,7 @@ class StateIntegrationManager:
         logger.info(f"Bound component {component_name} to state {state_path}")
 
     def update_state_from_component(self, component_name: str, value: Any) -> None:
-        """
-        Update state when a component value changes.
+        """Update state when a component value changes.
 
         Args:
             component_name: Name of the component that changed
@@ -194,8 +186,7 @@ class StateIntegrationManager:
             logger.error(f"Failed to update state from component {component_name}: {e}")
 
     def get_state_value(self, path: str, default: Any = None) -> Any:
-        """
-        Get a value from the state.
+        """Get a value from the state.
 
         Args:
             path: State path to retrieve
@@ -207,10 +198,9 @@ class StateIntegrationManager:
         return self.state_store.get(path, default)
 
     def set_state_value(
-        self, path: str, value: Any, source: Optional[str] = None
+        self, path: str, value: Any, source: str | None = None
     ) -> None:
-        """
-        Set a value in the state.
+        """Set a value in the state.
 
         Args:
             path: State path to set
@@ -221,10 +211,9 @@ class StateIntegrationManager:
         self._sync_state_to_app_state()
 
     def update_state_values(
-        self, updates: Dict[str, Any], source: Optional[str] = None
+        self, updates: dict[str, Any], source: str | None = None
     ) -> None:
-        """
-        Update multiple state values atomically.
+        """Update multiple state values atomically.
 
         Args:
             updates: Dictionary of path -> value updates
@@ -234,8 +223,7 @@ class StateIntegrationManager:
         self._sync_state_to_app_state()
 
     def select(self, selector_name: str) -> Any:
-        """
-        Get a computed value from a registered selector.
+        """Get a computed value from a registered selector.
 
         Args:
             selector_name: Name of the selector
@@ -246,8 +234,7 @@ class StateIntegrationManager:
         return self.state_store.select(selector_name)
 
     def migrate_from_legacy_ui(self, legacy_ui_instance: Any) -> None:
-        """
-        Migrate state from a legacy UI instance.
+        """Migrate state from a legacy UI instance.
 
         Args:
             legacy_ui_instance: Instance of the old UI class with scattered state
@@ -284,9 +271,8 @@ class StateIntegrationManager:
         except Exception as e:
             logger.error(f"Failed to migrate from legacy UI: {e}")
 
-    def extract_gradio_state(self, gradio_components: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract current values from Gradio components.
+    def extract_gradio_state(self, gradio_components: dict[str, Any]) -> dict[str, Any]:
+        """Extract current values from Gradio components.
 
         Args:
             gradio_components: Dictionary of component_name -> component_ref
@@ -310,9 +296,8 @@ class StateIntegrationManager:
 
         return extracted_state
 
-    def sync_with_gradio_state(self, gradio_state_dict: Dict[str, Any]) -> None:
-        """
-        Synchronize our state with values from Gradio state.
+    def sync_with_gradio_state(self, gradio_state_dict: dict[str, Any]) -> None:
+        """Synchronize our state with values from Gradio state.
 
         Args:
             gradio_state_dict: Dictionary of component values from Gradio
@@ -338,8 +323,7 @@ class StateIntegrationManager:
             logger.info(f"Synced {len(updates)} values from Gradio state")
 
     def create_gradio_update_handler(self, component_name: str) -> Callable[[Any], Any]:
-        """
-        Create a handler function for Gradio component updates.
+        """Create a handler function for Gradio component updates.
 
         Args:
             component_name: Name of the component
@@ -355,8 +339,7 @@ class StateIntegrationManager:
         return handler
 
     def get_component_ref(self, component_name: str) -> Any:
-        """
-        Get a reference to a registered component.
+        """Get a reference to a registered component.
 
         Args:
             component_name: Name of the component
@@ -380,18 +363,16 @@ class StateIntegrationManager:
         except Exception as e:
             logger.error(f"Failed to sync state to app_state: {e}")
 
-    def get_state_summary(self) -> Dict[str, Any]:
-        """
-        Get a summary of the current state.
+    def get_state_summary(self) -> dict[str, Any]:
+        """Get a summary of the current state.
 
         Returns:
             State summary dictionary
         """
         return self.app_state.get_summary()
 
-    def export_state_for_persistence(self) -> Dict[str, Any]:
-        """
-        Export state for persistence/debugging.
+    def export_state_for_persistence(self) -> dict[str, Any]:
+        """Export state for persistence/debugging.
 
         Returns:
             Serializable state dictionary
@@ -410,10 +391,9 @@ class StateIntegrationManager:
 
 
 def create_chat_state_from_history(
-    history: List[List[str]], mode: str = "RAG Mode"
-) -> Dict[str, Any]:
-    """
-    Create chat state from legacy history format.
+    history: list[list[str]], mode: str = "RAG Mode"
+) -> dict[str, Any]:
+    """Create chat state from legacy history format.
 
     Args:
         history: List of [user_message, assistant_message] pairs
@@ -448,9 +428,8 @@ def create_chat_state_from_history(
     }
 
 
-def migrate_document_metadata(legacy_files: List[Any]) -> Dict[str, Any]:
-    """
-    Migrate legacy document file list to new metadata format.
+def migrate_document_metadata(legacy_files: list[Any]) -> dict[str, Any]:
+    """Migrate legacy document file list to new metadata format.
 
     Args:
         legacy_files: List of legacy file data
@@ -501,8 +480,7 @@ def migrate_document_metadata(legacy_files: List[Any]) -> Dict[str, Any]:
 
 
 def setup_state_integration(ui_instance: Any) -> StateIntegrationManager:
-    """
-    Set up state integration for an existing UI instance.
+    """Set up state integration for an existing UI instance.
 
     Args:
         ui_instance: Existing UI instance to integrate with

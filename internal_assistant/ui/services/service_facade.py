@@ -1,20 +1,19 @@
-"""
-Base Service Facade
+"""Base Service Facade
 
 Provides the base abstraction layer for all UI service interactions.
 Implements error handling, retry logic, circuit breaker patterns, and caching.
 """
 
-import asyncio
 import logging
+import threading
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, TypeVar, Generic
 from functools import wraps
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Generic, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +53,7 @@ class CacheEntry:
 
 
 class ServiceFacade(ABC, Generic[T]):
-    """
-    Base facade for all UI service interactions.
+    """Base facade for all UI service interactions.
 
     Provides:
     - Error handling with exponential backoff
@@ -70,8 +68,8 @@ class ServiceFacade(ABC, Generic[T]):
         self.service_name = service_name
         self._health = ServiceHealth.UNKNOWN
         self._circuit_breaker = CircuitBreakerState()
-        self._cache: Dict[str, CacheEntry] = {}
-        self._metrics: Dict[str, Any] = {
+        self._cache: dict[str, CacheEntry] = {}
+        self._metrics: dict[str, Any] = {
             "total_requests": 0,
             "failed_requests": 0,
             "cache_hits": 0,
@@ -135,7 +133,7 @@ class ServiceFacade(ABC, Generic[T]):
         return decorator
 
     @staticmethod
-    def with_cache(ttl: int = 300, key_func: Optional[Callable] = None):
+    def with_cache(ttl: int = 300, key_func: Callable | None = None):
         """Decorator for caching service call results."""
 
         def decorator(func: Callable):
@@ -197,7 +195,7 @@ class ServiceFacade(ABC, Generic[T]):
             self._health = ServiceHealth.UNHEALTHY
             return self._health
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get service metrics."""
         with self._lock:
             return self._metrics.copy()

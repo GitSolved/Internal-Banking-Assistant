@@ -54,7 +54,7 @@ class VectorStoreComponent:
                     )
 
                 self.vector_store = typing.cast(
-                    BasePydanticVectorStore,
+                    "BasePydanticVectorStore",
                     PGVectorStore.from_params(
                         **settings.postgres.model_dump(exclude_none=True),
                         table_name="embeddings",
@@ -87,7 +87,7 @@ class VectorStoreComponent:
                 )  # TODO
 
                 self.vector_store = typing.cast(
-                    BasePydanticVectorStore,
+                    "BasePydanticVectorStore",
                     BatchedChromaVectorStore(
                         chroma_client=chroma_client, chroma_collection=chroma_collection
                     ),
@@ -119,7 +119,7 @@ class VectorStoreComponent:
                     settings.qdrant, "collection_name", "internal_assistant_documents"
                 )
                 self.vector_store = typing.cast(
-                    BasePydanticVectorStore,
+                    "BasePydanticVectorStore",
                     QdrantVectorStore(
                         client=client,
                         collection_name=collection_name,
@@ -144,7 +144,7 @@ class VectorStoreComponent:
                     )
 
                     self.vector_store = typing.cast(
-                        BasePydanticVectorStore,
+                        "BasePydanticVectorStore",
                         MilvusVectorStore(
                             dim=settings.embedding.embed_dim,
                             collection_name="make_this_parameterizable_per_api_call",
@@ -154,7 +154,7 @@ class VectorStoreComponent:
 
                 else:
                     self.vector_store = typing.cast(
-                        BasePydanticVectorStore,
+                        "BasePydanticVectorStore",
                         MilvusVectorStore(
                             dim=settings.embedding.embed_dim,
                             uri=settings.milvus.uri,

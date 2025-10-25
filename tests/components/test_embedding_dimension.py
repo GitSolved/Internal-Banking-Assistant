@@ -1,7 +1,8 @@
 """Test to ensure mock embedding dimensions match configuration."""
 
-import pytest
-from internal_assistant.components.embedding.embedding_component import EmbeddingComponent
+from internal_assistant.components.embedding.embedding_component import (
+    EmbeddingComponent,
+)
 from internal_assistant.settings.settings import Settings
 from tests.fixtures.mock_injector import MockInjector
 

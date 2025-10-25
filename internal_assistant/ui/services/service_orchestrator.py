@@ -1,23 +1,22 @@
-"""
-Service Orchestrator
+"""Service Orchestrator
 
 Manages service lifecycle, health monitoring, initialization order,
 and provides centralized service access for the UI layer.
 """
 
-import asyncio
 import logging
 import threading
 import time
-from typing import Dict, Any, Optional, List, Callable
-from enum import Enum
-from dataclasses import dataclass
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
 
-from .service_facade import ServiceFacade, ServiceHealth
 from .chat_service_facade import ChatServiceFacade
 from .document_service_facade import DocumentServiceFacade
 from .feeds_service_facade import FeedsServiceFacade
+from .service_facade import ServiceFacade, ServiceHealth
 
 logger = logging.getLogger(__name__)
 
@@ -37,36 +36,35 @@ class ServiceConfig:
 
     name: str
     facade_class: type
-    dependencies: List[str]
+    dependencies: list[str]
     critical: bool = True
     health_check_interval: int = 60
     max_init_retries: int = 3
 
 
 class ServiceOrchestrator:
-    """
-    Orchestrates all UI services with health monitoring, dependency management,
+    """Orchestrates all UI services with health monitoring, dependency management,
     and graceful degradation capabilities.
     """
 
     def __init__(self):
-        self._services: Dict[str, ServiceFacade] = {}
-        self._service_configs: Dict[str, ServiceConfig] = {}
-        self._service_health: Dict[str, ServiceHealth] = {}
+        self._services: dict[str, ServiceFacade] = {}
+        self._service_configs: dict[str, ServiceConfig] = {}
+        self._service_health: dict[str, ServiceHealth] = {}
         self._status = ServiceStatus.INITIALIZING
-        self._health_monitor_thread: Optional[threading.Thread] = None
+        self._health_monitor_thread: threading.Thread | None = None
         self._health_monitor_running = False
-        self._initialization_callbacks: List[Callable] = []
-        self._metrics_collector_thread: Optional[threading.Thread] = None
+        self._initialization_callbacks: list[Callable] = []
+        self._metrics_collector_thread: threading.Thread | None = None
         self._metrics_running = False
         self._health_check_in_progress = threading.Event()
         self._last_health_check_time = 0.0
         self._health_check_queue_limit = 2  # Prevent pile-up
         self._health_monitor_failure_count = 0
-        self._service_recovery_tracker: Dict[str, Dict[str, Any]] = (
+        self._service_recovery_tracker: dict[str, dict[str, Any]] = (
             {}
         )  # Track service recovery
-        self._global_metrics: Dict[str, Any] = {
+        self._global_metrics: dict[str, Any] = {
             "start_time": time.time(),
             "total_requests": 0,
             "failed_requests": 0,
@@ -83,11 +81,10 @@ class ServiceOrchestrator:
         name: str,
         service: Any,
         facade_class: type,
-        dependencies: Optional[List[str]] = None,
+        dependencies: list[str] | None = None,
         critical: bool = True,
     ) -> None:
-        """
-        Register a service with the orchestrator.
+        """Register a service with the orchestrator.
 
         Args:
             name: Service name
@@ -119,8 +116,7 @@ class ServiceOrchestrator:
                 raise
 
     def initialize_services(self) -> bool:
-        """
-        Initialize all services in dependency order.
+        """Initialize all services in dependency order.
 
         Returns:
             True if initialization successful
@@ -178,9 +174,8 @@ class ServiceOrchestrator:
             self._status = ServiceStatus.FAILED
             return False
 
-    def get_service(self, name: str) -> Optional[ServiceFacade]:
-        """
-        Get a service facade by name.
+    def get_service(self, name: str) -> ServiceFacade | None:
+        """Get a service facade by name.
 
         Args:
             name: Service name
@@ -191,10 +186,9 @@ class ServiceOrchestrator:
         return self._services.get(name)
 
     def get_service_health(
-        self, name: Optional[str] = None
-    ) -> Dict[str, ServiceHealth]:
-        """
-        Get health status for services.
+        self, name: str | None = None
+    ) -> dict[str, ServiceHealth]:
+        """Get health status for services.
 
         Args:
             name: Specific service name, or None for all services
@@ -211,7 +205,7 @@ class ServiceOrchestrator:
         """Get the overall orchestrator status."""
         return self._status
 
-    def get_comprehensive_metrics(self) -> Dict[str, Any]:
+    def get_comprehensive_metrics(self) -> dict[str, Any]:
         """Get comprehensive metrics for all services with health dashboard."""
         current_time = time.time()
 
@@ -259,7 +253,7 @@ class ServiceOrchestrator:
 
         return metrics
 
-    def get_health_status_dashboard(self) -> Dict[str, Any]:
+    def get_health_status_dashboard(self) -> dict[str, Any]:
         """Get comprehensive health status dashboard for debugging."""
         current_time = time.time()
 
@@ -335,9 +329,8 @@ class ServiceOrchestrator:
 
         return dashboard
 
-    def perform_health_checks(self) -> Dict[str, ServiceHealth]:
-        """
-        Perform health checks on all services with queuing prevention and graceful degradation.
+    def perform_health_checks(self) -> dict[str, ServiceHealth]:
+        """Perform health checks on all services with queuing prevention and graceful degradation.
 
         Returns:
             Dictionary of service health results
@@ -497,7 +490,7 @@ class ServiceOrchestrator:
             }
         )
 
-    def _calculate_initialization_order(self) -> List[str]:
+    def _calculate_initialization_order(self) -> list[str]:
         """Calculate service initialization order based on dependencies."""
         # Topological sort for dependency resolution
         visited = set()
@@ -607,7 +600,7 @@ class ServiceOrchestrator:
 
                 time.sleep(backoff_interval)
 
-    def _track_service_recovery(self, health_results: Dict[str, ServiceHealth]) -> None:
+    def _track_service_recovery(self, health_results: dict[str, ServiceHealth]) -> None:
         """Track service recovery and log significant state changes."""
         current_time = time.time()
 
@@ -670,7 +663,7 @@ class ServiceOrchestrator:
 
                 tracker["previous_health"] = current_health
 
-    def get_service_recovery_info(self) -> Dict[str, Dict[str, Any]]:
+    def get_service_recovery_info(self) -> dict[str, dict[str, Any]]:
         """Get comprehensive service recovery information for debugging."""
         recovery_info = {}
         current_time = time.time()

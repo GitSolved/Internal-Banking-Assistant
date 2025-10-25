@@ -1,17 +1,15 @@
-"""
-UI Data Processing Utilities
+"""UI Data Processing Utilities
 
 Data processing functions for document analysis, categorization, and metadata handling.
 Extracted from the monolithic ui.py file for better maintainability.
 """
 
 import logging
-from typing import Dict, List, Tuple
 
 logger = logging.getLogger(__name__)
 
 
-def get_category_counts(files: List[List[str]]) -> Dict[str, int]:
+def get_category_counts(files: list[list[str]]) -> dict[str, int]:
     """Get document counts by category for display."""
     try:
         category_counts = {
@@ -135,7 +133,7 @@ def get_category_counts(files: List[List[str]]) -> Dict[str, int]:
         return {}
 
 
-def analyze_document_types(files: List[List[str]]) -> Dict:
+def analyze_document_types(files: list[list[str]]) -> dict:
     """Analyze document types and return counts for cybersecurity-focused categories."""
     try:
         # Initialize counters with cybersecurity-focused categories
@@ -408,7 +406,7 @@ def analyze_document_types(files: List[List[str]]) -> Dict:
         }
 
 
-def get_document_counts(files: List[List[str]]) -> Dict[str, int]:
+def get_document_counts(files: list[list[str]]) -> dict[str, int]:
     """Get document counts by file type."""
     try:
         from .formatters import get_file_type
@@ -431,8 +429,8 @@ def get_document_counts(files: List[List[str]]) -> Dict[str, int]:
 
 
 def filter_documents_by_query(
-    files: List[List[str]], search_query: str = "", filter_type: str = "all"
-) -> Tuple[List[List[str]], Dict]:
+    files: list[list[str]], search_query: str = "", filter_type: str = "all"
+) -> tuple[list[list[str]], dict]:
     """Filter documents based on search query and filter type."""
     try:
         if not search_query.strip():
@@ -464,7 +462,7 @@ def filter_documents_by_query(
         return [], {}
 
 
-def get_chat_mentioned_documents(history: List[List[str]]) -> set:
+def get_chat_mentioned_documents(history: list[list[str]]) -> set:
     """Extract document names mentioned in chat history."""
     try:
         mentioned_docs = set()

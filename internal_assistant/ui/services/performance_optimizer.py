@@ -1,18 +1,17 @@
-"""
-Performance Optimizer
+"""Performance Optimizer
 
 Provides performance optimization capabilities including request batching,
 lazy loading, response caching, and performance monitoring.
 """
 
-import asyncio
 import logging
-import time
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor, Future
 import threading
+import time
+from collections import defaultdict, deque
+from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class BatchRequest:
     operation: Callable
     args: tuple = field(default_factory=tuple)
     kwargs: dict = field(default_factory=dict)
-    future: Optional[Future] = None
+    future: Future | None = None
     timestamp: float = field(default_factory=time.time)
 
 
@@ -43,16 +42,15 @@ class PerformanceMetrics:
 
 
 class RequestBatcher:
-    """
-    Batches similar requests together for more efficient processing.
+    """Batches similar requests together for more efficient processing.
     Useful for operations like document searches, feed refreshes, etc.
     """
 
     def __init__(self, batch_size: int = 10, batch_timeout: float = 2.0):
         self.batch_size = batch_size
         self.batch_timeout = batch_timeout
-        self._batches: Dict[str, List[BatchRequest]] = defaultdict(list)
-        self._batch_timers: Dict[str, threading.Timer] = {}
+        self._batches: dict[str, list[BatchRequest]] = defaultdict(list)
+        self._batch_timers: dict[str, threading.Timer] = {}
         self._executor = ThreadPoolExecutor(
             max_workers=4, thread_name_prefix="batch-processor"
         )
@@ -61,8 +59,7 @@ class RequestBatcher:
     def add_request(
         self, operation_type: str, operation: Callable, *args, **kwargs
     ) -> Future:
-        """
-        Add a request to be batched.
+        """Add a request to be batched.
 
         Args:
             operation_type: Type of operation for batching similar requests
@@ -124,7 +121,7 @@ class RequestBatcher:
         # Submit batch for processing
         self._executor.submit(self._execute_batch, batch_requests)
 
-    def _execute_batch(self, batch_requests: List[BatchRequest]) -> None:
+    def _execute_batch(self, batch_requests: list[BatchRequest]) -> None:
         """Execute a batch of requests."""
         for request in batch_requests:
             try:
@@ -135,22 +132,20 @@ class RequestBatcher:
 
 
 class LazyLoader:
-    """
-    Implements lazy loading for expensive operations.
+    """Implements lazy loading for expensive operations.
     Operations are only executed when their results are actually needed.
     """
 
     def __init__(self):
-        self._cache: Dict[str, Any] = {}
-        self._loading: Dict[str, Future] = {}
+        self._cache: dict[str, Any] = {}
+        self._loading: dict[str, Future] = {}
         self._executor = ThreadPoolExecutor(
             max_workers=2, thread_name_prefix="lazy-loader"
         )
         self._lock = threading.Lock()
 
     def lazy_load(self, key: str, loader: Callable, ttl: int = 3600) -> Future:
-        """
-        Lazily load a resource.
+        """Lazily load a resource.
 
         Args:
             key: Unique key for the resource
@@ -209,19 +204,18 @@ class LazyLoader:
 
 
 class ResponseCache:
-    """
-    Advanced response caching with intelligent invalidation
+    """Advanced response caching with intelligent invalidation
     and compression for large responses.
     """
 
     def __init__(self, max_size: int = 1000, default_ttl: int = 300):
         self.max_size = max_size
         self.default_ttl = default_ttl
-        self._cache: Dict[str, Dict] = {}
+        self._cache: dict[str, dict] = {}
         self._access_times: deque = deque()  # For LRU eviction
         self._lock = threading.Lock()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get cached response."""
         with self._lock:
             if key not in self._cache:
@@ -239,7 +233,7 @@ class ResponseCache:
 
             return entry["value"]
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Set cached response."""
         with self._lock:
             # Clean up if at max size
@@ -286,8 +280,7 @@ class ResponseCache:
 
 
 class PerformanceOptimizer:
-    """
-    Main performance optimizer that coordinates batching, lazy loading,
+    """Main performance optimizer that coordinates batching, lazy loading,
     caching, and performance monitoring.
     """
 
@@ -310,8 +303,7 @@ class PerformanceOptimizer:
         cache_ttl: int = 300,
         **kwargs,
     ) -> Any:
-        """
-        Optimize an operation using available optimization techniques.
+        """Optimize an operation using available optimization techniques.
 
         Args:
             operation_type: Type of operation for optimization decisions
@@ -380,7 +372,7 @@ class PerformanceOptimizer:
             self._record_request_failed(start_time)
             raise
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get comprehensive performance metrics."""
         with self._lock:
             recent_performance = list(self._performance_history)[
@@ -425,8 +417,7 @@ class PerformanceOptimizer:
     def optimize_ui_operation(
         self, operation_name: str, operation: Callable, *args, **kwargs
     ) -> Any:
-        """
-        Optimize common UI operations with predefined optimization strategies.
+        """Optimize common UI operations with predefined optimization strategies.
 
         Args:
             operation_name: Name of the UI operation

@@ -1,5 +1,4 @@
-"""
-Feed Component
+"""Feed Component
 
 This module implements the feed display component for the Internal Assistant UI.
 It handles RSS feeds, CVE information, MITRE ATT&CK data, and forum displays.
@@ -8,8 +7,9 @@ This component will eventually contain the extracted feed functionality from ui.
 including feed formatting, threat intelligence display, and data visualization.
 """
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
+
 import gradio as gr
 
 from internal_assistant.ui.core.ui_component import UIComponent
@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class FeedComponent(UIComponent):
-    """
-    Feed display component for the Internal Assistant.
+    """Feed display component for the Internal Assistant.
 
     This component manages:
     - RSS feed display and filtering
@@ -30,10 +29,9 @@ class FeedComponent(UIComponent):
     """
 
     def __init__(
-        self, component_id: str = "feeds", services: Optional[Dict[str, Any]] = None
+        self, component_id: str = "feeds", services: dict[str, Any] | None = None
     ):
-        """
-        Initialize the feed component.
+        """Initialize the feed component.
 
         Args:
             component_id: Unique identifier for this component
@@ -46,13 +44,12 @@ class FeedComponent(UIComponent):
         if self.has_service("feeds"):
             self.feeds_service = self.get_service("feeds")
 
-    def get_required_services(self) -> List[str]:
+    def get_required_services(self) -> list[str]:
         """Specify required services for this component."""
         return ["feeds"]
 
-    def build_interface(self) -> Dict[str, Any]:
-        """
-        Build the feed display interface components.
+    def build_interface(self) -> dict[str, Any]:
+        """Build the feed display interface components.
 
         Returns:
             Dictionary of Gradio components for the feed interface
@@ -120,8 +117,7 @@ class FeedComponent(UIComponent):
         return self._component_refs
 
     def register_events(self, demo: gr.Blocks) -> None:
-        """
-        Register event handlers for the feed component.
+        """Register event handlers for the feed component.
 
         Args:
             demo: The main gr.Blocks context
@@ -179,9 +175,8 @@ class FeedComponent(UIComponent):
 
         logger.debug(f"Registered events for {self.component_id}")
 
-    def get_component_refs(self) -> Dict[str, Any]:
-        """
-        Get references to this component's Gradio components.
+    def get_component_refs(self) -> dict[str, Any]:
+        """Get references to this component's Gradio components.
 
         Returns:
             Dictionary mapping component names to Gradio components
@@ -189,8 +184,7 @@ class FeedComponent(UIComponent):
         return self._component_refs.copy()
 
     def _handle_feed_type_change(self, feed_type: str):
-        """
-        Handle feed type selection change.
+        """Handle feed type selection change.
 
         Args:
             feed_type: Selected feed type
@@ -221,8 +215,7 @@ class FeedComponent(UIComponent):
     def _handle_feed_search(
         self, feed_type: str, search_term: str, severity: str, category: str
     ) -> str:
-        """
-        Handle feed search.
+        """Handle feed search.
 
         Args:
             feed_type: Current feed type
@@ -238,8 +231,7 @@ class FeedComponent(UIComponent):
     def _handle_filter_change(
         self, feed_type: str, search_term: str, severity: str, category: str
     ) -> str:
-        """
-        Handle filter changes.
+        """Handle filter changes.
 
         Args:
             feed_type: Current feed type
@@ -253,8 +245,7 @@ class FeedComponent(UIComponent):
         return self._get_feed_display(feed_type, search_term, severity, category)
 
     def _handle_refresh_feeds(self, feed_type: str):
-        """
-        Handle feed refresh.
+        """Handle feed refresh.
 
         Args:
             feed_type: Current feed type
@@ -277,14 +268,11 @@ class FeedComponent(UIComponent):
         return feed_html, stats_html
 
     def _handle_auto_refresh_toggle(self, enabled: bool) -> None:
-        """
-        Handle auto-refresh toggle.
+        """Handle auto-refresh toggle.
 
         Args:
             enabled: Whether auto-refresh is enabled
         """
-        import threading
-
         if enabled:
             logger.info("Auto-refresh enabled (5-minute intervals)")
             self._auto_refresh_enabled = True
@@ -319,8 +307,7 @@ class FeedComponent(UIComponent):
         severity: str = "All",
         category: str = "All",
     ) -> str:
-        """
-        Generate feed display HTML.
+        """Generate feed display HTML.
 
         Args:
             feed_type: Type of feed to display
@@ -346,8 +333,7 @@ class FeedComponent(UIComponent):
         return html
 
     def _format_rss_display(self, search_term: str = "", category: str = "All") -> str:
-        """
-        Format RSS feed display with search and category filtering.
+        """Format RSS feed display with search and category filtering.
 
         Args:
             search_term: Search filter text
@@ -378,7 +364,7 @@ class FeedComponent(UIComponent):
             except Exception as e:
                 logger.error(f"Failed to get RSS feeds: {e}")
                 return (
-                    f"<div class='error'><p>Error loading RSS feeds: {str(e)}</p></div>"
+                    f"<div class='error'><p>Error loading RSS feeds: {e!s}</p></div>"
                 )
 
         return """
@@ -424,8 +410,7 @@ class FeedComponent(UIComponent):
         return html
 
     def _format_cve_display(self, severity: str = "All", search_term: str = "") -> str:
-        """
-        Format CVE display with severity and search filtering.
+        """Format CVE display with severity and search filtering.
 
         Args:
             severity: Severity filter (Critical, High, Medium, Low, All)
@@ -459,7 +444,7 @@ class FeedComponent(UIComponent):
             except Exception as e:
                 logger.error(f"Failed to get CVE data: {e}")
                 return (
-                    f"<div class='error'><p>Error loading CVE data: {str(e)}</p></div>"
+                    f"<div class='error'><p>Error loading CVE data: {e!s}</p></div>"
                 )
 
         return """
@@ -513,8 +498,7 @@ class FeedComponent(UIComponent):
     def _format_mitre_display(
         self, search_term: str = "", category: str = "All"
     ) -> str:
-        """
-        Format MITRE ATT&CK display with search and category filtering.
+        """Format MITRE ATT&CK display with search and category filtering.
 
         Args:
             search_term: Search filter text
@@ -547,7 +531,7 @@ class FeedComponent(UIComponent):
                 return self._render_mitre_html(mitre_data)
             except Exception as e:
                 logger.error(f"Failed to get MITRE data: {e}")
-                return f"<div class='error'><p>Error loading MITRE data: {str(e)}</p></div>"
+                return f"<div class='error'><p>Error loading MITRE data: {e!s}</p></div>"
 
         return """
         <div class="feed-display">
@@ -596,8 +580,7 @@ class FeedComponent(UIComponent):
     def _format_forum_display(
         self, search_term: str = "", category: str = "All"
     ) -> str:
-        """
-        Format forum display with search and category filtering.
+        """Format forum display with search and category filtering.
 
         Args:
             search_term: Search filter text
@@ -630,7 +613,7 @@ class FeedComponent(UIComponent):
                 return self._render_forum_html(forum_data)
             except Exception as e:
                 logger.error(f"Failed to get forum data: {e}")
-                return f"<div class='error'><p>Error loading forum data: {str(e)}</p></div>"
+                return f"<div class='error'><p>Error loading forum data: {e!s}</p></div>"
 
         return """
         <div class="feed-display">
@@ -683,8 +666,7 @@ class FeedComponent(UIComponent):
         return html
 
     def _get_feed_statistics(self, feed_type: str) -> str:
-        """
-        Generate feed statistics HTML.
+        """Generate feed statistics HTML.
 
         Args:
             feed_type: Type of feed
@@ -718,7 +700,7 @@ class FeedComponent(UIComponent):
                 return f"""
                 <div class="feed-stats">
                     <h4>📊 Statistics for {feed_type}</h4>
-                    <p class="error">Error loading statistics: {str(e)}</p>
+                    <p class="error">Error loading statistics: {e!s}</p>
                 </div>
                 """
 

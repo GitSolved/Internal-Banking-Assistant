@@ -1,5 +1,4 @@
-"""
-Document Library Builder Component
+"""Document Library Builder Component
 
 This module contains document library management, filtering, and categorization functions
 extracted from ui.py during Phase 1B.2 of the UI refactoring project.
@@ -16,12 +15,11 @@ Date: 2024-01-18
 Phase: 1B.2 - Document Library Management Extraction
 """
 
-import logging
-from typing import Optional, Any
 import datetime
+import logging
 
-from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.chat.chat_service import ChatService
+from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.ui.components.documents.document_utility import (
     DocumentUtilityBuilder,
 )
@@ -30,19 +28,17 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentLibraryBuilder:
-    """
-    Builder class for document library management.
+    """Builder class for document library management.
     Handles document display, filtering, categorization, and HTML generation.
     """
 
     def __init__(
         self,
         ingest_service: IngestService,
-        chat_service: Optional[ChatService],
+        chat_service: ChatService | None,
         utility_builder: DocumentUtilityBuilder,
     ):
-        """
-        Initialize the DocumentLibraryBuilder.
+        """Initialize the DocumentLibraryBuilder.
 
         Args:
             ingest_service: Service for managing document ingestion
@@ -56,8 +52,7 @@ class DocumentLibraryBuilder:
     def get_document_library_html(
         self, search_query: str = "", filter_tags: list = None
     ) -> str:
-        """
-        Generate HTML for document library with enhanced folder structure, search, and filtering.
+        """Generate HTML for document library with enhanced folder structure, search, and filtering.
 
         Args:
             search_query: Search query string
@@ -301,8 +296,7 @@ class DocumentLibraryBuilder:
             return "<div style='color: #ff6b6b; padding: 20px;'>Error loading document library</div>"
 
     def get_chat_mentioned_documents(self) -> set:
-        """
-        Get set of documents that have been mentioned/referenced in chat conversations.
+        """Get set of documents that have been mentioned/referenced in chat conversations.
 
         Returns:
             Set of document names that have been mentioned in chat
@@ -340,8 +334,7 @@ class DocumentLibraryBuilder:
     def filter_documents(
         self, search_query: str = "", filter_type: str = "all"
     ) -> tuple[str, str]:
-        """
-        Filter and search documents based on query and type with scrolling.
+        """Filter and search documents based on query and type with scrolling.
 
         Args:
             search_query: Search query string
@@ -487,8 +480,7 @@ class DocumentLibraryBuilder:
     def generate_filtered_document_html(
         self, filtered_files: list, doc_metadata: dict
     ) -> str:
-        """
-        Generate HTML for filtered document list with scrolling functionality.
+        """Generate HTML for filtered document list with scrolling functionality.
 
         Args:
             filtered_files: List of filtered file entries
@@ -547,8 +539,7 @@ class DocumentLibraryBuilder:
         return html_content
 
     def get_document_counts(self) -> dict[str, int]:
-        """
-        Get counts of documents for each filter type.
+        """Get counts of documents for each filter type.
 
         Returns:
             Dictionary with document counts for each filter category

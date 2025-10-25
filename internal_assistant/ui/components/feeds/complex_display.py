@@ -1,9 +1,7 @@
 """Complex display functions for advanced UI components."""
 
-from typing import Optional, Any
 import logging
 from pathlib import Path
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

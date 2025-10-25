@@ -2,17 +2,17 @@
 
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import aiohttp
 import feedparser
 from bs4 import BeautifulSoup
 
 from internal_assistant.server.threat_intelligence.threat_analyzer import (
-    ThreatIntelligenceAnalyzer,
-    ThreatIndicator,
     SecurityRecommendation,
+    ThreatIndicator,
+    ThreatIntelligenceAnalyzer,
 )
 
 logger = logging.getLogger(__name__)
@@ -203,9 +203,9 @@ class RSSFeedService:
         self, max_items: int = 1000
     ):  # Increased for better scrolling and more sources
         self.max_items = max_items
-        self.feeds_cache: List[FeedItem] = []
-        self.last_refresh: Optional[datetime] = None
-        self._session: Optional[aiohttp.ClientSession] = None
+        self.feeds_cache: list[FeedItem] = []
+        self.last_refresh: datetime | None = None
+        self._session: aiohttp.ClientSession | None = None
         self.threat_analyzer = ThreatIntelligenceAnalyzer()
 
     async def __aenter__(self):
@@ -223,7 +223,7 @@ class RSSFeedService:
             finally:
                 self._session = None
 
-    async def fetch_feed(self, url: str, source: str) -> List[FeedItem]:
+    async def fetch_feed(self, url: str, source: str) -> list[FeedItem]:
         """Fetch and parse a single RSS feed."""
         if not self._session:
             raise RuntimeError("Service must be used within async context manager")
@@ -238,7 +238,7 @@ class RSSFeedService:
 
                 content = await response.text()
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Timeout fetching {source} feed")
             return []
         except Exception as e:
@@ -247,7 +247,7 @@ class RSSFeedService:
 
         return self._parse_feed_content(content, source)
 
-    def _parse_feed_content(self, content: str, source: str) -> List[FeedItem]:
+    def _parse_feed_content(self, content: str, source: str) -> list[FeedItem]:
         """Parse RSS feed content into FeedItem objects."""
         try:
             feed = feedparser.parse(content)
@@ -260,7 +260,7 @@ class RSSFeedService:
                     if hasattr(entry, "published_parsed") and entry.published_parsed:
                         try:
                             published = datetime(
-                                *entry.published_parsed[:6], tzinfo=timezone.utc
+                                *entry.published_parsed[:6], tzinfo=UTC
                             )
                         except (TypeError, ValueError) as e:
                             logger.warning(
@@ -269,7 +269,7 @@ class RSSFeedService:
                     elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
                         try:
                             published = datetime(
-                                *entry.updated_parsed[:6], tzinfo=timezone.utc
+                                *entry.updated_parsed[:6], tzinfo=UTC
                             )
                         except (TypeError, ValueError) as e:
                             logger.warning(
@@ -316,7 +316,9 @@ class RSSFeedService:
         # Create a new session for this refresh to avoid "Connector is closed" errors
         session_created_here = False
         if not self._session:
-            self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            )
             session_created_here = True
 
         try:
@@ -344,7 +346,7 @@ class RSSFeedService:
             )
 
             self.feeds_cache = sorted_items[: self.max_items]
-            self.last_refresh = datetime.now(timezone.utc)
+            self.last_refresh = datetime.now(UTC)
 
             logger.info(
                 f"Refreshed {len(self.feeds_cache)} feed items from {len(self.FEED_SOURCES)} sources"
@@ -365,8 +367,8 @@ class RSSFeedService:
                     logger.warning(f"Error closing session: {e}")
 
     def get_feeds(
-        self, source_filter: Optional[str] = None, days_filter: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        self, source_filter: str | None = None, days_filter: int | None = None
+    ) -> list[dict[str, Any]]:
         """Get feeds with optional filtering."""
         items = self.feeds_cache
 
@@ -376,7 +378,7 @@ class RSSFeedService:
 
         # Filter by days
         if days_filter:
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_filter)
+            cutoff_date = datetime.now(UTC) - timedelta(days=days_filter)
             items = [item for item in items if item.published >= cutoff_date]
 
         # Convert to dict format - sort intelligently
@@ -386,7 +388,7 @@ class RSSFeedService:
             if priority == 4:  # Regulatory sources (Federal Reserve, SEC)
                 return (
                     -item.published.timestamp(),  # Most recent first (primary sort)
-                    priority  # Priority as secondary sort
+                    priority,  # Priority as secondary sort
                 )
             else:
                 # For cyber threats, priority first, then date
@@ -419,16 +421,16 @@ class RSSFeedService:
                 return category
         return "Other"
 
-    def get_available_sources(self) -> List[str]:
+    def get_available_sources(self) -> list[str]:
         """Get list of available feed sources."""
         sources = ["All"] + list(self.FEED_SOURCES.keys())
         return sources
 
-    def get_source_categories(self) -> Dict[str, List[str]]:
+    def get_source_categories(self) -> dict[str, list[str]]:
         """Get source categories."""
         return self.SOURCE_CATEGORIES.copy()
 
-    def get_cache_info(self) -> Dict[str, Any]:
+    def get_cache_info(self) -> dict[str, Any]:
         """Get cache information."""
         return {
             "total_items": len(self.feeds_cache),
@@ -439,7 +441,7 @@ class RSSFeedService:
             "categories": self.SOURCE_CATEGORIES,
         }
 
-    def analyze_threats(self) -> List[ThreatIndicator]:
+    def analyze_threats(self) -> list[ThreatIndicator]:
         """Analyze feeds for cyber threats."""
         feed_data = []
         for item in self.feeds_cache:
@@ -454,12 +456,12 @@ class RSSFeedService:
 
         return self.threat_analyzer.analyze_feed_content(feed_data)
 
-    def get_security_recommendations(self) -> List[SecurityRecommendation]:
+    def get_security_recommendations(self) -> list[SecurityRecommendation]:
         """Get security recommendations based on threat analysis."""
         threats = self.analyze_threats()
         return self.threat_analyzer.generate_security_recommendations(threats)
 
-    def get_threat_summary(self) -> Dict[str, Any]:
+    def get_threat_summary(self) -> dict[str, Any]:
         """Get a summary of current threats."""
         threats = self.analyze_threats()
         recommendations = self.get_security_recommendations()
@@ -552,7 +554,7 @@ class RSSFeedService:
             logger.error(f"Failed to remove feed source {name}: {e}")
             return False
 
-    def get_feed_health_status(self) -> Dict[str, Any]:
+    def get_feed_health_status(self) -> dict[str, Any]:
         """Get health status of all feed sources."""
         health_status = {
             "total_sources": len(self.FEED_SOURCES),

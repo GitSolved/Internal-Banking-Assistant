@@ -42,7 +42,9 @@ class SagemakerEmbedding(BaseEmbedding):
 
     def _async_not_implemented_warn_once(self) -> None:
         if not self._async_not_implemented_warned:
-            logger.warning("Async embedding not available, falling back to sync method.")
+            logger.warning(
+                "Async embedding not available, falling back to sync method."
+            )
             self._async_not_implemented_warned = True
 
     def _embed(self, sentences: list[str]) -> list[list[float]]:

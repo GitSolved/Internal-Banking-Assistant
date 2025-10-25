@@ -1,5 +1,4 @@
-"""
-Feeds Service Facade
+"""Feeds Service Facade
 
 Provides clean abstraction for feeds and external information services
 with intelligent caching, background refresh, and data aggregation.
@@ -7,36 +6,35 @@ with intelligent caching, background refresh, and data aggregation.
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
-from .service_facade import ServiceFacade, ServiceHealth
+
+from .service_facade import ServiceFacade
 
 logger = logging.getLogger(__name__)
 
 
 class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
-    """
-    Facade for feeds service with enhanced caching, background refresh,
+    """Facade for feeds service with enhanced caching, background refresh,
     and intelligent data aggregation.
     """
 
     def __init__(self, feeds_service: RSSFeedService):
         super().__init__(feeds_service, "feeds_service")
-        self._feed_cache: Dict[str, Dict] = {}
-        self._last_refresh_times: Dict[str, float] = {}
-        self._source_metadata: Dict[str, Dict] = {}
+        self._feed_cache: dict[str, dict] = {}
+        self._last_refresh_times: dict[str, float] = {}
+        self._source_metadata: dict[str, dict] = {}
 
     @ServiceFacade.with_cache(
         ttl=600, key_func=lambda self, source=None, days=None: f"feeds:{source}:{days}"
     )
     @ServiceFacade.with_retry(max_retries=2, base_delay=1.0)
     def get_feeds(
-        self, source_filter: Optional[str] = None, days_filter: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
-        """
-        Get RSS feeds with intelligent caching and filtering.
+        self, source_filter: str | None = None, days_filter: int | None = None
+    ) -> list[dict[str, Any]]:
+        """Get RSS feeds with intelligent caching and filtering.
 
         Args:
             source_filter: Optional source filter
@@ -67,9 +65,8 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
 
     @ServiceFacade.with_cache(ttl=900, key_func=lambda self: "cve_data")
     @ServiceFacade.with_retry(max_retries=2, base_delay=1.0)
-    def get_cve_data(self) -> List[Dict[str, Any]]:
-        """
-        Get CVE data with caching and enhancement.
+    def get_cve_data(self) -> list[dict[str, Any]]:
+        """Get CVE data with caching and enhancement.
 
         Returns:
             List of CVE entries with enhanced metadata
@@ -99,9 +96,8 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
 
     @ServiceFacade.with_cache(ttl=1800, key_func=lambda self: "mitre_data")
     @ServiceFacade.with_retry(max_retries=2, base_delay=1.0)
-    def get_mitre_data(self) -> Dict[str, Any]:
-        """
-        Get MITRE ATT&CK data with caching.
+    def get_mitre_data(self) -> dict[str, Any]:
+        """Get MITRE ATT&CK data with caching.
 
         Returns:
             Dictionary with MITRE ATT&CK data
@@ -129,11 +125,9 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
             logger.error(f"Failed to get MITRE data: {e}")
             return {"techniques": [], "tactics": [], "groups": [], "error": str(e)}
 
-
     @ServiceFacade.with_retry(max_retries=1, base_delay=2.0)
-    def refresh_feeds(self, force: bool = False) -> Dict[str, Any]:
-        """
-        Refresh feeds from external sources.
+    def refresh_feeds(self, force: bool = False) -> dict[str, Any]:
+        """Refresh feeds from external sources.
 
         Args:
             force: Force refresh even if recently updated
@@ -182,9 +176,8 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
             logger.error(f"Feeds refresh failed: {e}")
             return {"status": "failed", "error": str(e), "timestamp": current_time}
 
-    def get_feed_statistics(self) -> Dict[str, Any]:
-        """
-        Get comprehensive feed statistics.
+    def get_feed_statistics(self) -> dict[str, Any]:
+        """Get comprehensive feed statistics.
 
         Returns:
             Dictionary with feed statistics
@@ -225,8 +218,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
             return {"error": str(e)}
 
     def is_feeds_cache_empty(self) -> bool:
-        """
-        Check if feeds cache is empty.
+        """Check if feeds cache is empty.
 
         Returns:
             True if cache is empty or expired
@@ -237,7 +229,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
         except Exception:
             return True
 
-    def _enhance_feed_data(self, feed: Dict[str, Any]) -> Dict[str, Any]:
+    def _enhance_feed_data(self, feed: dict[str, Any]) -> dict[str, Any]:
         """Enhance feed entry with additional metadata."""
         enhanced_feed = feed.copy()
 
@@ -272,7 +264,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
 
         return enhanced_feed
 
-    def _enhance_cve_data(self, cve: Dict[str, Any]) -> Dict[str, Any]:
+    def _enhance_cve_data(self, cve: dict[str, Any]) -> dict[str, Any]:
         """Enhance CVE entry with additional analysis."""
         enhanced_cve = cve.copy()
 
@@ -300,7 +292,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
 
         return enhanced_cve
 
-    def _extract_cves_from_feeds(self, feeds: List[Dict]) -> List[Dict[str, Any]]:
+    def _extract_cves_from_feeds(self, feeds: list[dict]) -> list[dict[str, Any]]:
         """Extract CVE references from feed data."""
         cves = []
 
@@ -360,8 +352,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
         keys_to_remove = [
             key
             for key in self._cache.keys()
-            if key.startswith("feeds:")
-            or key in ["cve_data", "mitre_data"]
+            if key.startswith("feeds:") or key in ["cve_data", "mitre_data"]
         ]
 
         with self._lock:
@@ -409,7 +400,7 @@ class FeedsServiceFacade(ServiceFacade[RSSFeedService]):
         except Exception:
             return False
 
-    def get_service_info(self) -> Dict[str, Any]:
+    def get_service_info(self) -> dict[str, Any]:
         """Get comprehensive service information."""
         base_metrics = self.get_metrics()
 

@@ -1,7 +1,7 @@
 from typing import Any, Literal
 
 from llama_index.core.schema import Document
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class IngestedDoc(BaseModel):

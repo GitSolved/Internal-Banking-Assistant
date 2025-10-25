@@ -1,0 +1,137 @@
+# ============================================
+# Docker Build Optimization
+# ============================================
+# This file prevents unnecessary files from being sent to Docker build context,
+# resulting in faster builds, smaller images, and better security.
+
+# ============================================
+# Version Control (.git alone can be 100MB+)
+# ============================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ============================================
+# Documentation (not needed in container)
+# ============================================
+*.md
+!README.md
+docs/
+site/
+mkdocs.yml
+
+# ============================================
+# Development Tools & IDE
+# ============================================
+.idea/
+.vscode/
+.run/
+.fleet/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================
+# Python Virtual Environments
+# ============================================
+.venv/
+venv/
+*.egg-info/
+.python-version
+
+# ============================================
+# Testing & Quality Tools
+# ============================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+tests-results.xml
+tests/
+.tox/
+
+# ============================================
+# CI/CD Files
+# ============================================
+.github/
+Makefile
+
+# ============================================
+# Runtime Data (CRITICAL - can be 5GB+)
+# ============================================
+local_data/
+data/
+storage/
+models/cache/
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Logs (can accumulate to 100s of MB)
+# ============================================
+*.log
+logs/
+
+# ============================================
+# Build Artifacts
+# ============================================
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.so
+*.egg
+dist/
+build/
+
+# ============================================
+# Secrets & Environment Files
+# ============================================
+.env
+*.env
+.env.*
+*.token
+HF_TOKEN
+OPENAI_API_KEY
+GOOGLE_API_KEY
+AZ_OPENAI_API_KEY
+*.key
+*.pem
+credentials.json
+
+# ============================================
+# Backup Files
+# ============================================
+*.backup
+*.backup-*
+*_backup.*
+*.bak
+*.old
+
+# ============================================
+# Tools & Scripts (not needed at runtime)
+# ============================================
+tools/
+scripts/development/
+
+# ============================================
+# Package Manager Files (already handled by poetry install)
+# ============================================
+poetry.lock
+pyproject.toml
+requirements*.txt
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+.cache/

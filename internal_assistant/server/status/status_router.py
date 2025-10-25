@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Request
 import os
 import re
-from datetime import datetime
-from typing import Annotated
+
+from fastapi import APIRouter, Request
+
 from internal_assistant.settings.settings import settings
 
 
@@ -30,7 +30,7 @@ def ingestion_status():
     warnings = []
     last_ingestion_time = None
     if os.path.exists(LOG_PATH):
-        with open(LOG_PATH, "r", encoding="utf-8", errors="ignore") as f:
+        with open(LOG_PATH, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()[-MAX_LOG_LINES:]
             for line in lines:
                 logs.append(line.strip())

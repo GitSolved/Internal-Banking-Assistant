@@ -1,5 +1,4 @@
-"""
-Feeds Display Component
+"""Feeds Display Component
 
 This module contains feeds display functions extracted from ui.py
 during Phase 1B.5 of the UI refactoring project.
@@ -16,7 +15,6 @@ Updated: 2025-01-19 - Phase 1 MITRE Integration - Added MITRE technique cross-re
 """
 
 import logging
-from typing import Optional
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
 
@@ -24,14 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 class FeedsDisplayBuilder:
-    """
-    Builder class for feeds display functionality.
+    """Builder class for feeds display functionality.
     Handles RSS feeds and CVE display formatting with MITRE ATT&CK integration.
     """
 
     def __init__(self, feeds_service: RSSFeedService, threat_analyzer=None):
-        """
-        Initialize the FeedsDisplayBuilder.
+        """Initialize the FeedsDisplayBuilder.
 
         Args:
             feeds_service: Service for RSS feeds management
@@ -47,6 +43,7 @@ class FeedsDisplayBuilder:
                 from internal_assistant.server.threat_intelligence.threat_analyzer import (
                     ThreatIntelligenceAnalyzer,
                 )
+
                 self._threat_analyzer = global_injector.get(ThreatIntelligenceAnalyzer)
                 logger.debug("ThreatIntelligenceAnalyzer loaded for MITRE integration")
             except Exception as e:
@@ -56,8 +53,7 @@ class FeedsDisplayBuilder:
     def format_feeds_display(
         self, source_filter: str = None, days_filter: int = None
     ) -> str:
-        """
-        Format RSS feeds for display in the UI.
+        """Format RSS feeds for display in the UI.
 
         Args:
             source_filter: Optional source filter
@@ -161,7 +157,9 @@ class FeedsDisplayBuilder:
                     mitre_techniques = []
                     if self._threat_analyzer:
                         try:
-                            mitre_techniques = self._threat_analyzer.extract_mitre_techniques_from_feed_item(feed)
+                            mitre_techniques = self._threat_analyzer.extract_mitre_techniques_from_feed_item(
+                                feed
+                            )
                             # Limit to top 3 techniques by confidence
                             mitre_techniques = mitre_techniques[:3]
                         except Exception as e:
@@ -177,7 +175,11 @@ class FeedsDisplayBuilder:
                             confidence_pct = int(confidence * 100)
 
                             # Color based on confidence: high=green, medium=yellow, low=orange
-                            badge_color = "#28A745" if confidence >= 0.8 else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+                            badge_color = (
+                                "#28A745"
+                                if confidence >= 0.8
+                                else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+                            )
 
                             mitre_badges_html += f"""
                             <span style='
@@ -222,14 +224,13 @@ class FeedsDisplayBuilder:
                 <div style='text-align: center; color: #ff6b6b; padding: 20px;'>
                     <div>❌ Error loading external information</div>
                     <div style='font-size: 12px; margin-top: 8px;'>
-                        {str(e)}
+                        {e!s}
                     </div>
                 </div>
             </div>"""
 
     def format_rss_display(self, search_term: str = "", category: str = "All") -> str:
-        """
-        Format RSS feed display with search and category filtering.
+        """Format RSS feed display with search and category filtering.
 
         Args:
             search_term: Search filter text
@@ -277,14 +278,13 @@ class FeedsDisplayBuilder:
             <div class="feed-display">
                 <h3>📰 RSS Security Feeds</h3>
                 <div class="error">
-                    <p>Error loading RSS feeds: {str(e)}</p>
+                    <p>Error loading RSS feeds: {e!s}</p>
                 </div>
             </div>
             """
 
     def format_news_display(self, search_term: str = "", category: str = "All") -> str:
-        """
-        Format news display with search and category filtering.
+        """Format news display with search and category filtering.
 
         Args:
             search_term: Search filter text
@@ -304,14 +304,13 @@ class FeedsDisplayBuilder:
             <div class="news-display">
                 <h3>📰 News Display</h3>
                 <div class="error">
-                    <p>Error loading news: {str(e)}</p>
+                    <p>Error loading news: {e!s}</p>
                 </div>
             </div>
             """
 
     def _render_rss_html(self, feeds_data: list) -> str:
-        """
-        Render RSS feeds as HTML.
+        """Render RSS feeds as HTML.
 
         Args:
             feeds_data: List of feed data
@@ -355,8 +354,7 @@ class FeedsDisplayBuilder:
         severity_filter: str = "All Severities",
         vendor_filter: str = "All Vendors",
     ) -> str:
-        """
-        Format CVE information for display in the UI.
+        """Format CVE information for display in the UI.
 
         Args:
             source_filter: Optional source filter
@@ -392,8 +390,7 @@ class FeedsDisplayBuilder:
             </div>"""
 
     def get_cve_data(self) -> list:
-        """
-        Get CVE data from feeds service.
+        """Get CVE data from feeds service.
 
         Returns:
             List of CVE feed items
@@ -412,8 +409,7 @@ class FeedsDisplayBuilder:
             return []
 
     def is_feeds_cache_empty(self) -> bool:
-        """
-        Check if the feeds cache is empty.
+        """Check if the feeds cache is empty.
 
         Returns:
             True if cache is empty, False otherwise

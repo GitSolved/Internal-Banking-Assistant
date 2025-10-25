@@ -1,5 +1,4 @@
-"""
-Sidebar Component
+"""Sidebar Component
 
 This module implements the sidebar component for the Internal Assistant UI.
 It handles mode selection, document upload controls, and advanced settings.
@@ -8,8 +7,9 @@ This component will eventually contain the extracted sidebar functionality from 
 including mode selection, upload controls, and settings management.
 """
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
+
 import gradio as gr
 
 from internal_assistant.ui.core.ui_component import UIComponent
@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class SidebarComponent(UIComponent):
-    """
-    Sidebar component for the Internal Assistant.
+    """Sidebar component for the Internal Assistant.
 
     This component manages:
     - Mode selection (RAG/General LLM)
@@ -30,10 +29,9 @@ class SidebarComponent(UIComponent):
     """
 
     def __init__(
-        self, component_id: str = "sidebar", services: Optional[Dict[str, Any]] = None
+        self, component_id: str = "sidebar", services: dict[str, Any] | None = None
     ):
-        """
-        Initialize the sidebar component.
+        """Initialize the sidebar component.
 
         Args:
             component_id: Unique identifier for this component
@@ -46,13 +44,12 @@ class SidebarComponent(UIComponent):
         if self.has_service("ingest"):
             self.ingest_service = self.get_service("ingest")
 
-    def get_required_services(self) -> List[str]:
+    def get_required_services(self) -> list[str]:
         """Specify required services for this component."""
         return []  # Sidebar doesn't strictly require services
 
-    def build_interface(self) -> Dict[str, Any]:
-        """
-        Build the sidebar interface components.
+    def build_interface(self) -> dict[str, Any]:
+        """Build the sidebar interface components.
 
         Returns:
             Dictionary of Gradio components for the sidebar interface
@@ -181,8 +178,7 @@ class SidebarComponent(UIComponent):
         return self._component_refs
 
     def register_events(self, demo: gr.Blocks) -> None:
-        """
-        Register event handlers for the sidebar component.
+        """Register event handlers for the sidebar component.
 
         Args:
             demo: The main gr.Blocks context
@@ -225,9 +221,8 @@ class SidebarComponent(UIComponent):
 
         logger.debug(f"Registered events for {self.component_id}")
 
-    def get_component_refs(self) -> Dict[str, Any]:
-        """
-        Get references to this component's Gradio components.
+    def get_component_refs(self) -> dict[str, Any]:
+        """Get references to this component's Gradio components.
 
         Returns:
             Dictionary mapping component names to Gradio components
@@ -235,8 +230,7 @@ class SidebarComponent(UIComponent):
         return self._component_refs.copy()
 
     def _handle_mode_change(self, mode: str) -> None:
-        """
-        Handle mode selection change.
+        """Handle mode selection change.
 
         Args:
             mode: Selected mode
@@ -252,9 +246,8 @@ class SidebarComponent(UIComponent):
         else:
             logger.debug("Switched to General LLM mode")
 
-    def _handle_quick_upload(self, files: List) -> str:
-        """
-        Handle quick file upload from sidebar.
+    def _handle_quick_upload(self, files: list) -> str:
+        """Handle quick file upload from sidebar.
 
         Args:
             files: List of uploaded files
@@ -286,8 +279,7 @@ class SidebarComponent(UIComponent):
             return "Error uploading files"
 
     def _refresh_system_info(self) -> str:
-        """
-        Refresh system information display.
+        """Refresh system information display.
 
         Returns:
             Updated system info HTML
@@ -295,8 +287,7 @@ class SidebarComponent(UIComponent):
         return self._get_system_info()
 
     def _handle_clear_all(self) -> str:
-        """
-        Handle clear all data action.
+        """Handle clear all data action.
 
         Returns:
             Updated document count
@@ -310,7 +301,7 @@ class SidebarComponent(UIComponent):
                 return "All documents cleared"
             except Exception as e:
                 logger.error(f"Failed to clear documents: {e}")
-                return f"Error clearing documents: {str(e)}"
+                return f"Error clearing documents: {e!s}"
         else:
             logger.warning("Clear all data requested (no ingest service)")
             return "No ingest service available"
@@ -346,8 +337,7 @@ class SidebarComponent(UIComponent):
         logger.info(help_message)
 
     def _get_document_count(self) -> str:
-        """
-        Get current document count.
+        """Get current document count.
 
         Returns:
             Document count string
@@ -364,15 +354,15 @@ class SidebarComponent(UIComponent):
         return "0 documents"
 
     def _get_system_info(self) -> str:
-        """
-        Generate system information HTML.
+        """Generate system information HTML.
 
         Returns:
             HTML string with system information
         """
-        import psutil
         import platform
         from datetime import datetime
+
+        import psutil
 
         try:
             # Get system metrics

@@ -1,5 +1,4 @@
-"""
-Internal Assistant UI State Management
+"""Internal Assistant UI State Management
 
 This package provides centralized state management for the Internal Assistant UI,
 replacing scattered state management with a clean, predictable architecture.
@@ -13,68 +12,65 @@ Phase 2: State Management System - Complete implementation with:
 - Migration utilities for legacy state
 """
 
-from .state_manager import (
-    StateStore,
-    StateObserver,
-    StateSelector,
-    MemoizedSelector,
-    StateChange,
-    StateChangeType,
-    StatePersistence,
-    create_chat_state_selector,
-    create_document_state_selector,
-)
-
 from .app_state import (
     ApplicationState,
     ChatState,
     DocumentState,
-    SettingsState,
     ExternalInfoState,
+    SettingsState,
     UIState,
     create_application_state_from_legacy,
     validate_application_state,
 )
 
+# Gradio synchronization system - Phase 2.5 fix
+from .gradio_sync import ComponentBinding, GradioStateSync, create_gradio_sync
+
+# Integration manager - required import
+from .integration import StateIntegrationManager
 from .message_bus import (
-    MessageBus,
-    Message,
-    MessageType,
-    MessagePriority,
-    MessageHandler,
-    MessageFilter,
-    SimpleMessageFilter,
-    UIComponentHandler,
     ChatComponentHandler,
     DocumentComponentHandler,
+    Message,
+    MessageBus,
+    MessageFilter,
+    MessageHandler,
+    MessagePriority,
+    MessageType,
+    SimpleMessageFilter,
+    UIComponentHandler,
 )
-
 from .session_manager import (
+    ConversationHistory,
     SessionManager,
     SessionMetadata,
-    ConversationHistory,
     SessionStorage,
     create_default_session_manager,
     migrate_legacy_conversation_history,
 )
-
-# Integration manager - required import
-from .integration import StateIntegrationManager
-
-# Gradio synchronization system - Phase 2.5 fix
-from .gradio_sync import GradioStateSync, create_gradio_sync, ComponentBinding
+from .state_manager import (
+    MemoizedSelector,
+    StateChange,
+    StateChangeType,
+    StateObserver,
+    StatePersistence,
+    StateSelector,
+    StateStore,
+    create_chat_state_selector,
+    create_document_state_selector,
+)
 
 # Convenience imports for integration
 try:
+    from .integration import StateObserverAdapter
     from .selectors import (
         ChatStateSelector,
-        DocumentCountSelector,
-        ThreatIntelligenceSelector,
-        SystemHealthSelector,
-        UILayoutSelector,
         DashboardSummarySelector,
+        DocumentCountSelector,
+        SystemHealthSelector,
+        ThreatIntelligenceSelector,
+        UILayoutSelector,
     )
-    from .integration import StateObserverAdapter
 except ImportError:
     # These modules may not exist yet, graceful fallback
     pass

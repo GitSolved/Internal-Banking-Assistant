@@ -1,5 +1,4 @@
-"""
-Layout Manager
+"""Layout Manager
 
 This module provides layout management capabilities for the Internal Assistant UI system.
 It handles the organization and positioning of UI components while maintaining 
@@ -12,16 +11,16 @@ The LayoutManager ensures:
 - Flexible layout composition for complex UIs
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
 import logging
+from typing import Any
+
 import gradio as gr
 
 logger = logging.getLogger(__name__)
 
 
 class LayoutSection:
-    """
-    Represents a section of the UI layout.
+    """Represents a section of the UI layout.
 
     A layout section can contain multiple components and has its own
     styling and positioning rules.
@@ -30,12 +29,11 @@ class LayoutSection:
     def __init__(
         self,
         section_id: str,
-        title: Optional[str] = None,
+        title: str | None = None,
         visible: bool = True,
-        css_classes: Optional[List[str]] = None,
+        css_classes: list[str] | None = None,
     ):
-        """
-        Initialize a layout section.
+        """Initialize a layout section.
 
         Args:
             section_id: Unique identifier for this section
@@ -47,14 +45,13 @@ class LayoutSection:
         self.title = title
         self.visible = visible
         self.css_classes = css_classes or []
-        self.components: List[Any] = []
-        self.layout_config: Dict[str, Any] = {}
+        self.components: list[Any] = []
+        self.layout_config: dict[str, Any] = {}
 
     def add_component(
-        self, component: Any, layout_config: Optional[Dict[str, Any]] = None
+        self, component: Any, layout_config: dict[str, Any] | None = None
     ) -> None:
-        """
-        Add a component to this section.
+        """Add a component to this section.
 
         Args:
             component: Gradio component to add
@@ -70,34 +67,31 @@ class LayoutSection:
 
 
 class LayoutManager:
-    """
-    Manages the overall layout structure of the UI.
+    """Manages the overall layout structure of the UI.
 
     This class provides methods for creating consistent, responsive layouts
     while maintaining the single gr.Blocks() context required by Gradio.
     """
 
-    def __init__(self, theme_config: Optional[Dict[str, Any]] = None):
-        """
-        Initialize the layout manager.
+    def __init__(self, theme_config: dict[str, Any] | None = None):
+        """Initialize the layout manager.
 
         Args:
             theme_config: Optional theme configuration
         """
         self.theme_config = theme_config or {}
-        self.sections: Dict[str, LayoutSection] = {}
+        self.sections: dict[str, LayoutSection] = {}
         self.global_css = ""
         self.layout_state = {}
 
     def create_section(
         self,
         section_id: str,
-        title: Optional[str] = None,
+        title: str | None = None,
         visible: bool = True,
-        css_classes: Optional[List[str]] = None,
+        css_classes: list[str] | None = None,
     ) -> LayoutSection:
-        """
-        Create a new layout section.
+        """Create a new layout section.
 
         Args:
             section_id: Unique identifier for the section
@@ -114,9 +108,8 @@ class LayoutManager:
         logger.debug(f"Created layout section: {section_id}")
         return section
 
-    def get_section(self, section_id: str) -> Optional[LayoutSection]:
-        """
-        Get a layout section by ID.
+    def get_section(self, section_id: str) -> LayoutSection | None:
+        """Get a layout section by ID.
 
         Args:
             section_id: ID of the section to retrieve
@@ -126,9 +119,8 @@ class LayoutManager:
         """
         return self.sections.get(section_id)
 
-    def create_header_layout(self) -> Tuple[Any, ...]:
-        """
-        Create the standard header layout.
+    def create_header_layout(self) -> tuple[Any, ...]:
+        """Create the standard header layout.
 
         Returns:
             Tuple of Gradio components for the header
@@ -136,7 +128,7 @@ class LayoutManager:
         with gr.Row(elem_classes=["header-row"]):
             with gr.Column(scale=1, elem_classes=["logo-column"]):
                 logo = gr.Image(
-                    value=str("internal_assistant/ui/internal-assistant-logo.png"),
+                    value="internal_assistant/ui/internal-assistant-logo.png",
                     show_label=False,
                     interactive=False,
                     height=80,
@@ -152,9 +144,8 @@ class LayoutManager:
 
         return logo, title, subtitle
 
-    def create_tab_layout(self, tab_configs: List[Dict[str, Any]]) -> Any:
-        """
-        Create a tabbed interface layout.
+    def create_tab_layout(self, tab_configs: list[dict[str, Any]]) -> Any:
+        """Create a tabbed interface layout.
 
         Args:
             tab_configs: List of tab configurations
@@ -179,9 +170,8 @@ class LayoutManager:
         logger.debug(f"Created tab layout with {len(tab_names)} tabs")
         return gr.TabbedInterface(tabs, tab_names=tab_names)
 
-    def create_sidebar_layout(self, width_ratio: float = 0.3) -> Tuple[Any, Any]:
-        """
-        Create a sidebar layout with main content area.
+    def create_sidebar_layout(self, width_ratio: float = 0.3) -> tuple[Any, Any]:
+        """Create a sidebar layout with main content area.
 
         Args:
             width_ratio: Ratio of sidebar width to total width (0.0 to 1.0)
@@ -204,10 +194,9 @@ class LayoutManager:
         return sidebar, main_content
 
     def create_responsive_grid(
-        self, components: List[Any], columns: int = 3, gap: str = "1rem"
+        self, components: list[Any], columns: int = 3, gap: str = "1rem"
     ) -> Any:
-        """
-        Create a responsive grid layout for components.
+        """Create a responsive grid layout for components.
 
         Args:
             components: List of components to arrange in grid
@@ -229,8 +218,7 @@ class LayoutManager:
         return grid_row
 
     def apply_theme_css(self) -> str:
-        """
-        Generate CSS for the current theme configuration.
+        """Generate CSS for the current theme configuration.
 
         Returns:
             CSS string for the theme
@@ -358,9 +346,8 @@ class LayoutManager:
         logger.debug("Generated theme CSS")
         return combined_css
 
-    def get_layout_state(self) -> Dict[str, Any]:
-        """
-        Get the current layout state.
+    def get_layout_state(self) -> dict[str, Any]:
+        """Get the current layout state.
 
         Returns:
             Dictionary containing layout state information
@@ -373,8 +360,7 @@ class LayoutManager:
         }
 
     def set_section_visibility(self, section_id: str, visible: bool) -> None:
-        """
-        Set the visibility of a layout section.
+        """Set the visibility of a layout section.
 
         Args:
             section_id: ID of the section
@@ -388,8 +374,7 @@ class LayoutManager:
             logger.warning(f"Section {section_id} not found")
 
     def create_loading_layout(self, message: str = "Loading...") -> Any:
-        """
-        Create a loading indicator layout.
+        """Create a loading indicator layout.
 
         Args:
             message: Loading message to display
@@ -437,14 +422,12 @@ class LayoutManager:
 
 
 class ResponsiveLayout:
-    """
-    Helper class for creating responsive layouts that adapt to different screen sizes.
+    """Helper class for creating responsive layouts that adapt to different screen sizes.
     """
 
     @staticmethod
-    def create_mobile_friendly_layout(components: List[Any]) -> Any:
-        """
-        Create a mobile-friendly vertical layout.
+    def create_mobile_friendly_layout(components: list[Any]) -> Any:
+        """Create a mobile-friendly vertical layout.
 
         Args:
             components: List of components to stack vertically
@@ -460,9 +443,8 @@ class ResponsiveLayout:
         return mobile_col
 
     @staticmethod
-    def create_desktop_layout(components: List[Any], columns: int = 2) -> Any:
-        """
-        Create a desktop-optimized multi-column layout.
+    def create_desktop_layout(components: list[Any], columns: int = 2) -> Any:
+        """Create a desktop-optimized multi-column layout.
 
         Args:
             components: List of components to arrange

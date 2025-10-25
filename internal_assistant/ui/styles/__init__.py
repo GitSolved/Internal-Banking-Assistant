@@ -1,5 +1,4 @@
-"""
-Styles Module
+"""Styles Module
 
 This module contains CSS and theme management for the Internal Assistant UI.
 """

@@ -1,12 +1,10 @@
-"""
-UI Formatting Utilities
+"""UI Formatting Utilities
 
 Pure utility functions for formatting and display purposes.
 Extracted from the monolithic ui.py file for better maintainability.
 """
 
 import logging
-from typing import Dict
 
 logger = logging.getLogger(__name__)
 

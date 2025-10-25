@@ -1,5 +1,4 @@
-"""
-Session Manager
+"""Session Manager
 
 This module handles user session tracking, conversation history management,
 and session persistence for the Internal Assistant UI.
@@ -10,16 +9,16 @@ Part of Phase 2.4: Session Management implementation.
 import asyncio
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+import pickle
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
-from uuid import uuid4
-import pickle
 from threading import Lock
+from typing import Any
+from uuid import uuid4
 
-from .app_state import ApplicationState, ChatState, DocumentState
-from .message_bus import MessageBus, Message, MessageType, MessagePriority
+from .app_state import ApplicationState
+from .message_bus import MessageBus, MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +28,19 @@ class SessionMetadata:
     """Metadata about a user session."""
 
     session_id: str
-    user_id: Optional[str] = None
+    user_id: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
     last_accessed: datetime = field(default_factory=datetime.now)
-    last_message_time: Optional[datetime] = None
+    last_message_time: datetime | None = None
     message_count: int = 0
-    documents_accessed: Set[str] = field(default_factory=set)
-    modes_used: Set[str] = field(default_factory=set)
-    settings_modified: Dict[str, datetime] = field(default_factory=dict)
+    documents_accessed: set[str] = field(default_factory=set)
+    modes_used: set[str] = field(default_factory=set)
+    settings_modified: dict[str, datetime] = field(default_factory=dict)
     session_duration: timedelta = field(default_factory=lambda: timedelta())
     is_active: bool = True
-    client_info: Dict[str, Any] = field(default_factory=dict)
+    client_info: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "session_id": self.session_id,
@@ -63,7 +62,7 @@ class SessionMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "SessionMetadata":
         """Create from dictionary."""
         return cls(
             session_id=data["session_id"],
@@ -93,7 +92,7 @@ class ConversationHistory:
     """Represents a conversation history for a session."""
 
     session_id: str
-    messages: List[Dict[str, Any]] = field(default_factory=list)
+    messages: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     last_updated: datetime = field(default_factory=datetime.now)
     total_messages: int = 0
@@ -104,8 +103,8 @@ class ConversationHistory:
         user_message: str,
         assistant_response: str,
         mode: str,
-        sources: Optional[List[Dict[str, Any]]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        sources: list[dict[str, Any]] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add a message pair to the conversation."""
         message_entry = {
@@ -127,7 +126,7 @@ class ConversationHistory:
         estimated_tokens = text_length // 4  # Rough approximation
         self.total_tokens_estimated += estimated_tokens
 
-    def get_recent_messages(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_messages(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get the most recent messages."""
         return self.messages[-limit:] if self.messages else []
 
@@ -138,7 +137,7 @@ class ConversationHistory:
         self.total_tokens_estimated = 0
         self.last_updated = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "session_id": self.session_id,
@@ -150,7 +149,7 @@ class ConversationHistory:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ConversationHistory":
+    def from_dict(cls, data: dict[str, Any]) -> "ConversationHistory":
         """Create from dictionary."""
         return cls(
             session_id=data["session_id"],
@@ -166,8 +165,7 @@ class SessionStorage:
     """Handles persistence of session data to disk."""
 
     def __init__(self, storage_path: Path):
-        """
-        Initialize session storage.
+        """Initialize session storage.
 
         Args:
             storage_path: Directory to store session files
@@ -191,14 +189,14 @@ class SessionStorage:
         except Exception as e:
             logger.error(f"Failed to save session metadata {metadata.session_id}: {e}")
 
-    def load_session_metadata(self, session_id: str) -> Optional[SessionMetadata]:
+    def load_session_metadata(self, session_id: str) -> SessionMetadata | None:
         """Load session metadata from disk."""
         try:
             file_path = self.sessions_path / f"{session_id}.json"
             if not file_path.exists():
                 return None
 
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 data = json.load(f)
 
             return SessionMetadata.from_dict(data)
@@ -220,14 +218,14 @@ class SessionStorage:
 
     def load_conversation_history(
         self, session_id: str
-    ) -> Optional[ConversationHistory]:
+    ) -> ConversationHistory | None:
         """Load conversation history from disk."""
         try:
             file_path = self.conversations_path / f"{session_id}.json"
             if not file_path.exists():
                 return ConversationHistory(session_id=session_id)
 
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 data = json.load(f)
 
             return ConversationHistory.from_dict(data)
@@ -245,7 +243,7 @@ class SessionStorage:
         except Exception as e:
             logger.error(f"Failed to save session state {session_id}: {e}")
 
-    def load_session_state(self, session_id: str) -> Optional[ApplicationState]:
+    def load_session_state(self, session_id: str) -> ApplicationState | None:
         """Load application state for a session."""
         try:
             file_path = self.states_path / f"{session_id}.pkl"
@@ -261,10 +259,9 @@ class SessionStorage:
             return None
 
     def list_sessions(
-        self, active_only: bool = False, limit: Optional[int] = None
-    ) -> List[str]:
-        """
-        List all session IDs.
+        self, active_only: bool = False, limit: int | None = None
+    ) -> list[str]:
+        """List all session IDs.
 
         Args:
             active_only: Only return active sessions
@@ -316,8 +313,7 @@ class SessionStorage:
 
 
 class SessionManager:
-    """
-    Manages user sessions, conversation history, and session persistence.
+    """Manages user sessions, conversation history, and session persistence.
 
     Handles session lifecycle, automatic cleanup, conversation tracking,
     and session restoration capabilities.
@@ -326,12 +322,11 @@ class SessionManager:
     def __init__(
         self,
         storage_path: Path,
-        message_bus: Optional[MessageBus] = None,
+        message_bus: MessageBus | None = None,
         session_timeout: timedelta = timedelta(hours=24),
         max_sessions: int = 1000,
     ):
-        """
-        Initialize session manager.
+        """Initialize session manager.
 
         Args:
             storage_path: Path for session storage
@@ -345,9 +340,9 @@ class SessionManager:
         self.max_sessions = max_sessions
 
         # In-memory session tracking
-        self._active_sessions: Dict[str, SessionMetadata] = {}
-        self._conversation_histories: Dict[str, ConversationHistory] = {}
-        self._session_states: Dict[str, ApplicationState] = {}
+        self._active_sessions: dict[str, SessionMetadata] = {}
+        self._conversation_histories: dict[str, ConversationHistory] = {}
+        self._session_states: dict[str, ApplicationState] = {}
         self._lock = Lock()
 
         # Statistics
@@ -364,17 +359,16 @@ class SessionManager:
         self._load_recent_sessions()
 
         # Initialize cleanup task (will be started lazily when needed)
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
 
         logger.info("SessionManager initialized")
 
     def create_session(
         self,
-        user_id: Optional[str] = None,
-        client_info: Optional[Dict[str, Any]] = None,
+        user_id: str | None = None,
+        client_info: dict[str, Any] | None = None,
     ) -> str:
-        """
-        Create a new session.
+        """Create a new session.
 
         Args:
             user_id: Optional user identifier
@@ -418,7 +412,7 @@ class SessionManager:
         logger.info(f"Session created: {session_id} for user: {user_id}")
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[SessionMetadata]:
+    def get_session(self, session_id: str) -> SessionMetadata | None:
         """Get session metadata."""
         with self._lock:
             return self._active_sessions.get(session_id)
@@ -440,11 +434,10 @@ class SessionManager:
         user_message: str,
         assistant_response: str,
         mode: str,
-        sources: Optional[List[Dict[str, Any]]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        sources: list[dict[str, Any]] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Add a message to session conversation history.
+        """Add a message to session conversation history.
 
         Args:
             session_id: Session identifier
@@ -502,10 +495,9 @@ class SessionManager:
         logger.debug(f"Message added to session {session_id}")
 
     def get_conversation_history(
-        self, session_id: str, limit: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
-        """
-        Get conversation history for a session.
+        self, session_id: str, limit: int | None = None
+    ) -> list[dict[str, Any]]:
+        """Get conversation history for a session.
 
         Args:
             session_id: Session identifier
@@ -536,8 +528,7 @@ class SessionManager:
         logger.info(f"Conversation history cleared for session: {session_id}")
 
     def save_session_state(self, session_id: str, state: ApplicationState) -> None:
-        """
-        Save application state for a session.
+        """Save application state for a session.
 
         Args:
             session_id: Session identifier
@@ -552,9 +543,8 @@ class SessionManager:
 
         logger.debug(f"Session state saved: {session_id}")
 
-    def restore_session_state(self, session_id: str) -> Optional[ApplicationState]:
-        """
-        Restore application state for a session.
+    def restore_session_state(self, session_id: str) -> ApplicationState | None:
+        """Restore application state for a session.
 
         Args:
             session_id: Session identifier
@@ -598,8 +588,7 @@ class SessionManager:
         logger.info(f"Session expired: {session_id}")
 
     def delete_session(self, session_id: str, permanent: bool = False) -> None:
-        """
-        Delete a session.
+        """Delete a session.
 
         Args:
             session_id: Session to delete
@@ -625,12 +614,11 @@ class SessionManager:
 
     def list_sessions(
         self,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
         active_only: bool = True,
-        limit: Optional[int] = None,
-    ) -> List[SessionMetadata]:
-        """
-        List sessions.
+        limit: int | None = None,
+    ) -> list[SessionMetadata]:
+        """List sessions.
 
         Args:
             user_id: Filter by user ID
@@ -659,7 +647,7 @@ class SessionManager:
 
         return sessions
 
-    def get_session_stats(self) -> Dict[str, Any]:
+    def get_session_stats(self) -> dict[str, Any]:
         """Get session statistics."""
         with self._lock:
             active_count = len(self._active_sessions)
@@ -785,10 +773,9 @@ class SessionManager:
 
 # Helper functions for common session operations
 def create_default_session_manager(
-    storage_path: Path, message_bus: Optional[MessageBus] = None
+    storage_path: Path, message_bus: MessageBus | None = None
 ) -> SessionManager:
-    """
-    Create a session manager with default settings.
+    """Create a session manager with default settings.
 
     Args:
         storage_path: Path for session storage
@@ -806,10 +793,9 @@ def create_default_session_manager(
 
 
 def migrate_legacy_conversation_history(
-    legacy_history: List[List[str]], session_id: str
+    legacy_history: list[list[str]], session_id: str
 ) -> ConversationHistory:
-    """
-    Migrate legacy Gradio chat history to new conversation format.
+    """Migrate legacy Gradio chat history to new conversation format.
 
     Args:
         legacy_history: Legacy chat history in [[user, assistant], ...] format

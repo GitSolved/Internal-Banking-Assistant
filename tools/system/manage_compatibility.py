@@ -315,7 +315,9 @@ def display_results(results: Dict[str, any]) -> int:
                 print(f"  {issue}")
 
             print("\nRECOMMENDATIONS:")
-            print("  1. Run: poetry run python tools/system/manage_compatibility.py --fix")
+            print(
+                "  1. Run: poetry run python tools/system/manage_compatibility.py --fix"
+            )
             print("  2. Or manually: poetry lock && poetry install")
             return 1
         else:
@@ -345,7 +347,9 @@ def display_results(results: Dict[str, any]) -> int:
         else:
             print("ERROR Version requirements not met!")
             print("\nTo fix:")
-            print("   1. Run: poetry run python tools/system/manage_compatibility.py --fix")
+            print(
+                "   1. Run: poetry run python tools/system/manage_compatibility.py --fix"
+            )
             print("   2. Ensure Python 3.11.9 is installed")
             return 1
 

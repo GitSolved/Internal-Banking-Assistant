@@ -1,5 +1,4 @@
-"""
-Display Utility Builder Component
+"""Display Utility Builder Component
 
 This module contains display utility functions extracted from ui.py
 during Phase 1C.1 of the UI refactoring project.
@@ -15,7 +14,7 @@ Phase: 1C.1 - Simple Display Functions Extraction
 
 import logging
 import re
-from typing import Optional, Any, Dict, List
+from typing import Any
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
 
@@ -23,14 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 class DisplayUtilityBuilder:
-    """
-    Builder class for display utility functions.
+    """Builder class for display utility functions.
     Handles formatting for CVE and MITRE displays.
     """
 
     def __init__(self, feeds_service: RSSFeedService, threat_analyzer=None):
-        """
-        Initialize the DisplayUtilityBuilder.
+        """Initialize the DisplayUtilityBuilder.
 
         Args:
             feeds_service: Service for RSS feeds management
@@ -46,8 +43,11 @@ class DisplayUtilityBuilder:
                 from internal_assistant.server.threat_intelligence.threat_analyzer import (
                     ThreatIntelligenceAnalyzer,
                 )
+
                 self._threat_analyzer = global_injector.get(ThreatIntelligenceAnalyzer)
-                logger.debug("ThreatIntelligenceAnalyzer loaded for MITRE integration in DisplayUtilityBuilder")
+                logger.debug(
+                    "ThreatIntelligenceAnalyzer loaded for MITRE integration in DisplayUtilityBuilder"
+                )
             except Exception as e:
                 logger.warning(f"Could not load ThreatIntelligenceAnalyzer: {e}")
                 self._threat_analyzer = None
@@ -154,7 +154,9 @@ class DisplayUtilityBuilder:
                     mitre_techniques = []
                     if self._threat_analyzer:
                         try:
-                            mitre_techniques = self._threat_analyzer.extract_mitre_techniques_from_feed_item(feed)
+                            mitre_techniques = self._threat_analyzer.extract_mitre_techniques_from_feed_item(
+                                feed
+                            )
                             # Limit to top 3 techniques by confidence
                             mitre_techniques = mitre_techniques[:3]
                         except Exception as e:
@@ -170,7 +172,11 @@ class DisplayUtilityBuilder:
                             confidence_pct = int(confidence * 100)
 
                             # Color based on confidence: high=green, medium=orange, low=red-orange
-                            badge_color = "#28A745" if confidence >= 0.8 else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+                            badge_color = (
+                                "#28A745"
+                                if confidence >= 0.8
+                                else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+                            )
 
                             mitre_badges_html += f"""
                             <span style='
@@ -223,7 +229,7 @@ class DisplayUtilityBuilder:
             <div class='feed-content error'>
                 <div style='text-align: center; color: #d32f2f; padding: 20px;'>
                     <div>⚠️ Error loading CVE data</div>
-                    <div style='font-size: 12px; margin-top: 8px;'>{str(e)}</div>
+                    <div style='font-size: 12px; margin-top: 8px;'>{e!s}</div>
                 </div>
             </div>"""
 
@@ -265,8 +271,7 @@ class DisplayUtilityBuilder:
         banking_focus: bool = False,
         mitre_data: dict = None,
     ) -> str:
-        """
-        Format MITRE ATT&CK data for display in the UI.
+        """Format MITRE ATT&CK data for display in the UI.
 
         Args:
             mitre_data: Optional cached MITRE data. If None, will attempt to get fresh data.
@@ -459,13 +464,12 @@ class DisplayUtilityBuilder:
             <div class='feed-content error'>
                 <div style='text-align: center; color: #d32f2f; padding: 20px;'>
                     <div>⚠️ Error loading MITRE ATT&CK data</div>
-                    <div style='font-size: 12px; margin-top: 8px;'>{str(e)}</div>
+                    <div style='font-size: 12px; margin-top: 8px;'>{e!s}</div>
                 </div>
             </div>"""
 
     def format_active_threats_display(self, days_filter: int = 7) -> str:
-        """
-        Format active threats with attack chains for MITRE panel.
+        """Format active threats with attack chains for MITRE panel.
 
         Shows collapsed cards by default, expandable to full attack chain.
         Limit to 10 threats max for performance.
@@ -484,6 +488,7 @@ class DisplayUtilityBuilder:
 
             # Get THREAT INTELLIGENCE feeds only (not CVEs, regulatory, or news)
             from internal_assistant.server.feeds.feeds_service import RSSFeedService
+
             THREAT_SOURCES = RSSFeedService.THREAT_INTEL_SOURCES
 
             logger.info(f"Filtering Active Threats to sources: {THREAT_SOURCES}")
@@ -497,38 +502,46 @@ class DisplayUtilityBuilder:
 
             # If no threat intelligence feeds found, show appropriate message
             if not threat_feeds:
-                logger.warning(f"No threat intelligence feeds found from sources: {THREAT_SOURCES}")
+                logger.warning(
+                    f"No threat intelligence feeds found from sources: {THREAT_SOURCES}"
+                )
                 return self._render_no_threats_available_state(THREAT_SOURCES)
 
             # Sort by published date (most recent first)
             sorted_feeds = sorted(
-                threat_feeds,
-                key=lambda x: x.get('published', ''),
-                reverse=True
+                threat_feeds, key=lambda x: x.get("published", ""), reverse=True
             )
 
             # Take 10 most recent threat feeds and enrich with MITRE analysis
             threat_cards = []
             for feed in sorted_feeds[:10]:
                 # Extract MITRE techniques from threat description
-                techniques = threat_analyzer.extract_mitre_techniques_from_feed_item(feed)
+                techniques = threat_analyzer.extract_mitre_techniques_from_feed_item(
+                    feed
+                )
 
                 if techniques:
                     # Build attack chain if techniques found
                     attack_chain = threat_analyzer.build_attack_chain(techniques)
-                    confidence = max(t['confidence'] for t in techniques)
+                    confidence = max(t["confidence"] for t in techniques)
                 else:
                     # No techniques found in threat description
-                    attack_chain = {'phases': [], 'total_phases': 0, 'is_complete_chain': False}
+                    attack_chain = {
+                        "phases": [],
+                        "total_phases": 0,
+                        "is_complete_chain": False,
+                    }
                     techniques = []
                     confidence = 0.5  # Neutral confidence when no techniques extracted
 
-                threat_cards.append({
-                    'feed': feed,
-                    'techniques': techniques,
-                    'attack_chain': attack_chain,
-                    'confidence': confidence,
-                })
+                threat_cards.append(
+                    {
+                        "feed": feed,
+                        "techniques": techniques,
+                        "attack_chain": attack_chain,
+                        "confidence": confidence,
+                    }
+                )
 
             if not threat_cards:
                 return self._render_no_threats_available_state(THREAT_SOURCES)
@@ -543,7 +556,7 @@ class DisplayUtilityBuilder:
             html += self._render_threats_footer(threat_cards)
 
             # Safety check: Validate HTML size (max 100KB for performance)
-            html_size_kb = len(html.encode('utf-8')) / 1024
+            html_size_kb = len(html.encode("utf-8")) / 1024
             if html_size_kb > 100:
                 logger.warning(
                     f"Active threats HTML too large: {html_size_kb:.1f}KB, falling back to simple view"
@@ -552,9 +565,11 @@ class DisplayUtilityBuilder:
                 simple_threats = threat_cards[:5]  # Only show top 5
                 html = self._render_threats_header(len(simple_threats))
                 for idx, threat in enumerate(simple_threats):
-                    html += self._render_threat_card_collapsed(threat, idx, threat_analyzer)
+                    html += self._render_threat_card_collapsed(
+                        threat, idx, threat_analyzer
+                    )
                     # Skip expanded cards to reduce size
-                html += f"""
+                html += """
                 <div style='margin-top: 16px; padding: 12px; background: #2a2a2a; border-radius: 8px; border-left: 3px solid #FF0000;'>
                     <div style='color: #FF0000; font-size: 12px; margin-bottom: 8px;'>
                         ⚠️ Showing top 5 threats only (original display too large)
@@ -562,13 +577,15 @@ class DisplayUtilityBuilder:
                 </div>
                 </div>
                 """
-                logger.info(f"Fallback HTML size: {len(html.encode('utf-8')) / 1024:.1f}KB")
+                logger.info(
+                    f"Fallback HTML size: {len(html.encode('utf-8')) / 1024:.1f}KB"
+                )
 
             return html
 
         except Exception as e:
             logger.error(f"Error formatting active threats: {e}", exc_info=True)
-            return self._render_error_state(f"Error loading active threats: {str(e)}")
+            return self._render_error_state(f"Error loading active threats: {e!s}")
 
     def _render_threats_header(self, threat_count: int) -> str:
         """Render header for active threats panel."""
@@ -606,42 +623,44 @@ class DisplayUtilityBuilder:
         self, threat: dict, idx: int, threat_analyzer: Any
     ) -> str:
         """Render collapsed threat card showing summary."""
-        feed = threat['feed']
-        techniques = threat['techniques']
-        attack_chain = threat['attack_chain']
-        confidence = threat['confidence']
+        feed = threat["feed"]
+        techniques = threat["techniques"]
+        attack_chain = threat["attack_chain"]
+        confidence = threat["confidence"]
 
         # Build attack chain summary (T1566 → T1059 → T1486)
-        chain_summary = " → ".join([
-            t['technique_id'] for t in techniques[:5]
-        ])
+        chain_summary = " → ".join([t["technique_id"] for t in techniques[:5]])
         if len(techniques) > 5:
             chain_summary += " ..."
 
         # Get top 3 mitigations across all techniques
         all_mitigations = []
         for tech in techniques[:3]:
-            mits = threat_analyzer.get_mitigations_for_technique(tech['technique_id'])
+            mits = threat_analyzer.get_mitigations_for_technique(tech["technique_id"])
             all_mitigations.extend(mits)
 
         # Deduplicate mitigations
         seen = set()
         unique_mitigations = []
         for mit in all_mitigations:
-            if mit['id'] not in seen:
-                seen.add(mit['id'])
+            if mit["id"] not in seen:
+                seen.add(mit["id"])
                 unique_mitigations.append(mit)
 
         top_mitigations = unique_mitigations[:3]
 
         # Confidence bar color
         confidence_pct = int(confidence * 100)
-        confidence_color = "#28A745" if confidence >= 0.8 else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+        confidence_color = (
+            "#28A745"
+            if confidence >= 0.8
+            else "#FFA500" if confidence >= 0.6 else "#FF6B35"
+        )
 
-        source = feed.get('source', 'Unknown Source')
-        source_color = self._feeds_service.SOURCE_COLORS.get(source, '#666666')
-        title = feed.get('title', 'No Title')
-        published = feed.get('published', 'Unknown Date')
+        source = feed.get("source", "Unknown Source")
+        source_color = self._feeds_service.SOURCE_COLORS.get(source, "#666666")
+        title = feed.get("title", "No Title")
+        published = feed.get("published", "Unknown Date")
 
         return f"""
         <div id='threat-collapsed-{idx}' class='threat-card-collapsed' style='margin-bottom: 12px; padding: 12px; background: #1a1a1a; border-radius: 8px; border-left: 3px solid {source_color};'>
@@ -685,23 +704,23 @@ class DisplayUtilityBuilder:
         self, threat: dict, idx: int, threat_analyzer: Any
     ) -> str:
         """Render expanded threat card with full attack chain and mitigations."""
-        feed = threat['feed']
-        techniques = threat['techniques']
-        attack_chain = threat['attack_chain']
-        confidence = threat['confidence']
+        feed = threat["feed"]
+        techniques = threat["techniques"]
+        attack_chain = threat["attack_chain"]
+        confidence = threat["confidence"]
 
-        source = feed.get('source', 'Unknown Source')
-        source_color = self._feeds_service.SOURCE_COLORS.get(source, '#666666')
-        title = feed.get('title', 'No Title')
-        published = feed.get('published', 'Unknown Date')
-        summary = feed.get('summary', '')
-        link = feed.get('link', '#')
+        source = feed.get("source", "Unknown Source")
+        source_color = self._feeds_service.SOURCE_COLORS.get(source, "#666666")
+        title = feed.get("title", "No Title")
+        published = feed.get("published", "Unknown Date")
+        summary = feed.get("summary", "")
+        link = feed.get("link", "#")
 
         # Build phase-by-phase breakdown
         phases_html = ""
-        for phase_name, phase_data in attack_chain['phases']:
-            phase_order = phase_data['order']
-            phase_techniques = phase_data['techniques']
+        for phase_name, phase_data in attack_chain["phases"]:
+            phase_order = phase_data["order"]
+            phase_techniques = phase_data["techniques"]
 
             # Phase color based on kill chain position
             phase_colors = {
@@ -722,15 +741,17 @@ class DisplayUtilityBuilder:
             """
 
             for tech in phase_techniques:
-                tech_id = tech['technique_id']
-                tech_name = tech['name']
-                tech_confidence = int(tech['confidence'] * 100)
+                tech_id = tech["technique_id"]
+                tech_name = tech["name"]
+                tech_confidence = int(tech["confidence"] * 100)
 
                 # Get mitigations for this technique
                 mitigations = threat_analyzer.get_mitigations_for_technique(tech_id)
 
                 # MITRE ATT&CK link
-                mitre_link = f"https://attack.mitre.org/techniques/{tech_id.replace('.', '/')}"
+                mitre_link = (
+                    f"https://attack.mitre.org/techniques/{tech_id.replace('.', '/')}"
+                )
 
                 phases_html += f"""
                 <div style='margin-bottom: 12px; padding: 8px; background: #1a1a1a; border-radius: 4px;'>
@@ -798,11 +819,13 @@ class DisplayUtilityBuilder:
 
     def _render_threats_footer(self, threat_cards: list) -> str:
         """Render footer with summary statistics."""
-        total_techniques = sum(len(t['techniques']) for t in threat_cards)
-        total_phases = sum(t['attack_chain']['total_phases'] for t in threat_cards)
-        avg_confidence = sum(t['confidence'] for t in threat_cards) / len(threat_cards)
+        total_techniques = sum(len(t["techniques"]) for t in threat_cards)
+        total_phases = sum(t["attack_chain"]["total_phases"] for t in threat_cards)
+        avg_confidence = sum(t["confidence"] for t in threat_cards) / len(threat_cards)
 
-        complete_chains = sum(1 for t in threat_cards if t['attack_chain']['is_complete_chain'])
+        complete_chains = sum(
+            1 for t in threat_cards if t["attack_chain"]["is_complete_chain"]
+        )
 
         return f"""
             <div style='margin-top: 16px; padding: 12px; background: #2a2a2a; border-radius: 8px; border-left: 3px solid #FF0000;'>

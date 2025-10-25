@@ -1,5 +1,4 @@
-"""
-UI Component Abstract Base Class
+"""UI Component Abstract Base Class
 
 This module defines the foundational interface for all UI components in the Internal Assistant
 system. It ensures consistency across components while maintaining Gradio framework compatibility.
@@ -18,13 +17,13 @@ Key Architectural Constraints:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
+
 import gradio as gr
 
 
 class UIComponent(ABC):
-    """
-    Abstract base class for all UI components in the Internal Assistant system.
+    """Abstract base class for all UI components in the Internal Assistant system.
 
     This class defines the contract that all UI components must follow to ensure
     consistency, testability, and proper integration with the Gradio framework.
@@ -37,9 +36,8 @@ class UIComponent(ABC):
     5. Reference Management: Components expose references for integration
     """
 
-    def __init__(self, component_id: str, services: Optional[Dict[str, Any]] = None):
-        """
-        Initialize the UI component.
+    def __init__(self, component_id: str, services: dict[str, Any] | None = None):
+        """Initialize the UI component.
 
         Args:
             component_id: Unique identifier for this component
@@ -47,13 +45,12 @@ class UIComponent(ABC):
         """
         self.component_id = component_id
         self.services = services or {}
-        self._component_refs: Dict[str, Any] = {}
+        self._component_refs: dict[str, Any] = {}
         self._is_built = False
 
     @abstractmethod
-    def build_interface(self) -> Union[Any, Tuple[Any, ...], Dict[str, Any]]:
-        """
-        Build the Gradio interface components for this UI component.
+    def build_interface(self) -> Any | tuple[Any, ...] | dict[str, Any]:
+        """Build the Gradio interface components for this UI component.
 
         This method creates all Gradio components (textboxes, buttons, etc.) needed
         for this component's functionality. It should NOT register event handlers -
@@ -72,8 +69,7 @@ class UIComponent(ABC):
 
     @abstractmethod
     def register_events(self, demo: gr.Blocks) -> None:
-        """
-        Register event handlers for this component within the main Gradio blocks.
+        """Register event handlers for this component within the main Gradio blocks.
 
         This method sets up all click handlers, change events, and other interactions
         for the components created in build_interface(). All event registration must
@@ -90,9 +86,8 @@ class UIComponent(ABC):
         pass
 
     @abstractmethod
-    def get_component_refs(self) -> Dict[str, Any]:
-        """
-        Get references to this component's Gradio components.
+    def get_component_refs(self) -> dict[str, Any]:
+        """Get references to this component's Gradio components.
 
         This enables other components or the main UI to interact with this
         component's elements (e.g., updating values, triggering events).
@@ -114,8 +109,7 @@ class UIComponent(ABC):
         return self._is_built
 
     def get_service(self, service_name: str) -> Any:
-        """
-        Get an injected service by name.
+        """Get an injected service by name.
 
         Args:
             service_name: Name of the service to retrieve
@@ -136,9 +130,8 @@ class UIComponent(ABC):
         """Check if a service is available."""
         return service_name in self.services
 
-    def validate_dependencies(self) -> List[str]:
-        """
-        Validate that all required services are available.
+    def validate_dependencies(self) -> list[str]:
+        """Validate that all required services are available.
 
         Returns:
             List of missing service names (empty if all dependencies met)
@@ -149,9 +142,8 @@ class UIComponent(ABC):
                 missing.append(required_service)
         return missing
 
-    def get_required_services(self) -> List[str]:
-        """
-        Get list of service names this component requires.
+    def get_required_services(self) -> list[str]:
+        """Get list of service names this component requires.
 
         Override this method to specify dependencies.
 
@@ -170,16 +162,15 @@ class UIComponent(ABC):
 
 
 class StatefulUIComponent(UIComponent):
-    """
-    Extended UI component that includes state management capabilities.
+    """Extended UI component that includes state management capabilities.
 
     This class provides additional functionality for components that need to
     maintain internal state beyond basic Gradio component state.
     """
 
-    def __init__(self, component_id: str, services: Optional[Dict[str, Any]] = None):
+    def __init__(self, component_id: str, services: dict[str, Any] | None = None):
         super().__init__(component_id, services)
-        self._state: Dict[str, Any] = {}
+        self._state: dict[str, Any] = {}
 
     def get_state(self, key: str, default: Any = None) -> Any:
         """Get a state value."""
@@ -189,7 +180,7 @@ class StatefulUIComponent(UIComponent):
         """Set a state value."""
         self._state[key] = value
 
-    def get_all_state(self) -> Dict[str, Any]:
+    def get_all_state(self) -> dict[str, Any]:
         """Get all state as a dictionary."""
         return self._state.copy()
 
@@ -199,15 +190,14 @@ class StatefulUIComponent(UIComponent):
 
 
 class ServiceContainer:
-    """
-    Simple service container for dependency injection.
+    """Simple service container for dependency injection.
 
     This class holds references to application services and provides them
     to UI components that need them.
     """
 
     def __init__(self):
-        self._services: Dict[str, Any] = {}
+        self._services: dict[str, Any] = {}
 
     def register(self, name: str, service: Any) -> None:
         """Register a service."""
@@ -223,6 +213,6 @@ class ServiceContainer:
         """Check if a service is registered."""
         return name in self._services
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """Get all services as a dictionary."""
         return self._services.copy()

@@ -1,13 +1,10 @@
 """Threat Intelligence API endpoints for Internal Assistant."""
 
-from fastapi import APIRouter, Depends, Request
-from typing import Dict, List, Any
+from typing import Any
+
+from fastapi import APIRouter, Depends
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
-from internal_assistant.server.threat_intelligence.threat_analyzer import (
-    ThreatIndicator,
-    SecurityRecommendation,
-)
 
 threat_intelligence_router = APIRouter(
     prefix="/v1/threat-intelligence", tags=["Threat Intelligence"]
@@ -17,7 +14,7 @@ threat_intelligence_router = APIRouter(
 @threat_intelligence_router.get("/threats")
 def get_current_threats(
     feed_service: RSSFeedService = Depends(),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get current cyber threats from analyzed feeds."""
     threats = feed_service.analyze_threats()
 
@@ -39,7 +36,7 @@ def get_current_threats(
 @threat_intelligence_router.get("/recommendations")
 def get_security_recommendations(
     feed_service: RSSFeedService = Depends(),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get security recommendations based on threat analysis."""
     recommendations = feed_service.get_security_recommendations()
 
@@ -58,7 +55,7 @@ def get_security_recommendations(
 
 
 @threat_intelligence_router.get("/summary")
-def get_threat_summary(feed_service: RSSFeedService = Depends()) -> Dict[str, Any]:
+def get_threat_summary(feed_service: RSSFeedService = Depends()) -> dict[str, Any]:
     """Get a summary of current threat landscape."""
     return feed_service.get_threat_summary()
 
@@ -66,7 +63,7 @@ def get_threat_summary(feed_service: RSSFeedService = Depends()) -> Dict[str, An
 @threat_intelligence_router.get("/threats/critical")
 def get_critical_threats(
     feed_service: RSSFeedService = Depends(),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get only critical threats requiring immediate attention."""
     threats = feed_service.analyze_threats()
     critical_threats = [t for t in threats if t.threat_level.value == "critical"]
@@ -88,7 +85,7 @@ def get_critical_threats(
 @threat_intelligence_router.get("/threats/banking-specific")
 def get_banking_specific_threats(
     feed_service: RSSFeedService = Depends(),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get threats specifically targeting banking/financial institutions."""
     threats = feed_service.analyze_threats()
     banking_threats = [
@@ -118,7 +115,7 @@ def get_banking_specific_threats(
 @threat_intelligence_router.get("/recommendations/priority/{priority}")
 def get_recommendations_by_priority(
     priority: str, feed_service: RSSFeedService = Depends()
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get security recommendations filtered by priority level."""
     recommendations = feed_service.get_security_recommendations()
     filtered_recs = [r for r in recommendations if r.priority.value == priority.lower()]
@@ -140,7 +137,7 @@ def get_recommendations_by_priority(
 @threat_intelligence_router.get("/indicators/{ioc_type}")
 def get_indicators_by_type(
     ioc_type: str, feed_service: RSSFeedService = Depends()
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get threat indicators filtered by IOC type (IP, domain, hash)."""
     threats = feed_service.analyze_threats()
     filtered_threats = [t for t in threats if t.ioc_type.lower() == ioc_type.lower()]
@@ -162,7 +159,7 @@ def get_indicators_by_type(
 @threat_intelligence_router.get("/compliance-impact")
 def get_compliance_impact_analysis(
     feed_service: RSSFeedService = Depends(),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get analysis of how current threats impact banking compliance."""
     recommendations = feed_service.get_security_recommendations()
 

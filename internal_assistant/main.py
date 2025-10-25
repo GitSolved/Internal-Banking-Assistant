@@ -1,6 +1,7 @@
 """FastAPI app creation, logger configuration and main API routes."""
 
 import logging
+
 from internal_assistant.di import global_injector
 from internal_assistant.launcher import create_app
 

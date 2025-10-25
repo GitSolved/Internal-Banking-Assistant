@@ -8,6 +8,7 @@ SIMPLIFICATION CHANGES (2025-10-03):
 - Removed defensive programming that caused bugs
 - Trust LlamaIndex's built-in persistence mechanisms
 """
+
 import abc
 import logging
 import threading
@@ -147,15 +148,21 @@ class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
                         raise ValueError(f"Document {doc_id} not found")
 
                     node_ids = ref_doc_info.node_ids
-                    logger.info(f"Manual deletion: removing {len(node_ids)} nodes for doc {doc_id}")
+                    logger.info(
+                        f"Manual deletion: removing {len(node_ids)} nodes for doc {doc_id}"
+                    )
 
                     # Delete nodes from vector store
                     if node_ids:
                         try:
                             self._index.vector_store.delete_nodes(node_ids)
-                            logger.info(f"Deleted {len(node_ids)} nodes from vector store")
+                            logger.info(
+                                f"Deleted {len(node_ids)} nodes from vector store"
+                            )
                         except Exception as ve:
-                            logger.warning(f"Vector store deletion partial failure: {ve}")
+                            logger.warning(
+                                f"Vector store deletion partial failure: {ve}"
+                            )
 
                     # Delete nodes from docstore (direct kvstore access)
                     deleted_nodes = 0
@@ -163,28 +170,36 @@ class BaseIngestComponentWithIndex(BaseIngestComponent, abc.ABC):
                         try:
                             self._index.docstore._kvstore.delete(
                                 node_id,
-                                collection=self._index.docstore._node_collection
+                                collection=self._index.docstore._node_collection,
                             )
                             deleted_nodes += 1
                         except KeyError:
                             # Node might not exist in docstore, continue
-                            logger.debug(f"Node {node_id} not in docstore (already deleted or missing)")
+                            logger.debug(
+                                f"Node {node_id} not in docstore (already deleted or missing)"
+                            )
 
-                    logger.info(f"Deleted {deleted_nodes}/{len(node_ids)} nodes from docstore")
+                    logger.info(
+                        f"Deleted {deleted_nodes}/{len(node_ids)} nodes from docstore"
+                    )
 
                     # Delete ref_doc_info entry
                     self._index.docstore._kvstore.delete(
-                        doc_id,
-                        collection=self._index.docstore._ref_doc_collection
+                        doc_id, collection=self._index.docstore._ref_doc_collection
                     )
                     logger.info(f"Deleted ref_doc_info for doc {doc_id}")
 
                     # Persist changes
                     self._save_index()
-                    logger.info(f"Successfully deleted document {doc_id} via manual cleanup")
+                    logger.info(
+                        f"Successfully deleted document {doc_id} via manual cleanup"
+                    )
 
                 except Exception as cleanup_error:
-                    logger.error(f"Manual cleanup failed for {doc_id}: {cleanup_error}", exc_info=True)
+                    logger.error(
+                        f"Manual cleanup failed for {doc_id}: {cleanup_error}",
+                        exc_info=True,
+                    )
                     raise
 
             except Exception as e:
@@ -213,13 +228,19 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
 
         try:
             # Transform file to documents
-            documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+            documents = IngestionHelper.transform_file_into_documents(
+                file_name, file_data
+            )
             logger.info("Created %d documents from %s", len(documents), file_name)
 
             if documents:
                 # Save documents
                 saved_docs = self._save_docs(documents)
-                logger.info("Successfully saved %d documents from %s", len(saved_docs), file_name)
+                logger.info(
+                    "Successfully saved %d documents from %s",
+                    len(saved_docs),
+                    file_name,
+                )
                 return saved_docs
             return []
 
@@ -231,7 +252,9 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
         """Ingest multiple files."""
         saved_documents = []
         for file_name, file_data in files:
-            documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+            documents = IngestionHelper.transform_file_into_documents(
+                file_name, file_data
+            )
             saved_documents.extend(self._save_docs(documents))
         return saved_documents
 
@@ -263,17 +286,20 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
             # CRITICAL FIX: Manually populate ref_doc_info since insert_nodes() skips docstore
             # when using text-storing vector stores like Qdrant (optimization to avoid duplication)
             # See: "VectorStoreIndex only stores nodes in document store if vector store does not store text"
-            logger.info(f"Manually populating ref_doc_info for {len(documents)} documents")
+            logger.info(
+                f"Manually populating ref_doc_info for {len(documents)} documents"
+            )
             for document in documents:
                 doc_id = document.get_doc_id()
 
                 # Get node IDs for this document
-                doc_node_ids = [node.node_id for node in nodes if node.ref_doc_id == doc_id]
+                doc_node_ids = [
+                    node.node_id for node in nodes if node.ref_doc_id == doc_id
+                ]
 
                 # Create RefDocInfo with node IDs and metadata
                 ref_info = RefDocInfo(
-                    node_ids=doc_node_ids,
-                    metadata=document.metadata or {}
+                    node_ids=doc_node_ids, metadata=document.metadata or {}
                 )
 
                 # Manually add to docstore's kvstore (no public API for this, must use private _kvstore)
@@ -281,7 +307,7 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
                 self._index.docstore._kvstore.put(
                     doc_id,
                     ref_info.to_dict(),  # Convert to dict to avoid AttributeError: 'RefDocInfo' object has no attribute 'copy'
-                    collection=self._index.docstore._ref_doc_collection
+                    collection=self._index.docstore._ref_doc_collection,
                 )
 
             # CRITICAL: Use _save_index() which has the explicit docstore persistence fix
@@ -306,7 +332,8 @@ def get_ingestion_component(
     if ingest_mode in ("batch", "parallel", "pipeline"):
         logger.warning(
             "Ingest mode '%s' no longer supported (removed in simplification). "
-            "Using 'simple' mode instead.", ingest_mode
+            "Using 'simple' mode instead.",
+            ingest_mode,
         )
 
     return SimpleIngestComponent(

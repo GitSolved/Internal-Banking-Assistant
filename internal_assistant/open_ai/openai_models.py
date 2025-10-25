@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from typing import Literal
 
 from llama_index.core.llms import ChatResponse, CompletionResponse
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from internal_assistant.server.chunks.chunks_service import Chunk
 

@@ -1,5 +1,4 @@
-"""
-Document Upload Component
+"""Document Upload Component
 
 This module contains the extracted document upload interface from ui.py.
 It handles file uploads, folder processing, document management, and status displays.
@@ -11,15 +10,16 @@ Version: 0.6.2
 """
 
 import logging
+from collections.abc import Callable
+from typing import Any
+
 import gradio as gr
-from typing import Dict, Any, Tuple, Callable
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentUploadBuilder:
-    """
-    Builder class for document upload and management components.
+    """Builder class for document upload and management components.
 
     This class handles the creation and layout of all document-related UI elements
     including file uploads, folder processing, document library display, and status management.
@@ -27,8 +27,7 @@ class DocumentUploadBuilder:
     """
 
     def __init__(self, format_file_list_fn: Callable[[], str] = None):
-        """
-        Initialize the document upload builder.
+        """Initialize the document upload builder.
 
         Args:
             format_file_list_fn: Function to format the current file list for display
@@ -36,9 +35,8 @@ class DocumentUploadBuilder:
         self.format_file_list_fn = format_file_list_fn or (lambda: "No documents")
         logger.debug("DocumentUploadBuilder initialized")
 
-    def build_document_upload_interface(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """
-        Build the complete document upload and management interface.
+    def build_document_upload_interface(self) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Build the complete document upload and management interface.
 
         This method creates the full document management layout including:
         - File upload buttons and folder processing
@@ -163,9 +161,8 @@ class DocumentUploadBuilder:
         )
         return components, layout_config
 
-    def get_component_references(self, components: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract component references for external event handling.
+    def get_component_references(self, components: dict[str, Any]) -> dict[str, Any]:
+        """Extract component references for external event handling.
 
         Args:
             components: Dictionary of all created components
@@ -189,9 +186,8 @@ class DocumentUploadBuilder:
             "resize_handle": components.get("resize_handle"),
         }
 
-    def get_layout_configuration(self) -> Dict[str, Any]:
-        """
-        Get layout configuration for integration with main UI.
+    def get_layout_configuration(self) -> dict[str, Any]:
+        """Get layout configuration for integration with main UI.
 
         Returns:
             Dictionary containing layout configuration options
@@ -208,9 +204,8 @@ class DocumentUploadBuilder:
 
 def create_document_upload_interface(
     format_file_list_fn: Callable[[], str] = None
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Factory function to create a document upload interface.
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Factory function to create a document upload interface.
 
     Args:
         format_file_list_fn: Function to format the current file list for display
@@ -222,9 +217,8 @@ def create_document_upload_interface(
     return builder.build_document_upload_interface()
 
 
-def get_document_component_refs(components: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Extract component references for event handling integration.
+def get_document_component_refs(components: dict[str, Any]) -> dict[str, Any]:
+    """Extract component references for event handling integration.
 
     Args:
         components: Dictionary of created components

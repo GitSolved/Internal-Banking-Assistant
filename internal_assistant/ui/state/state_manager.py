@@ -1,5 +1,4 @@
-"""
-State Manager
+"""State Manager
 
 This module provides centralized state management for the Internal Assistant UI.
 It implements an observer pattern with state validation, persistence, and debugging
@@ -8,17 +7,16 @@ capabilities to replace the scattered state management throughout the UI.
 Part of Phase 2: State Management System refactoring.
 """
 
+import json
 import logging
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Callable, TypeVar, Generic, Union
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
-import json
 from threading import Lock
-
-from pydantic import BaseModel, Field, ValidationError
+from typing import Any, Generic, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +42,9 @@ class StateChange:
     path: str
     old_value: Any
     new_value: Any
-    source: Optional[str] = None  # Component or handler that triggered the change
+    source: str | None = None  # Component or handler that triggered the change
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -73,12 +71,12 @@ class StateSelector(ABC, Generic[T]):
     """Abstract base class for state selectors that compute derived values."""
 
     @abstractmethod
-    def select(self, state: Dict[str, Any]) -> T:
+    def select(self, state: dict[str, Any]) -> T:
         """Compute and return the derived value from state."""
         pass
 
     @abstractmethod
-    def get_dependencies(self) -> Set[str]:
+    def get_dependencies(self) -> set[str]:
         """Return set of state paths this selector depends on."""
         pass
 
@@ -87,10 +85,9 @@ class MemoizedSelector(StateSelector[T]):
     """A selector that memoizes its result until dependencies change."""
 
     def __init__(
-        self, selector_func: Callable[[Dict[str, Any]], T], dependencies: Set[str]
+        self, selector_func: Callable[[dict[str, Any]], T], dependencies: set[str]
     ):
-        """
-        Initialize memoized selector.
+        """Initialize memoized selector.
 
         Args:
             selector_func: Function that computes the derived value
@@ -98,11 +95,11 @@ class MemoizedSelector(StateSelector[T]):
         """
         self.selector_func = selector_func
         self.dependencies = dependencies
-        self._cached_value: Optional[T] = None
+        self._cached_value: T | None = None
         self._cache_valid = False
-        self._last_state_hash: Optional[str] = None
+        self._last_state_hash: str | None = None
 
-    def select(self, state: Dict[str, Any]) -> T:
+    def select(self, state: dict[str, Any]) -> T:
         """Get the computed value, using cache if dependencies haven't changed."""
         # Create hash of dependency values to check for changes
         dep_values = {}
@@ -119,7 +116,7 @@ class MemoizedSelector(StateSelector[T]):
 
         return self._cached_value
 
-    def get_dependencies(self) -> Set[str]:
+    def get_dependencies(self) -> set[str]:
         """Return the set of dependencies."""
         return self.dependencies
 
@@ -127,7 +124,7 @@ class MemoizedSelector(StateSelector[T]):
         """Manually invalidate the cache."""
         self._cache_valid = False
 
-    def _get_nested_value(self, data: Dict[str, Any], path: str) -> Any:
+    def _get_nested_value(self, data: dict[str, Any], path: str) -> Any:
         """Get nested value from dictionary using dot notation."""
         keys = path.split(".")
         value = data
@@ -140,35 +137,32 @@ class MemoizedSelector(StateSelector[T]):
 
 
 class StateStore:
-    """
-    Central state store with observer pattern, validation, and persistence.
+    """Central state store with observer pattern, validation, and persistence.
 
     This replaces the scattered state management throughout the UI with a
     centralized, predictable state management solution.
     """
 
-    def __init__(self, initial_state: Optional[Dict[str, Any]] = None):
-        """
-        Initialize the state store.
+    def __init__(self, initial_state: dict[str, Any] | None = None):
+        """Initialize the state store.
 
         Args:
             initial_state: Initial state dictionary
         """
-        self._state: Dict[str, Any] = initial_state or {}
-        self._observers: Dict[str, List[StateObserver]] = {}
-        self._selectors: Dict[str, StateSelector] = {}
-        self._change_history: List[StateChange] = []
+        self._state: dict[str, Any] = initial_state or {}
+        self._observers: dict[str, list[StateObserver]] = {}
+        self._selectors: dict[str, StateSelector] = {}
+        self._change_history: list[StateChange] = []
         self._lock = Lock()
         self._max_history = 1000  # Limit history size
 
         # Validation schemas (can be extended)
-        self._validators: Dict[str, Callable[[Any], bool]] = {}
+        self._validators: dict[str, Callable[[Any], bool]] = {}
 
         logger.info("StateStore initialized")
 
     def get(self, path: str, default: Any = None) -> Any:
-        """
-        Get value from state using dot notation.
+        """Get value from state using dot notation.
 
         Args:
             path: Dot-separated path to the value (e.g., 'chat.mode')
@@ -189,9 +183,8 @@ class StateStore:
 
             return value
 
-    def set(self, path: str, value: Any, source: Optional[str] = None) -> None:
-        """
-        Set value in state using dot notation.
+    def set(self, path: str, value: Any, source: str | None = None) -> None:
+        """Set value in state using dot notation.
 
         Args:
             path: Dot-separated path to set (e.g., 'chat.mode')
@@ -241,9 +234,8 @@ class StateStore:
 
             logger.debug(f"State set: {path} = {value} (source: {source})")
 
-    def update(self, updates: Dict[str, Any], source: Optional[str] = None) -> None:
-        """
-        Update multiple state values atomically.
+    def update(self, updates: dict[str, Any], source: str | None = None) -> None:
+        """Update multiple state values atomically.
 
         Args:
             updates: Dictionary of path -> value updates
@@ -254,10 +246,9 @@ class StateStore:
                 self.set(path, value, source)
 
     def merge(
-        self, path: str, updates: Dict[str, Any], source: Optional[str] = None
+        self, path: str, updates: dict[str, Any], source: str | None = None
     ) -> None:
-        """
-        Merge updates into an existing dictionary at path.
+        """Merge updates into an existing dictionary at path.
 
         Args:
             path: Path to the dictionary to merge into
@@ -285,9 +276,8 @@ class StateStore:
 
             self._add_change_to_history(change)
 
-    def reset(self, path: str, source: Optional[str] = None) -> None:
-        """
-        Reset a state path to its initial value or delete it.
+    def reset(self, path: str, source: str | None = None) -> None:
+        """Reset a state path to its initial value or delete it.
 
         Args:
             path: Path to reset
@@ -324,8 +314,7 @@ class StateStore:
             logger.debug(f"State reset: {path} (source: {source})")
 
     def subscribe(self, path: str, observer: StateObserver) -> None:
-        """
-        Subscribe an observer to changes at a specific path.
+        """Subscribe an observer to changes at a specific path.
 
         Args:
             path: State path to observe
@@ -339,8 +328,7 @@ class StateStore:
             logger.debug(f"Observer subscribed to path: {path}")
 
     def unsubscribe(self, path: str, observer: StateObserver) -> None:
-        """
-        Unsubscribe an observer from a path.
+        """Unsubscribe an observer from a path.
 
         Args:
             path: State path
@@ -357,8 +345,7 @@ class StateStore:
                     logger.warning(f"Observer not found for path: {path}")
 
     def register_selector(self, name: str, selector: StateSelector) -> None:
-        """
-        Register a state selector for computed values.
+        """Register a state selector for computed values.
 
         Args:
             name: Name of the selector
@@ -368,8 +355,7 @@ class StateStore:
         logger.debug(f"Selector registered: {name}")
 
     def select(self, selector_name: str) -> Any:
-        """
-        Get computed value from a registered selector.
+        """Get computed value from a registered selector.
 
         Args:
             selector_name: Name of the selector
@@ -383,8 +369,7 @@ class StateStore:
         return self._selectors[selector_name].select(self._state)
 
     def add_validator(self, path: str, validator: Callable[[Any], bool]) -> None:
-        """
-        Add a validator function for a state path.
+        """Add a validator function for a state path.
 
         Args:
             path: State path to validate
@@ -393,9 +378,8 @@ class StateStore:
         self._validators[path] = validator
         logger.debug(f"Validator added for path: {path}")
 
-    def get_change_history(self, limit: Optional[int] = None) -> List[StateChange]:
-        """
-        Get the history of state changes.
+    def get_change_history(self, limit: int | None = None) -> list[StateChange]:
+        """Get the history of state changes.
 
         Args:
             limit: Maximum number of changes to return
@@ -408,9 +392,8 @@ class StateStore:
                 return self._change_history[-limit:]
             return self._change_history.copy()
 
-    def export_state(self) -> Dict[str, Any]:
-        """
-        Export the current state for persistence or debugging.
+    def export_state(self) -> dict[str, Any]:
+        """Export the current state for persistence or debugging.
 
         Returns:
             Copy of the current state
@@ -418,9 +401,8 @@ class StateStore:
         with self._lock:
             return self._deep_copy(self._state)
 
-    def import_state(self, state: Dict[str, Any], source: Optional[str] = None) -> None:
-        """
-        Import state from external source.
+    def import_state(self, state: dict[str, Any], source: str | None = None) -> None:
+        """Import state from external source.
 
         Args:
             state: State dictionary to import
@@ -492,7 +474,7 @@ class StateStore:
         if len(self._change_history) > self._max_history:
             self._change_history = self._change_history[-self._max_history :]
 
-    def _get_nested_value(self, data: Dict[str, Any], path: str) -> Any:
+    def _get_nested_value(self, data: dict[str, Any], path: str) -> Any:
         """Get nested value using dot notation."""
         keys = path.split(".")
         value = data
@@ -517,8 +499,7 @@ class StatePersistence:
     """Handles state persistence to disk."""
 
     def __init__(self, storage_path: Path):
-        """
-        Initialize state persistence.
+        """Initialize state persistence.
 
         Args:
             storage_path: Path to store state files
@@ -527,8 +508,7 @@ class StatePersistence:
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
     def save_state(self, state_store: StateStore, name: str = "app_state") -> None:
-        """
-        Save state to disk.
+        """Save state to disk.
 
         Args:
             state_store: StateStore to save
@@ -551,8 +531,7 @@ class StatePersistence:
             logger.error(f"Failed to save state: {e}")
 
     def load_state(self, state_store: StateStore, name: str = "app_state") -> bool:
-        """
-        Load state from disk.
+        """Load state from disk.
 
         Args:
             state_store: StateStore to load into
@@ -567,7 +546,7 @@ class StatePersistence:
                 logger.info(f"No saved state found at {file_path}")
                 return False
 
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 state_data = json.load(f)
 
             state_store.import_state(state_data["state"], source="persistence")
@@ -580,10 +559,10 @@ class StatePersistence:
 
 
 # Helper functions for common selectors
-def create_chat_state_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_chat_state_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for chat-related state."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         return {
             "mode": state.get("chat", {}).get("mode", "RAG Mode"),
             "history": state.get("chat", {}).get("history", []),
@@ -600,10 +579,10 @@ def create_chat_state_selector() -> MemoizedSelector[Dict[str, Any]]:
     return MemoizedSelector(selector, dependencies)
 
 
-def create_document_state_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_document_state_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for document-related state."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         return {
             "filter_type": state.get("documents", {}).get("filter_type", "all"),
             "search_query": state.get("documents", {}).get("search_query", ""),

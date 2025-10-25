@@ -1,5 +1,4 @@
-"""
-External Information Component
+"""External Information Component
 
 This module contains the extracted external information and RSS feeds interface from ui.py.
 It handles regulatory information feeds, CVE tracking, time filtering, and feed refresh functionality.
@@ -11,15 +10,16 @@ Version: 0.6.2
 """
 
 import logging
+from collections.abc import Callable
+from typing import Any
+
 import gradio as gr
-from typing import Dict, Any, Tuple, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ExternalInfoBuilder:
-    """
-    Builder class for external information and RSS feeds components.
+    """Builder class for external information and RSS feeds components.
 
     This class handles the creation and layout of all external information UI elements
     including regulatory feeds, CVE tracking, time filtering, and refresh functionality.
@@ -29,8 +29,7 @@ class ExternalInfoBuilder:
     def __init__(
         self, format_feeds_fn: Callable = None, format_cve_fn: Callable = None
     ):
-        """
-        Initialize the external information builder.
+        """Initialize the external information builder.
 
         Args:
             format_feeds_fn: Function to format RSS feeds for display
@@ -44,9 +43,8 @@ class ExternalInfoBuilder:
         )
         logger.debug("ExternalInfoBuilder initialized")
 
-    def build_external_info_interface(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """
-        Build the complete external information interface.
+    def build_external_info_interface(self) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Build the complete external information interface.
 
         This method creates the full external information layout including:
         - Regulatory information feeds display
@@ -219,9 +217,8 @@ class ExternalInfoBuilder:
         )
         return components, layout_config
 
-    def get_component_references(self, components: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract component references for external event handling.
+    def get_component_references(self, components: dict[str, Any]) -> dict[str, Any]:
+        """Extract component references for external event handling.
 
         Args:
             components: Dictionary of all created components
@@ -252,9 +249,8 @@ class ExternalInfoBuilder:
             "cve_header": components.get("cve_header"),
         }
 
-    def get_layout_configuration(self) -> Dict[str, Any]:
-        """
-        Get layout configuration for integration with main UI.
+    def get_layout_configuration(self) -> dict[str, Any]:
+        """Get layout configuration for integration with main UI.
 
         Returns:
             Dictionary containing layout configuration options
@@ -270,9 +266,8 @@ class ExternalInfoBuilder:
 
 def create_external_info_interface(
     format_feeds_fn: Callable = None, format_cve_fn: Callable = None
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Factory function to create an external information interface.
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Factory function to create an external information interface.
 
     Args:
         format_feeds_fn: Function to format RSS feeds for display
@@ -285,9 +280,8 @@ def create_external_info_interface(
     return builder.build_external_info_interface()
 
 
-def get_external_info_component_refs(components: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Extract component references for event handling integration.
+def get_external_info_component_refs(components: dict[str, Any]) -> dict[str, Any]:
+    """Extract component references for event handling integration.
 
     Args:
         components: Dictionary of created components

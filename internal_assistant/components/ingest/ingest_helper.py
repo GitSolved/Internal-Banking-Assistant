@@ -59,14 +59,18 @@ FILE_READER_CLS.update(
         ".json": JSONReader,
         # Text files should use StringIterableReader for consistent handling
         # This prevents the "No reader found" warning for .txt files
-        ".txt": type("TextFileReader", (BaseReader,), {
-            "load_data": lambda self, file: [
-                Document(
-                    text=file.read_text(encoding='utf-8'),
-                    metadata={"file_path": str(file)}
-                )
-            ]
-        }),
+        ".txt": type(
+            "TextFileReader",
+            (BaseReader,),
+            {
+                "load_data": lambda self, file: [
+                    Document(
+                        text=file.read_text(encoding="utf-8"),
+                        metadata={"file_path": str(file)},
+                    )
+                ]
+            },
+        ),
     }
 )
 

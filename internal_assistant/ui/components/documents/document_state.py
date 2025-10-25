@@ -1,5 +1,4 @@
-"""
-Document State Manager Component
+"""Document State Manager Component
 
 This module contains document state management, metadata handling, and status tracking
 functions extracted from ui.py during Phase 1B.4 of the UI refactoring project.
@@ -19,41 +18,39 @@ Phase: 1B.4 - Document State Management Extraction
 
 import logging
 from datetime import datetime
-from typing import Optional, Any, Dict, Set
+from typing import Any
 
-from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.chat.chat_service import ChatService
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
-from internal_assistant.ui.components.documents.document_utility import (
-    DocumentUtilityBuilder,
+from internal_assistant.server.ingest.ingest_service import IngestService
+from internal_assistant.ui.components.documents.document_events import (
+    DocumentEventHandlerBuilder,
 )
 from internal_assistant.ui.components.documents.document_library import (
     DocumentLibraryBuilder,
 )
-from internal_assistant.ui.components.documents.document_events import (
-    DocumentEventHandlerBuilder,
+from internal_assistant.ui.components.documents.document_utility import (
+    DocumentUtilityBuilder,
 )
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentStateManager:
-    """
-    Manager class for document state, metadata, and status tracking.
+    """Manager class for document state, metadata, and status tracking.
     Provides centralized state management for document-related operations.
     """
 
     def __init__(
         self,
         ingest_service: IngestService,
-        chat_service: Optional[ChatService],
+        chat_service: ChatService | None,
         feeds_service: RSSFeedService,
         utility_builder: DocumentUtilityBuilder,
         library_builder: DocumentLibraryBuilder,
         event_builder: DocumentEventHandlerBuilder,
     ):
-        """
-        Initialize the DocumentStateManager.
+        """Initialize the DocumentStateManager.
 
         Args:
             ingest_service: Service for managing document ingestion
@@ -74,9 +71,8 @@ class DocumentStateManager:
         self._document_state = {}
         self._processing_status = {}
 
-    def get_model_info(self) -> Dict[str, str]:
-        """
-        Get information about the current LLM and embedding models.
+    def get_model_info(self) -> dict[str, str]:
+        """Get information about the current LLM and embedding models.
 
         Returns:
             Dictionary containing model information
@@ -167,8 +163,7 @@ class DocumentStateManager:
         return model_info
 
     def get_processing_queue_html(self) -> str:
-        """
-        Generate HTML for processing queue with actual document processing status and stages.
+        """Generate HTML for processing queue with actual document processing status and stages.
 
         Returns:
             HTML string for processing queue display
@@ -304,8 +299,7 @@ class DocumentStateManager:
             return "<div style='color: #ff6b6b; padding: 20px;'>Error loading processing queue</div>"
 
     def get_document_count(self) -> int:
-        """
-        Get the total count of ingested documents with categorization.
+        """Get the total count of ingested documents with categorization.
 
         Returns:
             Total number of unique documents
@@ -458,8 +452,7 @@ class DocumentStateManager:
             return 0
 
     def get_feed_count(self) -> int:
-        """
-        Get the count of configured feed sources.
+        """Get the count of configured feed sources.
 
         Returns:
             Number of configured RSS feed sources
@@ -473,8 +466,7 @@ class DocumentStateManager:
             return 0
 
     def get_model_status(self) -> str:
-        """
-        Get formatted model status HTML including document and feed counts.
+        """Get formatted model status HTML including document and feed counts.
 
         Returns:
             HTML string with model status information
@@ -492,9 +484,8 @@ class DocumentStateManager:
             f"</div>"
         )
 
-    def analyze_document_types(self) -> Dict[str, Any]:
-        """
-        Analyze uploaded documents to provide model recommendations.
+    def analyze_document_types(self) -> dict[str, Any]:
+        """Analyze uploaded documents to provide model recommendations.
 
         Returns:
             Dictionary containing document analysis results
@@ -585,9 +576,8 @@ class DocumentStateManager:
                 "has_research": False,
             }
 
-    def update_document_state(self, doc_id: str, state: Dict[str, Any]) -> None:
-        """
-        Update the state of a specific document.
+    def update_document_state(self, doc_id: str, state: dict[str, Any]) -> None:
+        """Update the state of a specific document.
 
         Args:
             doc_id: Document identifier
@@ -599,9 +589,8 @@ class DocumentStateManager:
         self._document_state[doc_id].update(state)
         logger.debug(f"Updated state for document {doc_id}: {state}")
 
-    def get_document_metadata(self, doc_id: str) -> Dict[str, Any]:
-        """
-        Get metadata for a specific document.
+    def get_document_metadata(self, doc_id: str) -> dict[str, Any]:
+        """Get metadata for a specific document.
 
         Args:
             doc_id: Document identifier
@@ -620,8 +609,7 @@ class DocumentStateManager:
         return {}
 
     def track_document_usage(self, doc_id: str, usage_type: str) -> None:
-        """
-        Track usage of a specific document.
+        """Track usage of a specific document.
 
         Args:
             doc_id: Document identifier
@@ -644,8 +632,7 @@ class DocumentStateManager:
         )
 
     def get_document_status(self, doc_id: str) -> str:
-        """
-        Get the current status of a specific document.
+        """Get the current status of a specific document.
 
         Args:
             doc_id: Document identifier
@@ -667,8 +654,7 @@ class DocumentStateManager:
             return "error"
 
     def sync_document_state(self) -> None:
-        """
-        Synchronize document state with the underlying services.
+        """Synchronize document state with the underlying services.
         """
         try:
             # Refresh document state from ingest service
@@ -687,9 +673,8 @@ class DocumentStateManager:
         except Exception as e:
             logger.error(f"Error synchronizing document state: {e}")
 
-    def get_state_summary(self) -> Dict[str, Any]:
-        """
-        Get a summary of the current document state.
+    def get_state_summary(self) -> dict[str, Any]:
+        """Get a summary of the current document state.
 
         Returns:
             Dictionary containing state summary information

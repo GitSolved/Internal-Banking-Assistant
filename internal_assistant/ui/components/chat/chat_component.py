@@ -1,24 +1,20 @@
-"""
-Chat Component
+"""Chat Component
 
 Extracted from the monolithic ui.py file to handle chat interface functionality.
 This component focuses solely on chat-related features.
 """
 
 import logging
-import time
 from collections.abc import Iterable
-from typing import Any, List
+from typing import Any
 
 import gradio as gr
 from injector import inject, singleton
-from llama_index.core.llms import ChatResponse
 from llama_index.core.types import TokenGen
 
 from internal_assistant.server.chat.chat_service import ChatService, CompletionGen
-from internal_assistant.ui.models.ui_models import Source
-from internal_assistant.ui.constants import SOURCES_SEPARATOR
 from internal_assistant.ui.components.chat.chat_interface import ChatInterfaceBuilder
+from internal_assistant.ui.models.ui_models import Source
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +51,7 @@ class ChatComponent:
         return chatbot
 
     def create_complete_chat_interface(self, default_mode: str = None):
-        """
-        Creates the complete chat interface using the extracted ChatInterfaceBuilder.
+        """Creates the complete chat interface using the extracted ChatInterfaceBuilder.
 
         Args:
             default_mode: Default chat mode to set
@@ -77,8 +72,7 @@ class ChatComponent:
         return components, layout_config
 
     def get_chat_component_refs(self, components: dict):
-        """
-        Get key component references for event binding.
+        """Get key component references for event binding.
 
         Args:
             components: Dictionary of all chat components
@@ -101,12 +95,12 @@ class ChatComponent:
 
         logger.debug("Chat event handlers configured")
 
-    def _handle_clear_chat(self) -> List[List[str]]:
+    def _handle_clear_chat(self) -> list[list[str]]:
         """Handle clearing the chat history"""
         logger.info("Chat history cleared by user")
         return []
 
-    def _handle_regenerate_response(self, history: List[List[str]]) -> List[List[str]]:
+    def _handle_regenerate_response(self, history: list[list[str]]) -> list[list[str]]:
         """Handle regenerating the last response"""
         if history and len(history) > 0:
             logger.info("Regenerating last response")
@@ -121,7 +115,7 @@ class ChatComponent:
     def _handle_chat_message(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float = 0.7,
@@ -130,8 +124,7 @@ class ChatComponent:
         response_length: str = "Medium",
         *_: Any,
     ) -> Any:
-        """
-        Handles individual chat messages
+        """Handles individual chat messages
 
         Extracted from the _chat method in ui.py
         """
@@ -200,7 +193,7 @@ class ChatComponent:
 
         except Exception as e:
             logger.error(f"Error processing chat message: {e}")
-            error_msg = f"Sorry, I encountered an error: {str(e)}"
+            error_msg = f"Sorry, I encountered an error: {e!s}"
             history[-1][1] = error_msg
             yield history
 
@@ -240,7 +233,7 @@ class ChatComponent:
 
         except Exception as e:
             logger.error(f"Error in delta streaming: {e}")
-            yield f"\n\n[Error in response streaming: {str(e)}]"
+            yield f"\n\n[Error in response streaming: {e!s}]"
 
     def _yield_tokens(self, token_gen: TokenGen) -> Iterable[str]:
         """Handles token streaming"""
@@ -253,9 +246,9 @@ class ChatComponent:
 
         except Exception as e:
             logger.error(f"Error in token streaming: {e}")
-            yield f"\n\n[Error in token streaming: {str(e)}]"
+            yield f"\n\n[Error in token streaming: {e!s}]"
 
-    def _format_sources(self, sources: List[Source], citation_style: str) -> str:
+    def _format_sources(self, sources: list[Source], citation_style: str) -> str:
         """Formats document sources for display"""
         if not sources:
             return ""

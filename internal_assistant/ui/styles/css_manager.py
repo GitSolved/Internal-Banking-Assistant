@@ -1,14 +1,13 @@
-"""
-CSS Manager
+"""CSS Manager
 
 This module manages CSS loading, injection, and organization for the Internal Assistant UI.
 It handles the extraction of CSS from the monolithic ui.py file and provides a clean
 interface for theme management.
 """
 
-from typing import Optional, Dict, Any
 import logging
 from pathlib import Path
+from typing import Any
 
 from .theme_config import ThemeConfig
 
@@ -16,28 +15,25 @@ logger = logging.getLogger(__name__)
 
 
 class CSSManager:
-    """
-    Manager for CSS loading and injection.
+    """Manager for CSS loading and injection.
 
     This class handles loading CSS from files, applying theme variables,
     and providing CSS for Gradio components.
     """
 
-    def __init__(self, theme_config: Optional[ThemeConfig] = None):
-        """
-        Initialize CSS manager.
+    def __init__(self, theme_config: ThemeConfig | None = None):
+        """Initialize CSS manager.
 
         Args:
             theme_config: Optional theme configuration
         """
         self.theme_config = theme_config or ThemeConfig()
-        self.css_cache: Dict[str, str] = {}
+        self.css_cache: dict[str, str] = {}
         self.styles_dir = Path(__file__).parent
-        self._compiled_css_cache: Optional[str] = None
+        self._compiled_css_cache: str | None = None
 
     def load_styles(self) -> str:
-        """
-        Load and compile all CSS styles.
+        """Load and compile all CSS styles.
 
         Returns:
             Complete CSS string for the application
@@ -108,8 +104,7 @@ class CSSManager:
         return combined_css
 
     def _load_main_styles(self) -> str:
-        """
-        Load main application styles from CSS file.
+        """Load main application styles from CSS file.
 
         Returns:
             Main CSS styles
@@ -126,8 +121,7 @@ class CSSManager:
             return self._get_fallback_css()
 
     def _load_component_styles(self) -> str:
-        """
-        Load component-specific styles from CSS file.
+        """Load component-specific styles from CSS file.
 
         Returns:
             Component CSS styles
@@ -142,8 +136,7 @@ class CSSManager:
         return ""
 
     def _load_responsive_styles(self) -> str:
-        """
-        Load responsive design styles from CSS file.
+        """Load responsive design styles from CSS file.
 
         Returns:
             Responsive CSS styles
@@ -158,8 +151,7 @@ class CSSManager:
         return ""
 
     def _load_extended_styles(self) -> str:
-        """
-        Load extended styles from CSS file.
+        """Load extended styles from CSS file.
 
         Returns:
             Extended CSS styles
@@ -174,8 +166,7 @@ class CSSManager:
         return ""
 
     def _load_override_styles(self) -> str:
-        """
-        Load override styles from CSS file.
+        """Load override styles from CSS file.
 
         Returns:
             Override CSS styles
@@ -190,8 +181,7 @@ class CSSManager:
         return ""
 
     def _load_force_dark_styles(self) -> str:
-        """
-        Load force dark styles from CSS file.
+        """Load force dark styles from CSS file.
 
         Returns:
             Force dark CSS styles
@@ -206,8 +196,7 @@ class CSSManager:
         return ""
 
     def _get_fallback_css(self) -> str:
-        """
-        Fallback CSS in case the main CSS files cannot be loaded.
+        """Fallback CSS in case the main CSS files cannot be loaded.
 
         This provides minimal styling to ensure the UI remains functional.
 
@@ -335,9 +324,8 @@ class CSSManager:
         }
         """
 
-    def get_component_css(self, component_name: str) -> Optional[str]:
-        """
-        Get CSS for a specific component.
+    def get_component_css(self, component_name: str) -> str | None:
+        """Get CSS for a specific component.
 
         Args:
             component_name: Name of the component
@@ -354,8 +342,7 @@ class CSSManager:
         return None
 
     def inject_custom_css(self, custom_css: str) -> str:
-        """
-        Inject custom CSS into the main styles.
+        """Inject custom CSS into the main styles.
 
         Args:
             custom_css: Custom CSS to inject
@@ -367,8 +354,7 @@ class CSSManager:
         return f"{main_css}\n\n/* Custom CSS */\n{custom_css}"
 
     def _get_inline_css(self) -> str:
-        """
-        Get CSS for inline styles that should be extracted from UI components.
+        """Get CSS for inline styles that should be extracted from UI components.
 
         Returns:
             CSS for inline styles
@@ -596,8 +582,7 @@ class CSSManager:
         """
 
     def _convert_to_css_variables(self, css: str) -> str:
-        """
-        Convert hardcoded color values to CSS variables where possible.
+        """Convert hardcoded color values to CSS variables where possible.
 
         Args:
             css: CSS string with hardcoded values
@@ -629,8 +614,7 @@ class CSSManager:
         return css
 
     def add_utility_css(self) -> str:
-        """
-        Add utility CSS classes for common styling patterns.
+        """Add utility CSS classes for common styling patterns.
 
         Returns:
             Utility CSS string
@@ -706,9 +690,8 @@ class CSSManager:
         .hidden { display: none !important; }
         """
 
-    def get_css_info(self) -> Dict[str, Any]:
-        """
-        Get information about loaded CSS files and their status.
+    def get_css_info(self) -> dict[str, Any]:
+        """Get information about loaded CSS files and their status.
 
         Returns:
             Dictionary with CSS loading information
@@ -753,9 +736,8 @@ class CSSManager:
 
         return info
 
-    def validate_css_loading(self) -> Dict[str, Any]:
-        """
-        Validate that CSS files are loading correctly.
+    def validate_css_loading(self) -> dict[str, Any]:
+        """Validate that CSS files are loading correctly.
 
         Returns:
             Validation results
@@ -781,7 +763,7 @@ class CSSManager:
                     else validation["status"]
                 )
         except Exception as e:
-            validation["issues"].append(f"CSS compilation failed: {str(e)}")
+            validation["issues"].append(f"CSS compilation failed: {e!s}")
             validation["status"] = "error"
 
         # Check theme configuration

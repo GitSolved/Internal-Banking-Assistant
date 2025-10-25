@@ -1,5 +1,4 @@
-"""
-State Selectors
+"""State Selectors
 
 This module contains selectors for computing derived values from the application state.
 Selectors provide an efficient way to compute values that depend on multiple state properties
@@ -11,14 +10,9 @@ Author: UI Refactoring Team
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Set, Optional, Tuple
+from typing import Any
+
 from internal_assistant.ui.state.state_manager import MemoizedSelector
-from internal_assistant.ui.state.app_state import (
-    ApplicationState,
-    FilterType,
-    ProcessingStatus,
-    CitationStyle,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +22,10 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-def create_chat_status_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_chat_status_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for chat status information."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         chat_state = state.get("chat", {})
         settings_state = state.get("settings", {})
 
@@ -60,10 +54,10 @@ def create_chat_status_selector() -> MemoizedSelector[Dict[str, Any]]:
     return MemoizedSelector(selector, dependencies)
 
 
-def create_chat_settings_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_chat_settings_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for effective chat settings."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         settings_state = state.get("settings", {})
         chat_settings = settings_state.get("chat", {})
         rag_settings = settings_state.get("rag", {})
@@ -95,10 +89,10 @@ def create_chat_settings_selector() -> MemoizedSelector[Dict[str, Any]]:
 # ============================================================================
 
 
-def create_document_counts_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_document_counts_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for document counts and statistics."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         doc_state = state.get("documents", {})
         counts = doc_state.get("counts", {})
         filter_config = doc_state.get("filter", {})
@@ -150,10 +144,10 @@ def create_document_counts_selector() -> MemoizedSelector[Dict[str, Any]]:
     return MemoizedSelector(selector, dependencies)
 
 
-def create_document_filter_summary_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_document_filter_summary_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for document filter summary."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         doc_state = state.get("documents", {})
         filter_config = doc_state.get("filter", {})
 
@@ -197,10 +191,10 @@ def create_document_filter_summary_selector() -> MemoizedSelector[Dict[str, Any]
 # ============================================================================
 
 
-def create_feeds_summary_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_feeds_summary_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for feeds summary information."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         external_state = state.get("external", {})
 
         feeds = external_state.get("feeds", [])
@@ -260,10 +254,10 @@ def create_feeds_summary_selector() -> MemoizedSelector[Dict[str, Any]]:
     return MemoizedSelector(selector, dependencies)
 
 
-def create_threat_intelligence_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_threat_intelligence_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for threat intelligence summary."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         external_state = state.get("external", {})
 
         cve_data = external_state.get("cve_data", [])
@@ -320,10 +314,10 @@ def create_threat_intelligence_selector() -> MemoizedSelector[Dict[str, Any]]:
 # ============================================================================
 
 
-def create_system_status_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_system_status_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for overall system status."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         chat_state = state.get("chat", {})
         doc_state = state.get("documents", {})
         external_state = state.get("external", {})
@@ -412,10 +406,10 @@ def create_system_status_selector() -> MemoizedSelector[Dict[str, Any]]:
 # ============================================================================
 
 
-def create_ui_layout_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_ui_layout_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a selector for UI layout information."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         ui_state = state.get("ui", {})
         chat_state = state.get("chat", {})
 
@@ -469,10 +463,10 @@ def create_ui_layout_selector() -> MemoizedSelector[Dict[str, Any]]:
 # ============================================================================
 
 
-def create_dashboard_summary_selector() -> MemoizedSelector[Dict[str, Any]]:
+def create_dashboard_summary_selector() -> MemoizedSelector[dict[str, Any]]:
     """Create a comprehensive selector for dashboard summary information."""
 
-    def selector(state: Dict[str, Any]) -> Dict[str, Any]:
+    def selector(state: dict[str, Any]) -> dict[str, Any]:
         # This would combine data from multiple other selectors
         # For now, provide a basic implementation
 
@@ -531,8 +525,7 @@ SELECTOR_REGISTRY = {
 
 
 def register_all_selectors(state_store) -> None:
-    """
-    Register all selectors with a state store.
+    """Register all selectors with a state store.
 
     Args:
         state_store: StateStore instance to register selectors with
@@ -548,9 +541,8 @@ def register_all_selectors(state_store) -> None:
     logger.info(f"Registered {len(SELECTOR_REGISTRY)} selectors")
 
 
-def get_selector_dependencies() -> Dict[str, Set[str]]:
-    """
-    Get the dependencies for all selectors.
+def get_selector_dependencies() -> dict[str, set[str]]:
+    """Get the dependencies for all selectors.
 
     Returns:
         Dictionary mapping selector names to their dependencies

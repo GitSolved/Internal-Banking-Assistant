@@ -192,8 +192,12 @@ def main():
         cleanup_unused_models(args.models_dir, dry_run=args.dry_run)
     else:
         print(f"\nTo remove unused directories:")
-        print(f"  poetry run python tools/maintenance/cleanup_unused_models.py --dry-run")
-        print(f"  poetry run python tools/maintenance/cleanup_unused_models.py --cleanup")
+        print(
+            f"  poetry run python tools/maintenance/cleanup_unused_models.py --dry-run"
+        )
+        print(
+            f"  poetry run python tools/maintenance/cleanup_unused_models.py --cleanup"
+        )
 
 
 if __name__ == "__main__":

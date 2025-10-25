@@ -215,8 +215,18 @@ lint.ignore = [
     "D104",
     "D105",
     "D106",
-    "D107"
+    "D107",
     # -> "Missing docstring in public function too restrictive"
+    "W505", # "Doc line too long"
+    # -> pedantic, docstrings can be longer than code lines
+    "D415", # "First line should end with a period, question mark, or exclamation point"
+    # -> pedantic punctuation enforcement
+    "F841", # "Local variable assigned but never used"
+    # -> sometimes useful for debugging or future use
+    "B904", # "Within an `except` clause, raise exceptions with `raise ... from err`"
+    # -> not always necessary for simple error handling
+    "SIM105" # "Use `contextlib.suppress(...)` instead of try-except-pass"
+    # -> suppress() is less readable than explicit try-except
 ]
 
 [tool.ruff.lint.pydocstyle]

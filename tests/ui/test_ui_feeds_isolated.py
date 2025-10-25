@@ -35,9 +35,7 @@ def test_ui_component_structure():
         if component not in ui_content:
             missing_components.append(component)
 
-    assert not missing_components, (
-        f"Missing UI components: {missing_components}"
-    )
+    assert not missing_components, f"Missing UI components: {missing_components}"
     print("[PASS] All RSS UI components found in UI file")
 
 
@@ -128,9 +126,9 @@ def test_termfeed_style_confirmation():
         if element not in ui_content:
             missing_elements.append(element)
 
-    assert not missing_elements, (
-        f"Missing TermFeed confirmation elements: {missing_elements}"
-    )
+    assert (
+        not missing_elements
+    ), f"Missing TermFeed confirmation elements: {missing_elements}"
     print("[PASS] TermFeed-style confirmation dialog implemented")
 
 
@@ -150,9 +148,7 @@ def test_dependency_injection_integration():
         if element not in di_content:
             missing_elements.append(element)
 
-    assert not missing_elements, (
-        f"Missing DI integration elements: {missing_elements}"
-    )
+    assert not missing_elements, f"Missing DI integration elements: {missing_elements}"
     print("[PASS] Feeds service properly integrated into dependency injection")
 
 

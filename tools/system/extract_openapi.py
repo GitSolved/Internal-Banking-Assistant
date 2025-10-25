@@ -19,7 +19,9 @@ import yaml
 from uvicorn.importer import import_from_string
 
 
-def extract_openapi_spec(app_string: str, output_file: str, app_dir: str = None) -> None:
+def extract_openapi_spec(
+    app_string: str, output_file: str, app_dir: str = None
+) -> None:
     """Extract and save OpenAPI specification from FastAPI app."""
 
     if app_dir:
@@ -57,23 +59,21 @@ Examples:
 
     # Specify app directory
     python extract_openapi.py main:app --app-dir /path/to/app --out spec.yaml
-        """
+        """,
     )
 
     parser.add_argument(
         "app",
         help='App import string (e.g., "main:app", "internal_assistant.launcher:app")',
-        default="main:app"
+        default="main:app",
     )
     parser.add_argument(
         "--app-dir",
         help="Directory containing the app (added to sys.path)",
-        default=None
+        default=None,
     )
     parser.add_argument(
-        "--out",
-        help="Output file path (.json or .yaml)",
-        default="openapi.yaml"
+        "--out", help="Output file path (.json or .yaml)", default="openapi.yaml"
     )
 
     args = parser.parse_args()

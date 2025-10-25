@@ -1,5 +1,4 @@
-"""
-Chat Service Facade
+"""Chat Service Facade
 
 Provides clean abstraction for chat service interactions with optimized
 streaming, error handling, and performance monitoring.
@@ -7,19 +6,21 @@ streaming, error handling, and performance monitoring.
 
 import logging
 import time
-from typing import Iterable, List, Optional, Any, Dict
+from collections.abc import Iterable
+from typing import Any
+
 from llama_index.core.llms import ChatMessage
 
-from internal_assistant.server.chat.chat_service import ChatService, CompletionGen
 from internal_assistant.open_ai.extensions.context_filter import ContextFilter
-from .service_facade import ServiceFacade, ServiceHealth
+from internal_assistant.server.chat.chat_service import ChatService, CompletionGen
+
+from .service_facade import ServiceFacade
 
 logger = logging.getLogger(__name__)
 
 
 class ChatServiceFacade(ServiceFacade[ChatService]):
-    """
-    Facade for chat service with enhanced streaming capabilities,
+    """Facade for chat service with enhanced streaming capabilities,
     error recovery, and performance optimization.
     """
 
@@ -31,13 +32,12 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
     @ServiceFacade.with_retry(max_retries=3, base_delay=1.0)
     def stream_chat(
         self,
-        messages: List[ChatMessage],
+        messages: list[ChatMessage],
         use_context: bool = True,
-        context_filter: Optional[ContextFilter] = None,
-        stream_id: Optional[str] = None,
+        context_filter: ContextFilter | None = None,
+        stream_id: str | None = None,
     ) -> CompletionGen:
-        """
-        Stream chat with retry logic and stream management.
+        """Stream chat with retry logic and stream management.
 
         Args:
             messages: List of chat messages
@@ -84,12 +84,11 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
     @ServiceFacade.with_retry(max_retries=2, base_delay=0.5)
     def complete_chat(
         self,
-        messages: List[ChatMessage],
+        messages: list[ChatMessage],
         use_context: bool = True,
-        context_filter: Optional[ContextFilter] = None,
+        context_filter: ContextFilter | None = None,
     ) -> str:
-        """
-        Non-streaming chat completion with retry logic.
+        """Non-streaming chat completion with retry logic.
 
         Args:
             messages: List of chat messages
@@ -127,13 +126,12 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
             logger.error(f"Chat completion failed: {e}")
             raise
 
-    def get_active_streams(self) -> Dict[str, Dict]:
+    def get_active_streams(self) -> dict[str, dict]:
         """Get information about active chat streams."""
         return self._active_streams.copy()
 
     def cancel_stream(self, stream_id: str) -> bool:
-        """
-        Cancel an active chat stream.
+        """Cancel an active chat stream.
 
         Args:
             stream_id: ID of stream to cancel
@@ -150,8 +148,7 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
     def _wrap_stream_generator(
         self, completion_gen: CompletionGen, stream_id: str
     ) -> Iterable[Any]:
-        """
-        Wrap streaming generator with monitoring and error handling.
+        """Wrap streaming generator with monitoring and error handling.
 
         Args:
             completion_gen: Original completion generator
@@ -201,7 +198,7 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
                     f"Stream {stream_id} completed: {token_count} tokens in {duration:.2f}s"
                 )
 
-    def _cleanup_stream(self, stream_id: str, error: Optional[str] = None):
+    def _cleanup_stream(self, stream_id: str, error: str | None = None):
         """Clean up completed or failed stream."""
         if stream_id in self._active_streams:
             stream_info = self._active_streams[stream_id]
@@ -215,7 +212,6 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
     def _basic_health_check(self) -> bool:
         """Basic health check for chat service with timeout and circuit breaker."""
         from concurrent.futures import ThreadPoolExecutor, TimeoutError
-        import platform
 
         # Check circuit breaker first
         if self._is_circuit_breaker_open():
@@ -238,7 +234,7 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
                     result = future.result(timeout=5)  # 5-second timeout
                     return result
                 except TimeoutError:
-                    logger.warning(f"Chat service health check timed out")
+                    logger.warning("Chat service health check timed out")
                     # Cancel the future if it's still running
                     future.cancel()
                     self._trigger_circuit_breaker()
@@ -261,7 +257,7 @@ class ChatServiceFacade(ServiceFacade[ChatService]):
         except Exception:
             return False
 
-    def get_service_info(self) -> Dict[str, Any]:
+    def get_service_info(self) -> dict[str, Any]:
         """Get comprehensive service information."""
         base_metrics = self.get_metrics()
 

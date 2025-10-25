@@ -1,11 +1,11 @@
 """Threat Intelligence Analysis Engine for Internal Assistant."""
 
-import re
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+import re
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +47,10 @@ class SecurityRecommendation:
     title: str
     description: str
     priority: ThreatLevel
-    action_items: List[str]
-    affected_systems: List[str]
+    action_items: list[str]
+    affected_systems: list[str]
     estimated_effort: str
-    compliance_impact: List[str]
+    compliance_impact: list[str]
 
 
 class ThreatIntelligenceAnalyzer:
@@ -150,10 +150,9 @@ class ThreatIntelligenceAnalyzer:
         }
 
     def extract_mitre_techniques_from_feed_item(
-        self, feed_item: Dict[str, str]
-    ) -> List[Dict[str, Any]]:
-        """
-        Extract relevant MITRE ATT&CK techniques from a single feed item.
+        self, feed_item: dict[str, str]
+    ) -> list[dict[str, Any]]:
+        """Extract relevant MITRE ATT&CK techniques from a single feed item.
 
         This method analyzes the title and summary of a feed item and identifies
         relevant MITRE techniques based on pattern matching.
@@ -186,12 +185,14 @@ class ThreatIntelligenceAnalyzer:
                     content, pattern, matched_text
                 )
 
-                matched_techniques.append({
-                    "technique_id": technique_id,
-                    "confidence": confidence,
-                    "matched_text": matched_text,
-                    "pattern": pattern,
-                })
+                matched_techniques.append(
+                    {
+                        "technique_id": technique_id,
+                        "confidence": confidence,
+                        "matched_text": matched_text,
+                        "pattern": pattern,
+                    }
+                )
 
         # Sort by confidence (highest first)
         matched_techniques.sort(key=lambda x: x["confidence"], reverse=True)
@@ -210,7 +211,13 @@ class ThreatIntelligenceAnalyzer:
             confidence += min(match_count * 0.1, 0.2)
 
         # Exact match of key terms (not partial) increases confidence
-        if matched_text in ["phishing", "ransomware", "malware", "vulnerability", "exploit"]:
+        if matched_text in [
+            "phishing",
+            "ransomware",
+            "malware",
+            "vulnerability",
+            "exploit",
+        ]:
             confidence += 0.1
 
         # Presence of security keywords increases confidence
@@ -219,9 +226,10 @@ class ThreatIntelligenceAnalyzer:
 
         return min(confidence, 1.0)
 
-    def build_attack_chain(self, detected_techniques: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Build attack chain from detected techniques, ordering by kill chain phase.
+    def build_attack_chain(
+        self, detected_techniques: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Build attack chain from detected techniques, ordering by kill chain phase.
 
         Args:
             detected_techniques: List of detected techniques with IDs and confidence
@@ -232,72 +240,120 @@ class ThreatIntelligenceAnalyzer:
         # MITRE kill chain phase mapping
         KILL_CHAIN_PHASES = {
             # Initial Access
-            'T1566': {'phase': 'Initial Access', 'order': 1, 'name': 'Phishing'},
-            'T1190': {'phase': 'Initial Access', 'order': 1, 'name': 'Exploit Public-Facing Application'},
-            'T1078': {'phase': 'Initial Access', 'order': 1, 'name': 'Valid Accounts'},
-            'T1133': {'phase': 'Initial Access', 'order': 1, 'name': 'External Remote Services'},
-
+            "T1566": {"phase": "Initial Access", "order": 1, "name": "Phishing"},
+            "T1190": {
+                "phase": "Initial Access",
+                "order": 1,
+                "name": "Exploit Public-Facing Application",
+            },
+            "T1078": {"phase": "Initial Access", "order": 1, "name": "Valid Accounts"},
+            "T1133": {
+                "phase": "Initial Access",
+                "order": 1,
+                "name": "External Remote Services",
+            },
             # Execution
-            'T1059': {'phase': 'Execution', 'order': 2, 'name': 'Command and Scripting Interpreter'},
-            'T1203': {'phase': 'Execution', 'order': 2, 'name': 'Exploitation for Client Execution'},
-            'T1053': {'phase': 'Execution', 'order': 2, 'name': 'Scheduled Task/Job'},
-
+            "T1059": {
+                "phase": "Execution",
+                "order": 2,
+                "name": "Command and Scripting Interpreter",
+            },
+            "T1203": {
+                "phase": "Execution",
+                "order": 2,
+                "name": "Exploitation for Client Execution",
+            },
+            "T1053": {"phase": "Execution", "order": 2, "name": "Scheduled Task/Job"},
             # Persistence
-            'T1098': {'phase': 'Persistence', 'order': 3, 'name': 'Account Manipulation'},
-            'T1136': {'phase': 'Persistence', 'order': 3, 'name': 'Create Account'},
-            'T1547': {'phase': 'Persistence', 'order': 3, 'name': 'Boot or Logon Autostart Execution'},
-
+            "T1098": {
+                "phase": "Persistence",
+                "order": 3,
+                "name": "Account Manipulation",
+            },
+            "T1136": {"phase": "Persistence", "order": 3, "name": "Create Account"},
+            "T1547": {
+                "phase": "Persistence",
+                "order": 3,
+                "name": "Boot or Logon Autostart Execution",
+            },
             # Credential Access
-            'T1003': {'phase': 'Credential Access', 'order': 4, 'name': 'OS Credential Dumping'},
-            'T1110': {'phase': 'Credential Access', 'order': 4, 'name': 'Brute Force'},
-            'T1528': {'phase': 'Credential Access', 'order': 4, 'name': 'Steal Application Access Token'},
-
+            "T1003": {
+                "phase": "Credential Access",
+                "order": 4,
+                "name": "OS Credential Dumping",
+            },
+            "T1110": {"phase": "Credential Access", "order": 4, "name": "Brute Force"},
+            "T1528": {
+                "phase": "Credential Access",
+                "order": 4,
+                "name": "Steal Application Access Token",
+            },
             # Lateral Movement
-            'T1021': {'phase': 'Lateral Movement', 'order': 5, 'name': 'Remote Services'},
-            'T1091': {'phase': 'Lateral Movement', 'order': 5, 'name': 'Replication Through Removable Media'},
-            'T1080': {'phase': 'Lateral Movement', 'order': 5, 'name': 'Taint Shared Content'},
-
+            "T1021": {
+                "phase": "Lateral Movement",
+                "order": 5,
+                "name": "Remote Services",
+            },
+            "T1091": {
+                "phase": "Lateral Movement",
+                "order": 5,
+                "name": "Replication Through Removable Media",
+            },
+            "T1080": {
+                "phase": "Lateral Movement",
+                "order": 5,
+                "name": "Taint Shared Content",
+            },
             # Impact
-            'T1486': {'phase': 'Impact', 'order': 6, 'name': 'Data Encrypted for Impact'},
-            'T1490': {'phase': 'Impact', 'order': 6, 'name': 'Inhibit System Recovery'},
-            'T1499': {'phase': 'Impact', 'order': 6, 'name': 'Endpoint Denial of Service'},
+            "T1486": {
+                "phase": "Impact",
+                "order": 6,
+                "name": "Data Encrypted for Impact",
+            },
+            "T1490": {"phase": "Impact", "order": 6, "name": "Inhibit System Recovery"},
+            "T1499": {
+                "phase": "Impact",
+                "order": 6,
+                "name": "Endpoint Denial of Service",
+            },
         }
 
         # Group techniques by phase
         phases = {}
         for tech in detected_techniques:
-            tech_id = tech.get('technique_id', '')
-            base_tech_id = tech_id.split('.')[0]  # Handle sub-techniques (e.g., T1566.001 -> T1566)
+            tech_id = tech.get("technique_id", "")
+            base_tech_id = tech_id.split(".")[
+                0
+            ]  # Handle sub-techniques (e.g., T1566.001 -> T1566)
 
             if base_tech_id in KILL_CHAIN_PHASES:
                 phase_info = KILL_CHAIN_PHASES[base_tech_id]
-                phase_name = phase_info['phase']
-                phase_order = phase_info['order']
+                phase_name = phase_info["phase"]
+                phase_order = phase_info["order"]
 
                 if phase_name not in phases:
-                    phases[phase_name] = {
-                        'order': phase_order,
-                        'techniques': []
-                    }
+                    phases[phase_name] = {"order": phase_order, "techniques": []}
 
-                phases[phase_name]['techniques'].append({
-                    'technique_id': tech_id,
-                    'name': tech.get('matched_text', phase_info['name']),
-                    'confidence': tech.get('confidence', 0.0),
-                })
+                phases[phase_name]["techniques"].append(
+                    {
+                        "technique_id": tech_id,
+                        "name": tech.get("matched_text", phase_info["name"]),
+                        "confidence": tech.get("confidence", 0.0),
+                    }
+                )
 
         # Sort phases by order
-        sorted_phases = sorted(phases.items(), key=lambda x: x[1]['order'])
+        sorted_phases = sorted(phases.items(), key=lambda x: x[1]["order"])
 
         return {
-            'phases': sorted_phases,
-            'total_phases': len(sorted_phases),
-            'is_complete_chain': len(sorted_phases) >= 3,  # 3+ phases = likely complete attack
+            "phases": sorted_phases,
+            "total_phases": len(sorted_phases),
+            "is_complete_chain": len(sorted_phases)
+            >= 3,  # 3+ phases = likely complete attack
         }
 
-    def get_mitigations_for_technique(self, technique_id: str) -> List[Dict[str, str]]:
-        """
-        Get MITRE mitigations for a technique.
+    def get_mitigations_for_technique(self, technique_id: str) -> list[dict[str, str]]:
+        """Get MITRE mitigations for a technique.
 
         Args:
             technique_id: MITRE technique ID (e.g., "T1566")
@@ -307,68 +363,68 @@ class ThreatIntelligenceAnalyzer:
         """
         # Common mitigations mapping (hardcoded for reliability)
         COMMON_MITIGATIONS = {
-            'T1566': [
-                {'id': 'M1049', 'name': 'Antivirus/Antimalware'},
-                {'id': 'M1031', 'name': 'Network Intrusion Prevention'},
-                {'id': 'M1017', 'name': 'User Training'},
-                {'id': 'M1021', 'name': 'Restrict Web-Based Content'},
+            "T1566": [
+                {"id": "M1049", "name": "Antivirus/Antimalware"},
+                {"id": "M1031", "name": "Network Intrusion Prevention"},
+                {"id": "M1017", "name": "User Training"},
+                {"id": "M1021", "name": "Restrict Web-Based Content"},
             ],
-            'T1059': [
-                {'id': 'M1042', 'name': 'Disable or Remove Feature'},
-                {'id': 'M1038', 'name': 'Execution Prevention'},
-                {'id': 'M1026', 'name': 'Privileged Account Management'},
+            "T1059": [
+                {"id": "M1042", "name": "Disable or Remove Feature"},
+                {"id": "M1038", "name": "Execution Prevention"},
+                {"id": "M1026", "name": "Privileged Account Management"},
             ],
-            'T1003': [
-                {'id': 'M1028', 'name': 'Operating System Configuration'},
-                {'id': 'M1043', 'name': 'Credential Access Protection'},
-                {'id': 'M1027', 'name': 'Password Policies'},
-                {'id': 'M1026', 'name': 'Privileged Account Management'},
+            "T1003": [
+                {"id": "M1028", "name": "Operating System Configuration"},
+                {"id": "M1043", "name": "Credential Access Protection"},
+                {"id": "M1027", "name": "Password Policies"},
+                {"id": "M1026", "name": "Privileged Account Management"},
             ],
-            'T1021': [
-                {'id': 'M1035', 'name': 'Limit Access to Resource Over Network'},
-                {'id': 'M1032', 'name': 'Multi-factor Authentication'},
-                {'id': 'M1030', 'name': 'Network Segmentation'},
-                {'id': 'M1018', 'name': 'User Account Management'},
+            "T1021": [
+                {"id": "M1035", "name": "Limit Access to Resource Over Network"},
+                {"id": "M1032", "name": "Multi-factor Authentication"},
+                {"id": "M1030", "name": "Network Segmentation"},
+                {"id": "M1018", "name": "User Account Management"},
             ],
-            'T1486': [
-                {'id': 'M1053', 'name': 'Data Backup'},
-                {'id': 'M1040', 'name': 'Behavior Prevention on Endpoint'},
-                {'id': 'M1022', 'name': 'Restrict File and Directory Permissions'},
+            "T1486": [
+                {"id": "M1053", "name": "Data Backup"},
+                {"id": "M1040", "name": "Behavior Prevention on Endpoint"},
+                {"id": "M1022", "name": "Restrict File and Directory Permissions"},
             ],
-            'T1490': [
-                {'id': 'M1053', 'name': 'Data Backup'},
-                {'id': 'M1028', 'name': 'Operating System Configuration'},
-                {'id': 'M1026', 'name': 'Privileged Account Management'},
+            "T1490": [
+                {"id": "M1053", "name": "Data Backup"},
+                {"id": "M1028", "name": "Operating System Configuration"},
+                {"id": "M1026", "name": "Privileged Account Management"},
             ],
-            'T1078': [
-                {'id': 'M1027', 'name': 'Password Policies'},
-                {'id': 'M1032', 'name': 'Multi-factor Authentication'},
-                {'id': 'M1026', 'name': 'Privileged Account Management'},
-                {'id': 'M1018', 'name': 'User Account Management'},
+            "T1078": [
+                {"id": "M1027", "name": "Password Policies"},
+                {"id": "M1032", "name": "Multi-factor Authentication"},
+                {"id": "M1026", "name": "Privileged Account Management"},
+                {"id": "M1018", "name": "User Account Management"},
             ],
-            'T1190': [
-                {'id': 'M1048', 'name': 'Application Isolation and Sandboxing'},
-                {'id': 'M1030', 'name': 'Network Segmentation'},
-                {'id': 'M1016', 'name': 'Vulnerability Scanning'},
-                {'id': 'M1050', 'name': 'Exploit Protection'},
+            "T1190": [
+                {"id": "M1048", "name": "Application Isolation and Sandboxing"},
+                {"id": "M1030", "name": "Network Segmentation"},
+                {"id": "M1016", "name": "Vulnerability Scanning"},
+                {"id": "M1050", "name": "Exploit Protection"},
             ],
         }
 
         # Use common mitigations
-        base_tech_id = technique_id.split('.')[0]
+        base_tech_id = technique_id.split(".")[0]
         mitigations = COMMON_MITIGATIONS.get(base_tech_id, [])
 
         if not mitigations:
             logger.debug(f"No mitigations found for technique {technique_id}")
             # Return generic mitigations as fallback
             mitigations = [
-                {'id': 'M1051', 'name': 'Update Software'},
-                {'id': 'M1047', 'name': 'Audit'},
+                {"id": "M1051", "name": "Update Software"},
+                {"id": "M1047", "name": "Audit"},
             ]
 
         return mitigations
 
-    def analyze_feed_content(self, feed_items: List[Dict]) -> List[ThreatIndicator]:
+    def analyze_feed_content(self, feed_items: list[dict]) -> list[ThreatIndicator]:
         """Analyze RSS feed content for cyber threats."""
         threats = []
 
@@ -421,7 +477,7 @@ class ThreatIntelligenceAnalyzer:
         else:
             return ThreatLevel.LOW
 
-    def _extract_indicators(self, content: str) -> List[str]:
+    def _extract_indicators(self, content: str) -> list[str]:
         """Extract threat indicators from content."""
         indicators = []
 
@@ -486,11 +542,9 @@ class ThreatIntelligenceAnalyzer:
 
         return min(confidence, 1.0)
 
-    def get_mitre_data(self) -> Dict[str, Any]:
+    def get_mitre_data(self) -> dict[str, Any]:
         """Get MITRE ATT&CK data from API."""
         try:
-            import aiohttp
-            import asyncio
 
             # For now, return sample data since we need async context
             # In a real implementation, this would call the MITRE ATT&CK API
@@ -849,8 +903,8 @@ class ThreatIntelligenceAnalyzer:
         return domain_techniques.get(domain, [])
 
     def generate_security_recommendations(
-        self, threats: List[ThreatIndicator]
-    ) -> List[SecurityRecommendation]:
+        self, threats: list[ThreatIndicator]
+    ) -> list[SecurityRecommendation]:
         """Generate security recommendations based on threat analysis."""
         recommendations = []
 
@@ -879,11 +933,10 @@ class ThreatIntelligenceAnalyzer:
     def _create_recommendation(
         self,
         threat_type: ThreatType,
-        threats: List[ThreatIndicator],
+        threats: list[ThreatIndicator],
         threat_level: ThreatLevel,
     ) -> SecurityRecommendation:
         """Create a specific security recommendation."""
-
         recommendations_map = {
             ThreatType.MALWARE: {
                 "title": "Malware Threat Detection - Immediate Action Required",

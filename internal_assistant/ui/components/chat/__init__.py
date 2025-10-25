@@ -1,5 +1,4 @@
-"""
-Chat Component Package
+"""Chat Component Package
 
 Handles chat interface functionality including:
 - Chat interface creation

@@ -1,5 +1,4 @@
-"""
-Settings and General Assistant Event Handlers
+"""Settings and General Assistant Event Handlers
 
 This module contains event handlers for settings management and general assistant features
 like calculator and definition shortcuts. Extracted from ui.py as part of Phase 1 refactoring
@@ -7,14 +6,12 @@ to decouple event handling from UI construction.
 """
 
 import logging
-from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class GeneralAssistantEventHandler:
-    """
-    Handles general assistant events including calculator and definition shortcuts.
+    """Handles general assistant events including calculator and definition shortcuts.
     """
 
     def __init__(self):
@@ -22,8 +19,7 @@ class GeneralAssistantEventHandler:
         pass
 
     def handle_calculation(self, calc_expression: str) -> str:
-        """
-        Handle calculator expressions with security checks.
+        """Handle calculator expressions with security checks.
         Extracted from ui.py lines 5474-5510 (~35 lines).
 
         Args:
@@ -72,11 +68,10 @@ class GeneralAssistantEventHandler:
                 return f"🧮 {calc_expression} = {result:,}"
 
         except Exception as e:
-            return f"❌ Calculation error: Please check your expression format"
+            return "❌ Calculation error: Please check your expression format"
 
     def handle_definition_shortcut(self, term_category: str) -> str:
-        """
-        Handle definition shortcut template selection.
+        """Handle definition shortcut template selection.
         Extracted from ui.py lines 5519-5530.
 
         Args:
@@ -99,13 +94,11 @@ class GeneralAssistantEventHandler:
 
 
 class SettingsEventHandler:
-    """
-    Handles settings-related events including system prompt management and defaults.
+    """Handles settings-related events including system prompt management and defaults.
     """
 
     def __init__(self, get_default_system_prompt_func, reset_settings_func):
-        """
-        Initialize settings event handler.
+        """Initialize settings event handler.
 
         Args:
             get_default_system_prompt_func: Function to get default system prompt
@@ -115,8 +108,7 @@ class SettingsEventHandler:
         self.reset_settings = reset_settings_func
 
     def update_system_prompt_from_template(self, selected_template: str) -> str:
-        """
-        Update system prompt based on selected template.
+        """Update system prompt based on selected template.
         Extracted from ui.py advanced settings section.
 
         Args:
@@ -139,8 +131,7 @@ class SettingsEventHandler:
             return ""
 
     def reset_to_defaults(self) -> tuple:
-        """
-        Reset all settings to their default values.
+        """Reset all settings to their default values.
         Extracted from ui.py reset settings functionality.
 
         Returns:
@@ -164,8 +155,7 @@ class SettingsEventHandler:
             )
 
     def on_system_prompt_blur(self, system_prompt: str) -> str:
-        """
-        Handle system prompt input blur event.
+        """Handle system prompt input blur event.
         Extracted from ui.py system prompt blur handler.
 
         Args:
@@ -179,13 +169,11 @@ class SettingsEventHandler:
 
 
 class SettingsEventHandlerBuilder:
-    """
-    Builder class for creating settings and general assistant event handlers.
+    """Builder class for creating settings and general assistant event handlers.
     """
 
     def __init__(self, get_default_system_prompt_func=None, reset_settings_func=None):
-        """
-        Initialize the builder with optional dependency injection.
+        """Initialize the builder with optional dependency injection.
 
         Args:
             get_default_system_prompt_func: Function to get default system prompt
@@ -197,8 +185,7 @@ class SettingsEventHandlerBuilder:
         self._settings_handler = None
 
     def get_general_handler(self) -> GeneralAssistantEventHandler:
-        """
-        Get or create the general assistant event handler instance.
+        """Get or create the general assistant event handler instance.
 
         Returns:
             GeneralAssistantEventHandler instance
@@ -208,8 +195,7 @@ class SettingsEventHandlerBuilder:
         return self._general_handler
 
     def get_settings_handler(self) -> SettingsEventHandler:
-        """
-        Get or create the settings event handler instance.
+        """Get or create the settings event handler instance.
 
         Returns:
             SettingsEventHandler instance

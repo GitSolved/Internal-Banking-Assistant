@@ -1,5 +1,4 @@
-"""
-Message Bus for Cross-Component Communication
+"""Message Bus for Cross-Component Communication
 
 This module implements a publish-subscribe message bus for decoupled communication
 between UI components. Part of Phase 2.3: Cross-Component Communication.
@@ -10,14 +9,14 @@ supporting async operations, queued messages, and event sourcing.
 
 import asyncio
 import logging
+import uuid
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
 from threading import Lock
-import uuid
-from collections import deque
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -80,15 +79,15 @@ class Message:
 
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     type: MessageType = MessageType.SYSTEM_INFO
-    data: Dict[str, Any] = field(default_factory=dict)
-    source: Optional[str] = None
-    target: Optional[str] = None  # Specific component target, None for broadcast
+    data: dict[str, Any] = field(default_factory=dict)
+    source: str | None = None
+    target: str | None = None  # Specific component target, None for broadcast
     timestamp: datetime = field(default_factory=datetime.now)
     priority: MessagePriority = MessagePriority.NORMAL
-    correlation_id: Optional[str] = None  # For linking related messages
-    reply_to: Optional[str] = None  # For request-response patterns
+    correlation_id: str | None = None  # For linking related messages
+    reply_to: str | None = None  # For request-response patterns
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary for serialization."""
         return {
             "id": self.id,
@@ -105,7 +104,7 @@ class Message:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Message":
+    def from_dict(cls, data: dict[str, Any]) -> "Message":
         """Create message from dictionary."""
         return cls(
             id=data["id"],
@@ -130,9 +129,8 @@ class MessageHandler(ABC):
     """Abstract base class for message handlers."""
 
     @abstractmethod
-    async def handle_message(self, message: Message) -> Optional[Message]:
-        """
-        Handle a received message.
+    async def handle_message(self, message: Message) -> Message | None:
+        """Handle a received message.
 
         Args:
             message: The message to handle
@@ -143,7 +141,7 @@ class MessageHandler(ABC):
         pass
 
     @abstractmethod
-    def get_handled_types(self) -> Set[MessageType]:
+    def get_handled_types(self) -> set[MessageType]:
         """Return the set of message types this handler processes."""
         pass
 
@@ -162,12 +160,11 @@ class SimpleMessageFilter(MessageFilter):
 
     def __init__(
         self,
-        allowed_types: Optional[Set[MessageType]] = None,
-        allowed_sources: Optional[Set[str]] = None,
-        allowed_targets: Optional[Set[str]] = None,
+        allowed_types: set[MessageType] | None = None,
+        allowed_sources: set[str] | None = None,
+        allowed_targets: set[str] | None = None,
     ):
-        """
-        Initialize the filter.
+        """Initialize the filter.
 
         Args:
             allowed_types: Set of allowed message types
@@ -196,8 +193,7 @@ class MessageQueue:
     """Priority queue for messages with async processing."""
 
     def __init__(self, max_size: int = 10000):
-        """
-        Initialize message queue.
+        """Initialize message queue.
 
         Args:
             max_size: Maximum number of messages in queue
@@ -213,8 +209,7 @@ class MessageQueue:
         self._message_count = 0
 
     def put(self, message: Message) -> bool:
-        """
-        Add message to queue.
+        """Add message to queue.
 
         Args:
             message: Message to queue
@@ -236,9 +231,8 @@ class MessageQueue:
             self._message_count += 1
             return True
 
-    def get(self) -> Optional[Message]:
-        """
-        Get next message from queue (highest priority first).
+    def get(self) -> Message | None:
+        """Get next message from queue (highest priority first).
 
         Returns:
             Next message or None if queue is empty
@@ -271,26 +265,24 @@ class MessageQueue:
 
 
 class MessageBus:
-    """
-    Central message bus for cross-component communication.
+    """Central message bus for cross-component communication.
 
     Implements publish-subscribe pattern with async message processing,
     message queuing, filtering, and event sourcing capabilities.
     """
 
     def __init__(self, max_queue_size: int = 10000, max_history: int = 5000):
-        """
-        Initialize the message bus.
+        """Initialize the message bus.
 
         Args:
             max_queue_size: Maximum size of message queue
             max_history: Maximum number of messages to keep in history
         """
-        self._handlers: Dict[str, MessageHandler] = {}
-        self._subscriptions: Dict[MessageType, Set[str]] = {}
-        self._filters: Dict[str, MessageFilter] = {}
+        self._handlers: dict[str, MessageHandler] = {}
+        self._subscriptions: dict[MessageType, set[str]] = {}
+        self._filters: dict[str, MessageFilter] = {}
         self._queue = MessageQueue(max_queue_size)
-        self._message_history: List[Message] = []
+        self._message_history: list[Message] = []
         self._max_history = max_history
         self._lock = Lock()
         self._processing = False
@@ -307,10 +299,9 @@ class MessageBus:
         self,
         handler_id: str,
         handler: MessageHandler,
-        message_filter: Optional[MessageFilter] = None,
+        message_filter: MessageFilter | None = None,
     ) -> None:
-        """
-        Register a message handler.
+        """Register a message handler.
 
         Args:
             handler_id: Unique identifier for the handler
@@ -333,8 +324,7 @@ class MessageBus:
             logger.info(f"Handler registered: {handler_id}")
 
     def unregister_handler(self, handler_id: str) -> None:
-        """
-        Unregister a message handler.
+        """Unregister a message handler.
 
         Args:
             handler_id: Handler identifier to remove
@@ -359,8 +349,7 @@ class MessageBus:
                 logger.info(f"Handler unregistered: {handler_id}")
 
     async def publish(self, message: Message) -> bool:
-        """
-        Publish a message to the bus.
+        """Publish a message to the bus.
 
         Args:
             message: Message to publish
@@ -393,13 +382,12 @@ class MessageBus:
     async def publish_simple(
         self,
         message_type: MessageType,
-        data: Dict[str, Any],
-        source: Optional[str] = None,
-        target: Optional[str] = None,
+        data: dict[str, Any],
+        source: str | None = None,
+        target: str | None = None,
         priority: MessagePriority = MessagePriority.NORMAL,
     ) -> bool:
-        """
-        Convenience method to publish a simple message.
+        """Convenience method to publish a simple message.
 
         Args:
             message_type: Type of message
@@ -423,9 +411,8 @@ class MessageBus:
 
     async def request_response(
         self, message: Message, timeout: float = 30.0
-    ) -> Optional[Message]:
-        """
-        Send a message and wait for a response.
+    ) -> Message | None:
+        """Send a message and wait for a response.
 
         Args:
             message: Request message
@@ -448,11 +435,11 @@ class MessageBus:
         temp_handler_id = f"response_{message.id}"
 
         class ResponseHandler(MessageHandler):
-            async def handle_message(self, msg: Message) -> Optional[Message]:
+            async def handle_message(self, msg: Message) -> Message | None:
                 response_handler(msg)
                 return None
 
-            def get_handled_types(self) -> Set[MessageType]:
+            def get_handled_types(self) -> set[MessageType]:
                 return set(MessageType)  # Listen to all types for response
 
         response_handler_obj = ResponseHandler()
@@ -466,7 +453,7 @@ class MessageBus:
             await asyncio.wait_for(response_event.wait(), timeout=timeout)
             return response_message
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Request timeout for message: {message.id}")
             return None
         finally:
@@ -555,10 +542,9 @@ class MessageBus:
             self._stats["messages_failed"] += 1
 
     def get_message_history(
-        self, limit: Optional[int] = None, message_type: Optional[MessageType] = None
-    ) -> List[Message]:
-        """
-        Get message history.
+        self, limit: int | None = None, message_type: MessageType | None = None
+    ) -> list[Message]:
+        """Get message history.
 
         Args:
             limit: Maximum number of messages to return
@@ -578,7 +564,7 @@ class MessageBus:
 
             return messages.copy()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get message bus statistics."""
         with self._lock:
             return {
@@ -611,9 +597,8 @@ class MessageBus:
 class UIComponentHandler(MessageHandler):
     """Base handler for UI component message handling."""
 
-    def __init__(self, component_id: str, handled_types: Set[MessageType]):
-        """
-        Initialize UI component handler.
+    def __init__(self, component_id: str, handled_types: set[MessageType]):
+        """Initialize UI component handler.
 
         Args:
             component_id: Unique component identifier
@@ -622,7 +607,7 @@ class UIComponentHandler(MessageHandler):
         self.component_id = component_id
         self.handled_types = handled_types
 
-    def get_handled_types(self) -> Set[MessageType]:
+    def get_handled_types(self) -> set[MessageType]:
         """Return handled message types."""
         return self.handled_types
 
@@ -642,7 +627,7 @@ class ChatComponentHandler(UIComponentHandler):
             },
         )
 
-    async def handle_message(self, message: Message) -> Optional[Message]:
+    async def handle_message(self, message: Message) -> Message | None:
         """Handle chat-related messages."""
         if message.type == MessageType.CHAT_MESSAGE_SENT:
             # Process new chat message
@@ -676,7 +661,7 @@ class DocumentComponentHandler(UIComponentHandler):
             },
         )
 
-    async def handle_message(self, message: Message) -> Optional[Message]:
+    async def handle_message(self, message: Message) -> Message | None:
         """Handle document-related messages."""
         if message.type == MessageType.DOCUMENT_UPLOADED:
             # Process document upload

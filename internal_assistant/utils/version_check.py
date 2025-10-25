@@ -1,20 +1,19 @@
-"""
-Version check utility for Internal Assistant.
+"""Version check utility for Internal Assistant.
 Validates that all dependencies meet the required version constraints.
 """
 
 import logging
-import sys
 import platform
+import sys
+
 import psutil
-from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
 # Required version constraints for compatibility
 # IMPORTANT: These constraints are used by the version check system
 # and should be kept in sync with pyproject.toml
-REQUIRED_VERSIONS: Dict[str, Tuple[str, str]] = {
+REQUIRED_VERSIONS: dict[str, tuple[str, str]] = {
     # Core Framework
     "fastapi": (">=0.108.0", "<0.115.0"),
     "pydantic": (">=2.8.0", "<2.9.0"),
@@ -234,12 +233,12 @@ def log_version_info() -> None:
         sys.version_info.micro,
     )
 
-    for package in REQUIRED_VERSIONS.keys():
+    for package in REQUIRED_VERSIONS:
         version = get_package_version(package)
         logger.info("%s: %s", package, version)
 
 
-def generate_compatibility_report() -> Dict[str, any]:
+def generate_compatibility_report() -> dict[str, any]:
     """Generate a comprehensive compatibility report for future processes."""
     report = {
         "application_version": get_application_version(),

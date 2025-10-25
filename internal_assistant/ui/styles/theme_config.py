@@ -1,19 +1,17 @@
-"""
-Theme Configuration
+"""Theme Configuration
 
 This module manages theme settings and CSS variables for the Internal Assistant UI.
 It provides a centralized place for color schemes, fonts, and other style constants.
 """
 
-from typing import Dict, Any, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class ThemeConfig:
-    """
-    Configuration class for UI theme settings.
+    """Configuration class for UI theme settings.
 
     This class manages color schemes, fonts, spacing, and other visual
     constants used throughout the application.
@@ -83,10 +81,9 @@ class ThemeConfig:
     }
 
     def __init__(
-        self, theme: str = "dark", custom_config: Optional[Dict[str, Any]] = None
+        self, theme: str = "dark", custom_config: dict[str, Any] | None = None
     ):
-        """
-        Initialize theme configuration.
+        """Initialize theme configuration.
 
         Args:
             theme: Theme name ("dark" or "light")
@@ -102,9 +99,8 @@ class ThemeConfig:
         if custom_config:
             self._apply_custom_config(custom_config)
 
-    def _apply_custom_config(self, custom_config: Dict[str, Any]) -> None:
-        """
-        Apply custom configuration overrides.
+    def _apply_custom_config(self, custom_config: dict[str, Any]) -> None:
+        """Apply custom configuration overrides.
 
         Args:
             custom_config: Dictionary of custom settings
@@ -119,8 +115,7 @@ class ThemeConfig:
             self.font_sizes.update(custom_config["font_sizes"])
 
     def get_css_variables(self) -> str:
-        """
-        Generate CSS custom properties (variables) from theme configuration.
+        """Generate CSS custom properties (variables) from theme configuration.
 
         Returns:
             CSS string with custom properties
@@ -152,8 +147,7 @@ class ThemeConfig:
         return "\n".join(css_vars)
 
     def apply_variables(self, css: str) -> str:
-        """
-        Replace placeholders in CSS with theme variables.
+        """Replace placeholders in CSS with theme variables.
 
         Args:
             css: CSS string with placeholders
@@ -183,9 +177,8 @@ class ThemeConfig:
 
         return css
 
-    def get_gradio_theme_config(self) -> Dict[str, Any]:
-        """
-        Get theme configuration in Gradio-compatible format.
+    def get_gradio_theme_config(self) -> dict[str, Any]:
+        """Get theme configuration in Gradio-compatible format.
 
         Returns:
             Dictionary of Gradio theme settings
@@ -200,9 +193,8 @@ class ThemeConfig:
             "font": self.fonts["primary"],
         }
 
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert theme configuration to dictionary.
+    def to_dict(self) -> dict[str, Any]:
+        """Convert theme configuration to dictionary.
 
         Returns:
             Dictionary representation of theme
@@ -216,9 +208,8 @@ class ThemeConfig:
         }
 
     @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "ThemeConfig":
-        """
-        Create ThemeConfig from dictionary.
+    def from_dict(cls, config: dict[str, Any]) -> "ThemeConfig":
+        """Create ThemeConfig from dictionary.
 
         Args:
             config: Configuration dictionary

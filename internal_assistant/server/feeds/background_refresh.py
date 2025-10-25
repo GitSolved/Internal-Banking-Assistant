@@ -2,8 +2,6 @@
 
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Optional
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
 
@@ -18,7 +16,7 @@ class BackgroundRefreshService:
     ):
         self.feed_service = feed_service
         self.refresh_interval = refresh_interval_minutes * 60  # Convert to seconds
-        self._refresh_task: Optional[asyncio.Task] = None
+        self._refresh_task: asyncio.Task | None = None
         self._is_running = False
         self._stop_event = asyncio.Event()
 
@@ -53,7 +51,7 @@ class BackgroundRefreshService:
         if self._refresh_task and not self._refresh_task.done():
             try:
                 await asyncio.wait_for(self._refresh_task, timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(
                     "Background refresh task did not stop gracefully, cancelling"
                 )
@@ -74,7 +72,7 @@ class BackgroundRefreshService:
                     )
                     # If we get here, stop was requested
                     break
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # Normal refresh time
                     pass
 

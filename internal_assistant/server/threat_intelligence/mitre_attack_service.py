@@ -1,14 +1,12 @@
 """MITRE ATT&CK Integration Service for Internal Assistant."""
 
-import asyncio
-import logging
 import json
-import os
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+import logging
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 import aiohttp
 
@@ -31,11 +29,11 @@ class AttackTechnique:
     name: str
     description: str
     tactic: str
-    subtechniques: List[str]
-    platforms: List[str]
-    data_sources: List[str]
-    detection: Optional[str]
-    mitigation: Optional[str]
+    subtechniques: list[str]
+    platforms: list[str]
+    data_sources: list[str]
+    detection: str | None
+    mitigation: str | None
     url: str
 
 
@@ -46,7 +44,7 @@ class AttackTactic:
     tactic_id: str
     name: str
     description: str
-    techniques: List[str]
+    techniques: list[str]
     url: str
 
 
@@ -57,9 +55,9 @@ class ThreatGroup:
     group_id: str
     name: str
     description: str
-    aliases: List[str]
-    techniques: List[str]
-    targets: List[str]
+    aliases: list[str]
+    techniques: list[str]
+    targets: list[str]
     url: str
 
 
@@ -78,33 +76,85 @@ class MitreAttackService:
     # Sector-specific threat groups and techniques
     SECTOR_THREAT_GROUPS = {
         "Financial": [
-            "APT29", "APT28", "Lazarus Group", "Carbanak", "Cobalt Group",
-            "FIN7", "FIN8", "FIN9", "LAPSUS$", "Conti", "REvil"
+            "APT29",
+            "APT28",
+            "Lazarus Group",
+            "Carbanak",
+            "Cobalt Group",
+            "FIN7",
+            "FIN8",
+            "FIN9",
+            "LAPSUS$",
+            "Conti",
+            "REvil",
         ],
         "Government": [
-            "APT29", "APT28", "APT1", "APT10", "APT19", "APT38",
-            "Turla", "Equation", "DarkHydrus", "Ke3chang", "Naikon"
+            "APT29",
+            "APT28",
+            "APT1",
+            "APT10",
+            "APT19",
+            "APT38",
+            "Turla",
+            "Equation",
+            "DarkHydrus",
+            "Ke3chang",
+            "Naikon",
         ],
         "Healthcare": [
-            "APT41", "FIN7", "Wizard Spider", "Conti", "REvil",
-            "LAPSUS$", "DarkSide", "Ryuk", "Maze", "SamSam"
+            "APT41",
+            "FIN7",
+            "Wizard Spider",
+            "Conti",
+            "REvil",
+            "LAPSUS$",
+            "DarkSide",
+            "Ryuk",
+            "Maze",
+            "SamSam",
         ],
         "Energy": [
-            "Dragonfly", "Energetic Bear", "APT33", "APT34", "APT38",
-            "HEXANE", "Sandworm", "BlackEnergy", "Industroyer"
+            "Dragonfly",
+            "Energetic Bear",
+            "APT33",
+            "APT34",
+            "APT38",
+            "HEXANE",
+            "Sandworm",
+            "BlackEnergy",
+            "Industroyer",
         ],
         "Technology": [
-            "APT41", "APT10", "Lazarus Group", "LAPSUS$", "APT29",
-            "APT1", "Winnti Group", "Ke3chang", "menuPass", "Stone Panda"
+            "APT41",
+            "APT10",
+            "Lazarus Group",
+            "LAPSUS$",
+            "APT29",
+            "APT1",
+            "Winnti Group",
+            "Ke3chang",
+            "menuPass",
+            "Stone Panda",
         ],
         "Retail": [
-            "FIN7", "FIN8", "Carbanak", "REvil", "Conti",
-            "Wizard Spider", "Maze", "NetWalker"
+            "FIN7",
+            "FIN8",
+            "Carbanak",
+            "REvil",
+            "Conti",
+            "Wizard Spider",
+            "Maze",
+            "NetWalker",
         ],
         "Manufacturing": [
-            "APT41", "Dragonfly", "APT10", "Wizard Spider",
-            "Sandworm", "BlackEnergy", "Industroyer"
-        ]
+            "APT41",
+            "Dragonfly",
+            "APT10",
+            "Wizard Spider",
+            "Sandworm",
+            "BlackEnergy",
+            "Industroyer",
+        ],
     }
 
     # Legacy support (default to Financial)
@@ -112,60 +162,110 @@ class MitreAttackService:
 
     # Common techniques across sectors (core attack patterns)
     COMMON_TECHNIQUES = [
-        "T1078.004", "T1078.002", "T1566.001", "T1566.002",  # Initial Access
-        "T1059.001", "T1059.003", "T1105",  # Execution
-        "T1083", "T1082", "T1018", "T1057",  # Discovery
-        "T1041", "T1048.003", "T1071.001",  # Exfiltration
+        "T1078.004",
+        "T1078.002",
+        "T1566.001",
+        "T1566.002",  # Initial Access
+        "T1059.001",
+        "T1059.003",
+        "T1105",  # Execution
+        "T1083",
+        "T1082",
+        "T1018",
+        "T1057",  # Discovery
+        "T1041",
+        "T1048.003",
+        "T1071.001",  # Exfiltration
     ]
 
     # Sector-specific technique focus
     SECTOR_TECHNIQUES = {
-        "Financial": COMMON_TECHNIQUES + [
-            "T1213", "T1005", "T1074.001", "T1560.001",  # Data Collection (financial records)
-            "T1087.002", "T1087.001",  # Account Discovery
-            "T1071.002", "T1071.003",  # Application Layer Protocol
+        "Financial": COMMON_TECHNIQUES
+        + [
+            "T1213",
+            "T1005",
+            "T1074.001",
+            "T1560.001",  # Data Collection (financial records)
+            "T1087.002",
+            "T1087.001",  # Account Discovery
+            "T1071.002",
+            "T1071.003",  # Application Layer Protocol
         ],
-        "Government": COMMON_TECHNIQUES + [
-            "T1070.004", "T1027", "T1140",  # Defense Evasion (cover tracks)
-            "T1482", "T1018", "T1016",  # Network Discovery
-            "T1021.001", "T1021.004",  # Remote Services (RDP, SSH)
+        "Government": COMMON_TECHNIQUES
+        + [
+            "T1070.004",
+            "T1027",
+            "T1140",  # Defense Evasion (cover tracks)
+            "T1482",
+            "T1018",
+            "T1016",  # Network Discovery
+            "T1021.001",
+            "T1021.004",  # Remote Services (RDP, SSH)
         ],
-        "Healthcare": COMMON_TECHNIQUES + [
-            "T1486", "T1490", "T1489",  # Impact (ransomware, data destruction)
-            "T1213", "T1005", "T1039",  # Data from Repositories (patient records)
+        "Healthcare": COMMON_TECHNIQUES
+        + [
+            "T1486",
+            "T1490",
+            "T1489",  # Impact (ransomware, data destruction)
+            "T1213",
+            "T1005",
+            "T1039",  # Data from Repositories (patient records)
             "T1562.001",  # Impair Defenses
         ],
-        "Energy": COMMON_TECHNIQUES + [
-            "T1542", "T1495", "T1200",  # ICS/SCADA attacks
-            "T1018", "T1046", "T1082",  # Network/System Discovery
-            "T1489", "T1490",  # Service Stop, Inhibit System Recovery
+        "Energy": COMMON_TECHNIQUES
+        + [
+            "T1542",
+            "T1495",
+            "T1200",  # ICS/SCADA attacks
+            "T1018",
+            "T1046",
+            "T1082",  # Network/System Discovery
+            "T1489",
+            "T1490",  # Service Stop, Inhibit System Recovery
         ],
-        "Technology": COMMON_TECHNIQUES + [
-            "T1195", "T1199", "T1078.004",  # Supply Chain, Cloud Accounts
-            "T1213", "T1039", "T1005",  # Data Collection (IP theft)
-            "T1071.001", "T1071.004",  # Web Protocols, DNS
+        "Technology": COMMON_TECHNIQUES
+        + [
+            "T1195",
+            "T1199",
+            "T1078.004",  # Supply Chain, Cloud Accounts
+            "T1213",
+            "T1039",
+            "T1005",  # Data Collection (IP theft)
+            "T1071.001",
+            "T1071.004",  # Web Protocols, DNS
         ],
-        "Retail": COMMON_TECHNIQUES + [
-            "T1213", "T1005", "T1560.001",  # Data Collection (POS, customer data)
-            "T1486", "T1490",  # Ransomware
-            "T1087.002", "T1087.001",  # Account Discovery
+        "Retail": COMMON_TECHNIQUES
+        + [
+            "T1213",
+            "T1005",
+            "T1560.001",  # Data Collection (POS, customer data)
+            "T1486",
+            "T1490",  # Ransomware
+            "T1087.002",
+            "T1087.001",  # Account Discovery
         ],
-        "Manufacturing": COMMON_TECHNIQUES + [
-            "T1542", "T1200", "T1018",  # ICS/Network targeting
-            "T1486", "T1490", "T1489",  # Production disruption
-            "T1213", "T1005",  # Data Collection (trade secrets)
-        ]
+        "Manufacturing": COMMON_TECHNIQUES
+        + [
+            "T1542",
+            "T1200",
+            "T1018",  # ICS/Network targeting
+            "T1486",
+            "T1490",
+            "T1489",  # Production disruption
+            "T1213",
+            "T1005",  # Data Collection (trade secrets)
+        ],
     }
 
     # Legacy support (default to Financial)
     TARGET_TECHNIQUES = SECTOR_TECHNIQUES["Financial"]
 
     def __init__(self):
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._techniques_cache: Dict[str, AttackTechnique] = {}
-        self._tactics_cache: Dict[str, AttackTactic] = {}
-        self._groups_cache: Dict[str, ThreatGroup] = {}
-        self._last_refresh: Optional[datetime] = None
+        self._session: aiohttp.ClientSession | None = None
+        self._techniques_cache: dict[str, AttackTechnique] = {}
+        self._tactics_cache: dict[str, AttackTactic] = {}
+        self._groups_cache: dict[str, ThreatGroup] = {}
+        self._last_refresh: datetime | None = None
 
         # Ensure storage directory exists
         self.STORAGE_DIR.mkdir(parents=True, exist_ok=True)
@@ -190,7 +290,7 @@ class MitreAttackService:
 
     async def fetch_techniques(
         self, domain: AttackDomain = AttackDomain.ENTERPRISE
-    ) -> List[AttackTechnique]:
+    ) -> list[AttackTechnique]:
         """Fetch MITRE ATT&CK techniques."""
         if not self._session:
             raise RuntimeError("Service must be used within async context manager")
@@ -237,7 +337,7 @@ class MitreAttackService:
 
     async def fetch_tactics(
         self, domain: AttackDomain = AttackDomain.ENTERPRISE
-    ) -> List[AttackTactic]:
+    ) -> list[AttackTactic]:
         """Fetch MITRE ATT&CK tactics."""
         if not self._session:
             raise RuntimeError("Service must be used within async context manager")
@@ -277,7 +377,7 @@ class MitreAttackService:
 
     async def fetch_threat_groups(
         self, domain: AttackDomain = AttackDomain.ENTERPRISE
-    ) -> List[ThreatGroup]:
+    ) -> list[ThreatGroup]:
         """Fetch MITRE ATT&CK threat groups."""
         if not self._session:
             raise RuntimeError("Service must be used within async context manager")
@@ -317,7 +417,9 @@ class MitreAttackService:
             logger.error(f"Error fetching groups: {e}")
             return []
 
-    def get_sector_relevant_techniques(self, sector: str = "Financial") -> List[AttackTechnique]:
+    def get_sector_relevant_techniques(
+        self, sector: str = "Financial"
+    ) -> list[AttackTechnique]:
         """Get techniques relevant to the specified sector.
 
         Args:
@@ -335,7 +437,7 @@ class MitreAttackService:
 
         return relevant_techniques
 
-    def get_sector_threat_groups(self, sector: str = "Financial") -> List[ThreatGroup]:
+    def get_sector_threat_groups(self, sector: str = "Financial") -> list[ThreatGroup]:
         """Get threat groups targeting the specified sector.
 
         Args:
@@ -353,7 +455,7 @@ class MitreAttackService:
 
         return relevant_groups
 
-    def get_available_sectors(self) -> List[str]:
+    def get_available_sectors(self) -> list[str]:
         """Get list of available sectors for filtering.
 
         Returns:
@@ -361,7 +463,7 @@ class MitreAttackService:
         """
         return list(self.SECTOR_THREAT_GROUPS.keys())
 
-    def search_techniques(self, query: str) -> List[AttackTechnique]:
+    def search_techniques(self, query: str) -> list[AttackTechnique]:
         """Search techniques by name or description."""
         results = []
         query_lower = query.lower()
@@ -375,15 +477,15 @@ class MitreAttackService:
 
         return results
 
-    def get_technique_by_id(self, technique_id: str) -> Optional[AttackTechnique]:
+    def get_technique_by_id(self, technique_id: str) -> AttackTechnique | None:
         """Get technique by ID."""
         return self._techniques_cache.get(technique_id)
 
-    def get_tactic_by_id(self, tactic_id: str) -> Optional[AttackTactic]:
+    def get_tactic_by_id(self, tactic_id: str) -> AttackTactic | None:
         """Get tactic by ID."""
         return self._tactics_cache.get(tactic_id)
 
-    def get_group_by_id(self, group_id: str) -> Optional[ThreatGroup]:
+    def get_group_by_id(self, group_id: str) -> ThreatGroup | None:
         """Get threat group by ID."""
         return self._groups_cache.get(group_id)
 
@@ -393,7 +495,7 @@ class MitreAttackService:
             await self.fetch_techniques()
             await self.fetch_tactics()
             await self.fetch_threat_groups()
-            self._last_refresh = datetime.now(timezone.utc)
+            self._last_refresh = datetime.now(UTC)
 
             # Save to disk after successful refresh
             self._save_cached_data()
@@ -408,7 +510,7 @@ class MitreAttackService:
         try:
             # Load techniques
             if self.TECHNIQUES_FILE.exists():
-                with open(self.TECHNIQUES_FILE, "r") as f:
+                with open(self.TECHNIQUES_FILE) as f:
                     data = json.load(f)
                     for tech_data in data.values():
                         technique = AttackTechnique(**tech_data)
@@ -419,7 +521,7 @@ class MitreAttackService:
 
             # Load tactics
             if self.TACTICS_FILE.exists():
-                with open(self.TACTICS_FILE, "r") as f:
+                with open(self.TACTICS_FILE) as f:
                     data = json.load(f)
                     for tactic_data in data.values():
                         tactic = AttackTactic(**tactic_data)
@@ -428,7 +530,7 @@ class MitreAttackService:
 
             # Load groups
             if self.GROUPS_FILE.exists():
-                with open(self.GROUPS_FILE, "r") as f:
+                with open(self.GROUPS_FILE) as f:
                     data = json.load(f)
                     for group_data in data.values():
                         group = ThreatGroup(**group_data)
@@ -437,7 +539,7 @@ class MitreAttackService:
 
             # Load cache info
             if self.CACHE_INFO_FILE.exists():
-                with open(self.CACHE_INFO_FILE, "r") as f:
+                with open(self.CACHE_INFO_FILE) as f:
                     cache_info = json.load(f)
                     if cache_info.get("last_refresh"):
                         self._last_refresh = datetime.fromisoformat(
@@ -484,7 +586,7 @@ class MitreAttackService:
         except Exception as e:
             logger.error(f"Error saving cached data: {e}")
 
-    def get_cache_info(self) -> Dict[str, Any]:
+    def get_cache_info(self) -> dict[str, Any]:
         """Get cache information."""
         return {
             "techniques_count": len(self._techniques_cache),

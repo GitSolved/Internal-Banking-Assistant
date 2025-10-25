@@ -1,5 +1,4 @@
-"""
-Document Component
+"""Document Component
 
 This module implements the document management component for the Internal Assistant UI.
 It handles document upload, display, filtering, and management functionality.
@@ -8,9 +7,9 @@ This component will eventually contain the extracted document functionality from
 including document library display, upload handling, and document analysis.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
 import logging
-from pathlib import Path
+from typing import Any
+
 import gradio as gr
 
 from internal_assistant.ui.core.ui_component import UIComponent
@@ -19,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentComponent(UIComponent):
-    """
-    Document management component for the Internal Assistant.
+    """Document management component for the Internal Assistant.
 
     This component manages:
     - Document upload interface
@@ -31,10 +29,9 @@ class DocumentComponent(UIComponent):
     """
 
     def __init__(
-        self, component_id: str = "documents", services: Optional[Dict[str, Any]] = None
+        self, component_id: str = "documents", services: dict[str, Any] | None = None
     ):
-        """
-        Initialize the document component.
+        """Initialize the document component.
 
         Args:
             component_id: Unique identifier for this component
@@ -50,13 +47,12 @@ class DocumentComponent(UIComponent):
         if self.has_service("chunks"):
             self.chunks_service = self.get_service("chunks")
 
-    def get_required_services(self) -> List[str]:
+    def get_required_services(self) -> list[str]:
         """Specify required services for this component."""
         return ["ingest", "chunks"]
 
-    def build_interface(self) -> Dict[str, Any]:
-        """
-        Build the document management interface components.
+    def build_interface(self) -> dict[str, Any]:
+        """Build the document management interface components.
 
         Returns:
             Dictionary of Gradio components for the document interface
@@ -135,8 +131,7 @@ class DocumentComponent(UIComponent):
         return self._component_refs
 
     def register_events(self, demo: gr.Blocks) -> None:
-        """
-        Register event handlers for the document component.
+        """Register event handlers for the document component.
 
         Args:
             demo: The main gr.Blocks context
@@ -200,18 +195,16 @@ class DocumentComponent(UIComponent):
 
         logger.debug(f"Registered events for {self.component_id}")
 
-    def get_component_refs(self) -> Dict[str, Any]:
-        """
-        Get references to this component's Gradio components.
+    def get_component_refs(self) -> dict[str, Any]:
+        """Get references to this component's Gradio components.
 
         Returns:
             Dictionary mapping component names to Gradio components
         """
         return self._component_refs.copy()
 
-    def _handle_upload(self, files: List) -> Tuple[str, str]:
-        """
-        Handle document upload.
+    def _handle_upload(self, files: list) -> tuple[str, str]:
+        """Handle document upload.
 
         Args:
             files: List of uploaded files
@@ -242,11 +235,10 @@ class DocumentComponent(UIComponent):
 
         except Exception as e:
             logger.error(f"Upload error: {e}")
-            return f"Error: {str(e)}", self._get_document_library_html()
+            return f"Error: {e!s}", self._get_document_library_html()
 
     def _handle_search(self, search_term: str, filter_type: str) -> str:
-        """
-        Handle document search.
+        """Handle document search.
 
         Args:
             search_term: Search query
@@ -269,8 +261,7 @@ class DocumentComponent(UIComponent):
         return self._get_document_library_html(search_term, filter_type)
 
     def _handle_filter(self, search_term: str, filter_type: str) -> str:
-        """
-        Handle document filtering.
+        """Handle document filtering.
 
         Args:
             search_term: Current search query
@@ -293,17 +284,15 @@ class DocumentComponent(UIComponent):
         return self._get_document_library_html(search_term, filter_type)
 
     def _refresh_library(self) -> str:
-        """
-        Refresh the document library display.
+        """Refresh the document library display.
 
         Returns:
             Updated library HTML
         """
         return self._get_document_library_html()
 
-    def _handle_delete_selected(self) -> Tuple[str, str]:
-        """
-        Handle deletion of selected documents.
+    def _handle_delete_selected(self) -> tuple[str, str]:
+        """Handle deletion of selected documents.
 
         Returns:
             Tuple of (status message, updated library HTML)
@@ -321,15 +310,14 @@ class DocumentComponent(UIComponent):
                 status = f"Deleted {deleted_count} selected documents"
             except Exception as e:
                 logger.error(f"Delete operation failed: {e}")
-                status = f"Error deleting documents: {str(e)}"
+                status = f"Error deleting documents: {e!s}"
         else:
             status = "No ingest service available for delete operation"
 
         return status, self._get_document_library_html()
 
-    def _handle_delete_all(self) -> Tuple[str, str]:
-        """
-        Handle deletion of all documents.
+    def _handle_delete_all(self) -> tuple[str, str]:
+        """Handle deletion of all documents.
 
         Returns:
             Tuple of (status message, updated library HTML)
@@ -349,15 +337,14 @@ class DocumentComponent(UIComponent):
                 status = f"Successfully deleted all {total_docs} documents"
             except Exception as e:
                 logger.error(f"Delete all operation failed: {e}")
-                status = f"Error deleting all documents: {str(e)}"
+                status = f"Error deleting all documents: {e!s}"
         else:
             status = "No ingest service available for delete all operation"
 
         return status, self._get_document_library_html()
 
     def _handle_analyze(self) -> str:
-        """
-        Handle document analysis.
+        """Handle document analysis.
 
         Returns:
             Analysis results HTML
@@ -387,7 +374,7 @@ class DocumentComponent(UIComponent):
                 """
             except Exception as e:
                 logger.error(f"Analysis failed: {e}")
-                return f"<div class='error'><p>Analysis error: {str(e)}</p></div>"
+                return f"<div class='error'><p>Analysis error: {e!s}</p></div>"
 
         return (
             "<div class='error'><p>No ingest service available for analysis</p></div>"
@@ -396,8 +383,7 @@ class DocumentComponent(UIComponent):
     def _get_document_library_html(
         self, search_term: str = "", filter_type: str = "All"
     ) -> str:
-        """
-        Generate document library HTML.
+        """Generate document library HTML.
 
         Args:
             search_term: Optional search filter
@@ -461,7 +447,7 @@ class DocumentComponent(UIComponent):
 
             except Exception as e:
                 logger.error(f"Failed to get document library: {e}")
-                return f"<div class='error'><p>Error loading document library: {str(e)}</p></div>"
+                return f"<div class='error'><p>Error loading document library: {e!s}</p></div>"
 
         # No ingest service available
         html = """

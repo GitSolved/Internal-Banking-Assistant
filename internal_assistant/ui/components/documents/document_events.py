@@ -1,5 +1,4 @@
-"""
-Document Event Handler Builder Component
+"""Document Event Handler Builder Component
 
 This module contains document-related event handlers extracted from ui.py
 during Phase 1B.3 of the UI refactoring project.
@@ -20,42 +19,39 @@ Phase: 1B.3 - Document Event Handlers Extraction
 """
 
 import logging
-import sys
 import os
+import sys
 from pathlib import Path
-from typing import Optional, Any, Tuple
 
-from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.chat.chat_service import ChatService
+from internal_assistant.server.ingest.ingest_service import IngestService
+from internal_assistant.ui.components.documents.document_library import (
+    DocumentLibraryBuilder,
+)
 from internal_assistant.ui.components.documents.document_utility import (
     DocumentUtilityBuilder,
 )
 from internal_assistant.ui.core.error_boundaries import create_error_boundary
-from internal_assistant.ui.components.documents.document_library import (
-    DocumentLibraryBuilder,
-)
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentEventHandlerBuilder:
-    """
-    Builder class for document-related event handlers.
+    """Builder class for document-related event handlers.
     Handles file uploads, folder ingestion, document clearing, and search/filter events.
     """
 
     def __init__(
         self,
         ingest_service: IngestService,
-        chat_service: Optional[ChatService],
+        chat_service: ChatService | None,
         utility_builder: DocumentUtilityBuilder,
         library_builder: DocumentLibraryBuilder,
         upload_file_method,
         get_model_status_method,
         document_service_facade=None,
     ):
-        """
-        Initialize the DocumentEventHandlerBuilder.
+        """Initialize the DocumentEventHandlerBuilder.
 
         Args:
             ingest_service: Service for managing document ingestion
@@ -85,9 +81,8 @@ class DocumentEventHandlerBuilder:
             "document_list", "document", "Document listing temporarily unavailable"
         )
 
-    def upload_and_refresh(self, files) -> Tuple[str, str, str, str]:
-        """
-        Handle file upload and refresh UI components with error boundary protection.
+    def upload_and_refresh(self, files) -> tuple[str, str, str, str]:
+        """Handle file upload and refresh UI components with error boundary protection.
 
         Args:
             files: List of uploaded files
@@ -118,16 +113,17 @@ class DocumentEventHandlerBuilder:
                 fallback_model_status,
             )
 
-    def _execute_upload_and_refresh(self, files) -> Tuple[str, str, str, str]:
-        """
-        Protected upload and refresh logic with enhanced status reporting.
+    def _execute_upload_and_refresh(self, files) -> tuple[str, str, str, str]:
+        """Protected upload and refresh logic with enhanced status reporting.
         """
         upload_status = "📄 Ready for uploads"
 
         if files:
             try:
                 # Use enhanced upload method that returns detailed status
-                updated_file_list, upload_status, updated_document_library = self._upload_file(files)
+                updated_file_list, upload_status, updated_document_library = (
+                    self._upload_file(files)
+                )
 
                 # Prefix status for file upload
                 if "✅" in upload_status:
@@ -138,11 +134,16 @@ class DocumentEventHandlerBuilder:
                 # Get updated model status (includes updated document count)
                 updated_model_status = self._get_model_status()
 
-                return (updated_file_list, final_status, updated_document_library, updated_model_status)
+                return (
+                    updated_file_list,
+                    final_status,
+                    updated_document_library,
+                    updated_model_status,
+                )
 
             except Exception as e:
                 logger.error(f"Error in enhanced upload process: {e}")
-                upload_status = f"📄 ❌ File upload error: {str(e)}"
+                upload_status = f"📄 ❌ File upload error: {e!s}"
 
         # Fallback: Return updated file list and default status
         updated_document_library = self._library_builder.get_document_library_html()
@@ -155,9 +156,8 @@ class DocumentEventHandlerBuilder:
             updated_model_status,
         )
 
-    def ingest_server_folder(self, folder_path: str) -> Tuple[str, str, str, str]:
-        """
-        Ingest a server-side folder using the ingest_folder script functionality.
+    def ingest_server_folder(self, folder_path: str) -> tuple[str, str, str, str]:
+        """Ingest a server-side folder using the ingest_folder script functionality.
 
         Args:
             folder_path: Path to the folder to ingest
@@ -201,6 +201,7 @@ class DocumentEventHandlerBuilder:
 
             try:
                 from ingest_folder import LocalIngestWorker
+
                 from internal_assistant.settings.settings import settings
 
                 # Initialize worker
@@ -219,7 +220,7 @@ class DocumentEventHandlerBuilder:
                 logger.error(f"Failed to import LocalIngestWorker: {e}")
                 return (
                     self._utility_builder.format_file_list(),
-                    f"❌ Folder ingestion not available: {str(e)}",
+                    f"❌ Folder ingestion not available: {e!s}",
                     self._library_builder.get_document_library_html(),
                     self._get_model_status(),
                 )
@@ -227,7 +228,7 @@ class DocumentEventHandlerBuilder:
                 logger.error(f"Folder ingestion failed: {e}")
                 return (
                     self._utility_builder.format_file_list(),
-                    f"❌ Ingestion failed: {str(e)}",
+                    f"❌ Ingestion failed: {e!s}",
                     self._library_builder.get_document_library_html(),
                     self._get_model_status(),
                 )
@@ -247,14 +248,13 @@ class DocumentEventHandlerBuilder:
             logger.error(f"Folder ingestion error: {e}")
             return (
                 self._utility_builder.format_file_list(),
-                f"❌ Error: {str(e)}",
+                f"❌ Error: {e!s}",
                 self._library_builder.get_document_library_html(),
                 self._get_model_status(),
             )
 
-    def clear_all_documents(self) -> Tuple[str, str, str, str]:
-        """
-        Clear all ingested documents with comprehensive verification.
+    def clear_all_documents(self) -> tuple[str, str, str, str]:
+        """Clear all ingested documents with comprehensive verification.
 
         Returns:
             Tuple of (file_list, status_message, document_library, model_status)
@@ -281,8 +281,14 @@ class DocumentEventHandlerBuilder:
 
             # Log document details before deletion
             for i, doc in enumerate(ingested_docs):
-                file_name = doc.doc_metadata.get("file_name", "Unknown") if doc.doc_metadata else "Unknown"
-                logger.info(f"🗑️ [CLEAR_ALL] Document {i+1}: {file_name} (ID: {doc.doc_id})")
+                file_name = (
+                    doc.doc_metadata.get("file_name", "Unknown")
+                    if doc.doc_metadata
+                    else "Unknown"
+                )
+                logger.info(
+                    f"🗑️ [CLEAR_ALL] Document {i+1}: {file_name} (ID: {doc.doc_id})"
+                )
 
             # Delete all documents
             failed_deletions = []
@@ -290,34 +296,62 @@ class DocumentEventHandlerBuilder:
 
             for i, doc in enumerate(ingested_docs):
                 try:
-                    file_name = doc.doc_metadata.get("file_name", doc.doc_id) if doc.doc_metadata else doc.doc_id
-                    logger.info(f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] Deleting document: {file_name}")
+                    file_name = (
+                        doc.doc_metadata.get("file_name", doc.doc_id)
+                        if doc.doc_metadata
+                        else doc.doc_id
+                    )
+                    logger.info(
+                        f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] Deleting document: {file_name}"
+                    )
 
                     self._ingest_service.delete(doc.doc_id)
                     successful_deletions.append(file_name)
-                    logger.info(f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] ✅ Successfully deleted: {file_name}")
+                    logger.info(
+                        f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] ✅ Successfully deleted: {file_name}"
+                    )
 
                 except Exception as e:
-                    file_name = doc.doc_metadata.get("file_name", doc.doc_id) if doc.doc_metadata else doc.doc_id
+                    file_name = (
+                        doc.doc_metadata.get("file_name", doc.doc_id)
+                        if doc.doc_metadata
+                        else doc.doc_id
+                    )
                     failed_deletions.append(file_name)
-                    logger.error(f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] ❌ Failed to delete {file_name}: {e}")
+                    logger.error(
+                        f"🗑️ [CLEAR_ALL] [{i+1}/{doc_count}] ❌ Failed to delete {file_name}: {e}"
+                    )
 
-            logger.info(f"🗑️ [CLEAR_ALL] Deletion complete. Success: {len(successful_deletions)}, Failed: {len(failed_deletions)}")
+            logger.info(
+                f"🗑️ [CLEAR_ALL] Deletion complete. Success: {len(successful_deletions)}, Failed: {len(failed_deletions)}"
+            )
 
             # Verify clearance by checking remaining documents
             try:
                 remaining_docs = self._ingest_service.list_ingested()
-                logger.info(f"🗑️ [CLEAR_ALL] After clearance: {len(remaining_docs)} documents remain")
+                logger.info(
+                    f"🗑️ [CLEAR_ALL] After clearance: {len(remaining_docs)} documents remain"
+                )
 
                 if remaining_docs:
-                    logger.error(f"❌ [CLEAR_ALL] CLEARANCE FAILED: {len(remaining_docs)} documents still present after clear operation!")
+                    logger.error(
+                        f"❌ [CLEAR_ALL] CLEARANCE FAILED: {len(remaining_docs)} documents still present after clear operation!"
+                    )
 
                     # Log which documents are still there
                     for doc in remaining_docs:
-                        file_name = doc.doc_metadata.get("file_name", "Unknown") if doc.doc_metadata else "Unknown"
-                        logger.error(f"❌ [CLEAR_ALL] Still present: {file_name} (ID: {doc.doc_id})")
+                        file_name = (
+                            doc.doc_metadata.get("file_name", "Unknown")
+                            if doc.doc_metadata
+                            else "Unknown"
+                        )
+                        logger.error(
+                            f"❌ [CLEAR_ALL] Still present: {file_name} (ID: {doc.doc_id})"
+                        )
                 else:
-                    logger.info("✅ [CLEAR_ALL] Clearance verification successful: No documents remain")
+                    logger.info(
+                        "✅ [CLEAR_ALL] Clearance verification successful: No documents remain"
+                    )
 
             except Exception as e:
                 logger.warning(f"🗑️ [CLEAR_ALL] Error verifying clearance: {e}")
@@ -331,15 +365,20 @@ class DocumentEventHandlerBuilder:
 
             # Verify deletion was successful (with brief delay for persistence)
             import time
+
             time.sleep(0.3)
 
             try:
                 final_check = self._ingest_service.list_ingested()
                 if final_check:
-                    logger.error(f"❌ [CLEAR_ALL] Deletion verification failed: {len(final_check)} documents still remain")
+                    logger.error(
+                        f"❌ [CLEAR_ALL] Deletion verification failed: {len(final_check)} documents still remain"
+                    )
                     status_msg += f" ⚠️ Warning: {len(final_check)} documents were not deleted successfully."
                 else:
-                    logger.info(f"✅ [CLEAR_ALL] Deletion verified: All documents successfully removed")
+                    logger.info(
+                        "✅ [CLEAR_ALL] Deletion verified: All documents successfully removed"
+                    )
             except Exception as e:
                 logger.warning(f"⚠️ [CLEAR_ALL] Could not verify deletion: {e}")
 
@@ -405,14 +444,13 @@ class DocumentEventHandlerBuilder:
             logger.error(f"❌ [CLEAR_ALL] Error clearing documents: {e}", exc_info=True)
             return (
                 self._utility_builder.format_file_list(),
-                f"❌ Error clearing documents: {str(e)}",
+                f"❌ Error clearing documents: {e!s}",
                 self._library_builder.get_document_library_html(),
                 self._get_model_status(),
             )
 
     def refresh_file_list(self) -> str:
-        """
-        Refresh the file list display.
+        """Refresh the file list display.
 
         Returns:
             Formatted file list HTML
@@ -420,8 +458,7 @@ class DocumentEventHandlerBuilder:
         return self._utility_builder.format_file_list()
 
     def handle_search(self, search_query: str) -> str:
-        """
-        Handle document search functionality.
+        """Handle document search functionality.
 
         Args:
             search_query: Search query string
@@ -435,8 +472,7 @@ class DocumentEventHandlerBuilder:
         return filtered_content
 
     def handle_filter(self, filter_type: str, search_query: str = "") -> str:
-        """
-        Handle document filtering functionality.
+        """Handle document filtering functionality.
 
         Args:
             filter_type: Type of filter to apply
@@ -452,9 +488,8 @@ class DocumentEventHandlerBuilder:
 
     def handle_filter_with_scroll(
         self, search_query: str, filter_type: str, current_filter: str
-    ) -> Tuple[str, str, str, str]:
-        """
-        Handle filtering with scrolling support and toggle-off functionality.
+    ) -> tuple[str, str, str, str]:
+        """Handle filtering with scrolling support and toggle-off functionality.
 
         Args:
             search_query: Search query string
@@ -481,8 +516,7 @@ class DocumentEventHandlerBuilder:
             return content, status_msg, filter_type, search_query
 
     def sync_sidebar_with_main(self) -> str:
-        """
-        Synchronize sidebar with main document management.
+        """Synchronize sidebar with main document management.
 
         Returns:
             Updated document library HTML
@@ -490,8 +524,7 @@ class DocumentEventHandlerBuilder:
         return self._library_builder.get_document_library_html()
 
     def show_folder_path_input(self):
-        """
-        Show folder path input for server-side folder ingestion.
+        """Show folder path input for server-side folder ingestion.
 
         Returns:
             Gradio update objects
@@ -549,9 +582,10 @@ class DocumentEventHandlerBuilder:
             search_query, "other", current_filter
         )
 
-    def remove_selected_documents(self, selected_files: list) -> Tuple[str, str, str, str]:
-        """
-        Remove selected documents with confirmation and error handling.
+    def remove_selected_documents(
+        self, selected_files: list
+    ) -> tuple[str, str, str, str]:
+        """Remove selected documents with confirmation and error handling.
 
         Args:
             selected_files: List of selected file names to remove
@@ -559,7 +593,9 @@ class DocumentEventHandlerBuilder:
         Returns:
             Tuple of (file_list, status_message, document_library, model_status)
         """
-        logger.info(f"🗑️ [BACKEND] remove_selected_documents called with {len(selected_files)} files")
+        logger.info(
+            f"🗑️ [BACKEND] remove_selected_documents called with {len(selected_files)} files"
+        )
         logger.info(f"🗑️ [BACKEND] Selected files: {selected_files}")
 
         try:
@@ -574,7 +610,9 @@ class DocumentEventHandlerBuilder:
 
             # Get all ingested documents
             ingested_docs = self._ingest_service.list_ingested()
-            logger.info(f"🗑️ [BACKEND] Found {len(ingested_docs)} total ingested documents")
+            logger.info(
+                f"🗑️ [BACKEND] Found {len(ingested_docs)} total ingested documents"
+            )
 
             if not ingested_docs:
                 logger.warning("🗑️ [BACKEND] No documents available to remove")
@@ -587,21 +625,29 @@ class DocumentEventHandlerBuilder:
 
             # Find documents that match selected file names
             docs_to_delete = []
-            logger.info("🗑️ [BACKEND] Searching for documents matching selected files...")
+            logger.info(
+                "🗑️ [BACKEND] Searching for documents matching selected files..."
+            )
 
             for doc in ingested_docs:
                 if doc.doc_metadata and doc.doc_metadata.get("file_name"):
                     file_name = doc.doc_metadata.get("file_name")
                     if file_name in selected_files:
                         docs_to_delete.append(doc)
-                        logger.info(f"🗑️ [BACKEND] Found document to delete: {file_name} (ID: {doc.doc_id})")
+                        logger.info(
+                            f"🗑️ [BACKEND] Found document to delete: {file_name} (ID: {doc.doc_id})"
+                        )
                 else:
-                    logger.debug(f"🗑️ [BACKEND] Skipping document {doc.doc_id} - no metadata or file_name")
+                    logger.debug(
+                        f"🗑️ [BACKEND] Skipping document {doc.doc_id} - no metadata or file_name"
+                    )
 
             logger.info(f"🗑️ [BACKEND] Found {len(docs_to_delete)} documents to delete")
 
             if not docs_to_delete:
-                logger.warning(f"🗑️ [BACKEND] None of the selected files found in database")
+                logger.warning(
+                    "🗑️ [BACKEND] None of the selected files found in database"
+                )
                 return (
                     self._utility_builder.format_file_list(),
                     f"⚠️ None of the selected files found in database: {', '.join(selected_files)}",
@@ -616,19 +662,27 @@ class DocumentEventHandlerBuilder:
             logger.info("🗑️ [BACKEND] Starting deletion process...")
             for doc in docs_to_delete:
                 try:
-                    logger.info(f"🗑️ [BACKEND] Attempting to delete document ID: {doc.doc_id}")
-                    
+                    logger.info(
+                        f"🗑️ [BACKEND] Attempting to delete document ID: {doc.doc_id}"
+                    )
+
                     # Use facade if available to ensure cache is cleared
                     if self._document_facade:
-                        logger.debug("🗑️ [BACKEND] Using document facade for deletion (with cache clear)")
+                        logger.debug(
+                            "🗑️ [BACKEND] Using document facade for deletion (with cache clear)"
+                        )
                         self._document_facade.delete_document(doc.doc_id)
                     else:
-                        logger.debug("🗑️ [BACKEND] Using direct ingest service (no cache clear)")
+                        logger.debug(
+                            "🗑️ [BACKEND] Using direct ingest service (no cache clear)"
+                        )
                         self._ingest_service.delete(doc.doc_id)
-                    
+
                     file_name = doc.doc_metadata.get("file_name", doc.doc_id)
                     successful_deletions.append(file_name)
-                    logger.info(f"✅ [BACKEND] Successfully deleted document: {file_name}")
+                    logger.info(
+                        f"✅ [BACKEND] Successfully deleted document: {file_name}"
+                    )
                 except Exception as e:
                     file_name = (
                         doc.doc_metadata.get("file_name", doc.doc_id)
@@ -636,13 +690,19 @@ class DocumentEventHandlerBuilder:
                         else doc.doc_id
                     )
                     failed_deletions.append(file_name)
-                    logger.error(f"❌ [BACKEND] Failed to delete document {file_name}: {e}")
+                    logger.error(
+                        f"❌ [BACKEND] Failed to delete document {file_name}: {e}"
+                    )
 
-            logger.info(f"🗑️ [BACKEND] Deletion complete. Success: {len(successful_deletions)}, Failed: {len(failed_deletions)}")
+            logger.info(
+                f"🗑️ [BACKEND] Deletion complete. Success: {len(successful_deletions)}, Failed: {len(failed_deletions)}"
+            )
 
             # Verify deletion by checking remaining documents
             remaining_docs = self._ingest_service.list_ingested()
-            logger.info(f"🗑️ [BACKEND] After deletion: {len(remaining_docs)} documents remain")
+            logger.info(
+                f"🗑️ [BACKEND] After deletion: {len(remaining_docs)} documents remain"
+            )
 
             # Check if any of the supposedly deleted files are still present
             remaining_files = []
@@ -651,10 +711,14 @@ class DocumentEventHandlerBuilder:
                     file_name = doc.doc_metadata.get("file_name")
                     if file_name in selected_files:
                         remaining_files.append(file_name)
-                        logger.warning(f"⚠️ [BACKEND] File still present after deletion: {file_name}")
+                        logger.warning(
+                            f"⚠️ [BACKEND] File still present after deletion: {file_name}"
+                        )
 
             if remaining_files:
-                logger.error(f"❌ [BACKEND] PERSISTENCE ISSUE: {len(remaining_files)} files still present: {remaining_files}")
+                logger.error(
+                    f"❌ [BACKEND] PERSISTENCE ISSUE: {len(remaining_files)} files still present: {remaining_files}"
+                )
 
             # Prepare status message
             if failed_deletions:
@@ -706,17 +770,18 @@ class DocumentEventHandlerBuilder:
             )
 
         except Exception as e:
-            logger.error(f"❌ [BACKEND] Error removing selected documents: {e}", exc_info=True)
+            logger.error(
+                f"❌ [BACKEND] Error removing selected documents: {e}", exc_info=True
+            )
             return (
                 self._utility_builder.format_file_list(),
-                f"❌ Error removing documents: {str(e)}",
+                f"❌ Error removing documents: {e!s}",
                 self._library_builder.get_document_library_html(),
                 self._get_model_status(),
             )
 
     def get_selected_files_from_js(self) -> list:
-        """
-        Placeholder for getting selected files from JavaScript.
+        """Placeholder for getting selected files from JavaScript.
         This will be replaced with actual integration.
 
         Returns:
@@ -725,9 +790,8 @@ class DocumentEventHandlerBuilder:
         # This will be handled by the JavaScript bridge
         return []
 
-    def process_folder_data(self, folder_data: list) -> Tuple[str, str, str]:
-        """
-        Process folder data from webkitdirectory selection.
+    def process_folder_data(self, folder_data: list) -> tuple[str, str, str]:
+        """Process folder data from webkitdirectory selection.
 
         Args:
             folder_data: List of file data objects from JavaScript
@@ -735,7 +799,9 @@ class DocumentEventHandlerBuilder:
         Returns:
             Tuple of (file_list, status_message, document_library)
         """
-        logger.info(f"📁 [BACKEND] process_folder_data called with {len(folder_data)} files")
+        logger.info(
+            f"📁 [BACKEND] process_folder_data called with {len(folder_data)} files"
+        )
 
         try:
             if not folder_data:
@@ -746,10 +812,14 @@ class DocumentEventHandlerBuilder:
                 )
 
             # Extract folder name and file information
-            folder_name = folder_data[0]['path'].split('/')[0] if folder_data else "Unknown"
+            folder_name = (
+                folder_data[0]["path"].split("/")[0] if folder_data else "Unknown"
+            )
             file_count = len(folder_data)
 
-            logger.info(f"📁 [BACKEND] Processing folder: {folder_name} with {file_count} files")
+            logger.info(
+                f"📁 [BACKEND] Processing folder: {folder_name} with {file_count} files"
+            )
 
             # For now, we can't directly process File objects from JavaScript in Gradio
             # This would require a more complex file transfer mechanism
@@ -763,7 +833,9 @@ class DocumentEventHandlerBuilder:
                or use the server-side folder ingestion if files are already on the server.
             """
 
-            logger.info(f"📁 [BACKEND] Folder selection processed: {folder_name} ({file_count} files)")
+            logger.info(
+                f"📁 [BACKEND] Folder selection processed: {folder_name} ({file_count} files)"
+            )
 
             return (
                 self._utility_builder.format_file_list(),
@@ -772,9 +844,11 @@ class DocumentEventHandlerBuilder:
             )
 
         except Exception as e:
-            logger.error(f"❌ [BACKEND] Error processing folder data: {e}", exc_info=True)
+            logger.error(
+                f"❌ [BACKEND] Error processing folder data: {e}", exc_info=True
+            )
             return (
                 self._utility_builder.format_file_list(),
-                f"❌ Error processing folder selection: {str(e)}",
+                f"❌ Error processing folder selection: {e!s}",
                 self._library_builder.get_document_library_html(),
             )

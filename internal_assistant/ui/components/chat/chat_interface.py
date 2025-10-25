@@ -1,5 +1,4 @@
-"""
-Chat Interface Component
+"""Chat Interface Component
 
 This module contains the extracted chat interface components from ui.py.
 It handles the creation and layout of chat UI elements including the chatbot,
@@ -12,8 +11,10 @@ Version: 0.6.2
 """
 
 import logging
+from typing import Any
+
 import gradio as gr
-from typing import Dict, Any, Tuple
+
 from internal_assistant.ui.models.modes import Modes
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,7 @@ CHAT_HEADER = "🛡️ Internal Security Assistant"
 
 
 class ChatInterfaceBuilder:
-    """
-    Builder class for chat interface components.
+    """Builder class for chat interface components.
 
     This class handles the creation and layout of all chat-related UI elements
     including the chatbot display, message input, action buttons, and mode selector.
@@ -31,8 +31,7 @@ class ChatInterfaceBuilder:
     """
 
     def __init__(self, default_mode: str = Modes.DOCUMENT_ASSISTANT.value):
-        """
-        Initialize the chat interface builder.
+        """Initialize the chat interface builder.
 
         Args:
             default_mode: Default chat mode (RAG or General LLM)
@@ -40,9 +39,8 @@ class ChatInterfaceBuilder:
         self.default_mode = default_mode
         logger.debug("ChatInterfaceBuilder initialized")
 
-    def build_chat_interface(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """
-        Build the complete chat interface.
+    def build_chat_interface(self) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Build the complete chat interface.
 
         This method creates the full chat interface layout including:
         - Chat header with mode selector
@@ -168,9 +166,8 @@ class ChatInterfaceBuilder:
         logger.info(f"Chat interface built with {len(components)} components")
         return components, layout_config
 
-    def get_component_references(self, components: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Get references to key chat components for event binding.
+    def get_component_references(self, components: dict[str, Any]) -> dict[str, Any]:
+        """Get references to key chat components for event binding.
 
         Args:
             components: Dictionary of all chat components
@@ -191,9 +188,8 @@ class ChatInterfaceBuilder:
         logger.debug(f"Retrieved {len(key_components)} key component references")
         return key_components
 
-    def get_layout_configuration(self) -> Dict[str, Any]:
-        """
-        Get the layout configuration for the chat interface.
+    def get_layout_configuration(self) -> dict[str, Any]:
+        """Get the layout configuration for the chat interface.
 
         Returns:
             Dictionary containing layout configuration
@@ -220,9 +216,8 @@ class ChatInterfaceBuilder:
 
 def create_chat_interface(
     default_mode: str = Modes.DOCUMENT_ASSISTANT.value,
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Factory function to create a chat interface.
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Factory function to create a chat interface.
 
     Args:
         default_mode: Default chat mode
@@ -234,9 +229,8 @@ def create_chat_interface(
     return builder.build_chat_interface()
 
 
-def get_chat_component_refs(components: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Factory function to get key component references for event binding.
+def get_chat_component_refs(components: dict[str, Any]) -> dict[str, Any]:
+    """Factory function to get key component references for event binding.
 
     Args:
         components: Dictionary of all chat components

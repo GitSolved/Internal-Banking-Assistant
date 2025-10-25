@@ -9,23 +9,22 @@ Version: 0.6.2
 """
 
 import logging
+from typing import Any
+
 import gradio as gr
-from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentComponentBuilder:
-    """
-    Builder class for document management interface components.
+    """Builder class for document management interface components.
 
     This class provides methods to build various document-related UI elements
     including upload areas, document libraries, and analysis displays.
     """
 
-    def __init__(self, services: Dict[str, Any]):
-        """
-        Initialize the document builder.
+    def __init__(self, services: dict[str, Any]):
+        """Initialize the document builder.
 
         Args:
             services: Dictionary of available services
@@ -35,8 +34,7 @@ class DocumentComponentBuilder:
         self.chunks_service = services.get("chunks")
 
     def build_upload_interface(self) -> tuple:
-        """
-        Build document upload interface components.
+        """Build document upload interface components.
 
         Returns:
             Tuple of Gradio components for document upload
@@ -60,8 +58,7 @@ class DocumentComponentBuilder:
         return upload_file, upload_btn, upload_status
 
     def build_library_interface(self) -> tuple:
-        """
-        Build document library display components.
+        """Build document library display components.
 
         Returns:
             Tuple of Gradio components for document library
@@ -102,9 +99,8 @@ class DocumentComponentBuilder:
             analyze_btn,
         )
 
-    def list_ingested_files(self) -> List[str]:
-        """
-        List all ingested files from the ingest service.
+    def list_ingested_files(self) -> list[str]:
+        """List all ingested files from the ingest service.
 
         Returns:
             List of file names
@@ -119,9 +115,8 @@ class DocumentComponentBuilder:
                 return []
         return []
 
-    def format_file_list(self, files: List[str]) -> str:
-        """
-        Format file list as HTML for display.
+    def format_file_list(self, files: list[str]) -> str:
+        """Format file list as HTML for display.
 
         Args:
             files: List of file names
@@ -149,8 +144,7 @@ class DocumentComponentBuilder:
     def get_document_library_html(
         self, search_term: str = "", file_filter: str = "All"
     ) -> str:
-        """
-        Generate complete document library HTML with search and filtering.
+        """Generate complete document library HTML with search and filtering.
 
         Args:
             search_term: Search filter

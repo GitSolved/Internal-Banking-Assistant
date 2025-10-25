@@ -5,22 +5,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from injector import Injector
-from llama_index.core.callbacks import CallbackManager
-from llama_index.core.callbacks.global_handlers import create_global_handler
-from llama_index.core.settings import Settings as LlamaIndexSettings
 
 from internal_assistant.server.chat.chat_router import chat_router
 from internal_assistant.server.chunks.chunks_router import chunks_router
 from internal_assistant.server.completions.completions_router import completions_router
 from internal_assistant.server.embeddings.embeddings_router import embeddings_router
+from internal_assistant.server.feeds.background_refresh import BackgroundRefreshService
 from internal_assistant.server.feeds.feeds_router import feeds_router
+from internal_assistant.server.feeds.feeds_service import RSSFeedService
 from internal_assistant.server.feeds.threat_intelligence_router import (
     threat_intelligence_router,
-)
-from internal_assistant.server.threat_intelligence.mitre_attack_router import (
-    mitre_attack_router,
 )
 from internal_assistant.server.health.health_router import health_router
 from internal_assistant.server.ingest.ingest_router import ingest_router
@@ -30,9 +25,10 @@ from internal_assistant.server.recipes.summarize.summarize_router import (
 )
 from internal_assistant.server.status.status_router import status_router
 from internal_assistant.server.system.system_router import system_router
+from internal_assistant.server.threat_intelligence.mitre_attack_router import (
+    mitre_attack_router,
+)
 from internal_assistant.settings.settings import Settings
-from internal_assistant.server.feeds.background_refresh import BackgroundRefreshService
-from internal_assistant.server.feeds.feeds_service import RSSFeedService
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +127,6 @@ def create_app(root_injector: Injector) -> FastAPI:
         # Fix 2: Apply Gradio-specific Pydantic compatibility
         try:
             # Configure Gradio to handle Pydantic schema issues
-            import gradio as gr
 
             # Set environment variable to handle Pydantic schema issues
             import os

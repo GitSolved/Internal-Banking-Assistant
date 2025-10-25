@@ -1,8 +1,8 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
-from pydantic import BaseModel, Field, ConfigDict
 from injector import Injector
+from pydantic import BaseModel, ConfigDict, Field
 
 from internal_assistant.di import global_injector
 from internal_assistant.server.ingest.ingest_service import IngestService
@@ -142,6 +142,7 @@ def delete_by_filenames(
     Returns a dict with deletion statistics.
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     service = injector.get(IngestService)
@@ -166,7 +167,9 @@ def delete_by_filenames(
         try:
             service.delete(doc.doc_id)
             deleted_count += 1
-            logger.info(f"Deleted document {doc.doc_id} ({doc.doc_metadata.get('file_name')})")
+            logger.info(
+                f"Deleted document {doc.doc_id} ({doc.doc_metadata.get('file_name')})"
+            )
         except Exception as e:
             failed_count += 1
             logger.error(f"Failed to delete {doc.doc_id}: {e}")
@@ -175,5 +178,5 @@ def delete_by_filenames(
         "deleted": deleted_count,
         "failed": failed_count,
         "requested": len(file_names),
-        "found": len(docs_to_delete)
+        "found": len(docs_to_delete),
     }

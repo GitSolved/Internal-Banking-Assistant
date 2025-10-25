@@ -1,5 +1,4 @@
-"""
-Application State Schema
+"""Application State Schema
 
 This module defines the complete application state structure using Pydantic models
 for the Internal Assistant UI. It replaces scattered state management throughout
@@ -12,9 +11,9 @@ Author: UI Refactoring Team
 import logging
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union, Tuple
-from pydantic import BaseModel, Field, validator, root_validator
+from typing import Any
+
+from pydantic import BaseModel, Field, root_validator, validator
 
 from internal_assistant.ui.models.modes import Modes, normalize_mode
 from internal_assistant.ui.models.source import Source
@@ -80,10 +79,10 @@ class ChatMessage(BaseModel):
     timestamp: datetime = Field(
         default_factory=datetime.now, description="When the message was created"
     )
-    sources: List[Source] = Field(
+    sources: list[Source] = Field(
         default_factory=list, description="Sources used for this message"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional message metadata"
     )
 
@@ -94,11 +93,11 @@ class ChatState(BaseModel):
     mode: str = Field(
         default=Modes.DOCUMENT_ASSISTANT.value, description="Current chat mode"
     )
-    history: List[Tuple[str, str]] = Field(
+    history: list[tuple[str, str]] = Field(
         default_factory=list,
         description="Chat message history as (user, assistant) tuples",
     )
-    messages: List[ChatMessage] = Field(
+    messages: list[ChatMessage] = Field(
         default_factory=list, description="Structured chat messages"
     )
     system_prompt: str = Field(default="", description="Current system prompt")
@@ -108,10 +107,10 @@ class ChatState(BaseModel):
     processing_status: ProcessingStatus = Field(
         default=ProcessingStatus.IDLE, description="Current processing status"
     )
-    last_response_sources: List[Source] = Field(
+    last_response_sources: list[Source] = Field(
         default_factory=list, description="Sources from last response"
     )
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         default=None, description="Last error message if any"
     )
 
@@ -179,11 +178,11 @@ class DocumentMetadata(BaseModel):
     )
     blocks_count: int = Field(default=0, description="Number of text blocks")
     usage_count: int = Field(default=0, description="Number of times accessed")
-    last_used: Optional[datetime] = Field(
+    last_used: datetime | None = Field(
         default=None, description="Last access timestamp"
     )
-    tags: List[str] = Field(default_factory=list, description="Document tags")
-    metadata: Dict[str, Any] = Field(
+    tags: list[str] = Field(default_factory=list, description="Document tags")
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
 
@@ -193,13 +192,13 @@ class DocumentFilter(BaseModel):
 
     type: FilterType = Field(default=FilterType.ALL, description="Current filter type")
     search_query: str = Field(default="", description="Search query text")
-    selected_tags: Set[str] = Field(
+    selected_tags: set[str] = Field(
         default_factory=set, description="Selected tag filters"
     )
-    date_range: Optional[Tuple[datetime, datetime]] = Field(
+    date_range: tuple[datetime, datetime] | None = Field(
         default=None, description="Date range filter"
     )
-    size_range: Optional[Tuple[int, int]] = Field(
+    size_range: tuple[int, int] | None = Field(
         default=None, description="Size range filter in bytes"
     )
 
@@ -210,7 +209,7 @@ class DocumentState(BaseModel):
     counts: DocumentCounts = Field(
         default_factory=DocumentCounts, description="Document counts"
     )
-    documents: Dict[str, DocumentMetadata] = Field(
+    documents: dict[str, DocumentMetadata] = Field(
         default_factory=dict, description="Document metadata by ID"
     )
     filter: DocumentFilter = Field(
@@ -219,16 +218,16 @@ class DocumentState(BaseModel):
     library_content: str = Field(
         default="", description="HTML content for document library"
     )
-    selected_documents: Set[str] = Field(
+    selected_documents: set[str] = Field(
         default_factory=set, description="Currently selected document IDs"
     )
     upload_status: ProcessingStatus = Field(
         default=ProcessingStatus.IDLE, description="Upload operation status"
     )
-    processing_queue: List[str] = Field(
+    processing_queue: list[str] = Field(
         default_factory=list, description="Documents queued for processing"
     )
-    last_refresh: Optional[datetime] = Field(
+    last_refresh: datetime | None = Field(
         default=None, description="Last library refresh timestamp"
     )
 
@@ -320,7 +319,7 @@ class FeedItem(BaseModel):
     published: datetime = Field(..., description="Publication timestamp")
     source: str = Field(..., description="Feed source name")
     category: str = Field(default="general", description="Content category")
-    tags: List[str] = Field(default_factory=list, description="Content tags")
+    tags: list[str] = Field(default_factory=list, description="Content tags")
 
 
 class CVEInfo(BaseModel):
@@ -329,12 +328,12 @@ class CVEInfo(BaseModel):
     cve_id: str = Field(..., description="CVE identifier")
     description: str = Field(default="", description="Vulnerability description")
     severity: str = Field(default="unknown", description="Severity level")
-    score: Optional[float] = Field(default=None, description="CVSS score")
+    score: float | None = Field(default=None, description="CVSS score")
     published: datetime = Field(..., description="Publication date")
-    modified: Optional[datetime] = Field(
+    modified: datetime | None = Field(
         default=None, description="Last modification date"
     )
-    references: List[str] = Field(default_factory=list, description="Reference URLs")
+    references: list[str] = Field(default_factory=list, description="Reference URLs")
 
 
 class MitreAttackInfo(BaseModel):
@@ -344,10 +343,10 @@ class MitreAttackInfo(BaseModel):
     technique_name: str = Field(..., description="Technique name")
     tactic: str = Field(default="", description="Associated tactic")
     description: str = Field(default="", description="Technique description")
-    platforms: List[str] = Field(
+    platforms: list[str] = Field(
         default_factory=list, description="Applicable platforms"
     )
-    data_sources: List[str] = Field(
+    data_sources: list[str] = Field(
         default_factory=list, description="Data sources for detection"
     )
 
@@ -355,15 +354,15 @@ class MitreAttackInfo(BaseModel):
 class ExternalInfoState(BaseModel):
     """External information and feeds state."""
 
-    feeds: List[FeedItem] = Field(default_factory=list, description="RSS feed items")
-    cve_data: List[CVEInfo] = Field(
+    feeds: list[FeedItem] = Field(default_factory=list, description="RSS feed items")
+    cve_data: list[CVEInfo] = Field(
         default_factory=list, description="CVE vulnerability data"
     )
-    mitre_data: List[MitreAttackInfo] = Field(
+    mitre_data: list[MitreAttackInfo] = Field(
         default_factory=list, description="MITRE ATT&CK data"
     )
     feed_count: int = Field(default=0, description="Number of configured feeds")
-    last_feed_refresh: Optional[datetime] = Field(
+    last_feed_refresh: datetime | None = Field(
         default=None, description="Last feed refresh timestamp"
     )
     feed_refresh_status: ProcessingStatus = Field(
@@ -372,10 +371,10 @@ class ExternalInfoState(BaseModel):
     selected_time_range: str = Field(
         default="24h", description="Selected time range for feeds"
     )
-    feed_filters: Dict[str, bool] = Field(
+    feed_filters: dict[str, bool] = Field(
         default_factory=dict, description="Feed category filters"
     )
-    error_messages: List[str] = Field(
+    error_messages: list[str] = Field(
         default_factory=list, description="Feed-related error messages"
     )
 
@@ -390,11 +389,11 @@ class UIComponentState(BaseModel):
 
     is_visible: bool = Field(default=True, description="Whether component is visible")
     is_expanded: bool = Field(default=True, description="Whether component is expanded")
-    height: Optional[int] = Field(
+    height: int | None = Field(
         default=None, description="Component height in pixels"
     )
-    width: Optional[int] = Field(default=None, description="Component width in pixels")
-    css_classes: List[str] = Field(
+    width: int | None = Field(default=None, description="Component width in pixels")
+    css_classes: list[str] = Field(
         default_factory=list, description="Active CSS classes"
     )
 
@@ -407,22 +406,22 @@ class UIState(BaseModel):
         default=False, description="Whether sidebar is collapsed"
     )
     theme: str = Field(default="dark", description="UI theme")
-    components: Dict[str, UIComponentState] = Field(
+    components: dict[str, UIComponentState] = Field(
         default_factory=dict, description="Component states"
     )
-    status_messages: List[str] = Field(
+    status_messages: list[str] = Field(
         default_factory=list, description="Current status messages"
     )
-    notifications: List[Dict[str, Any]] = Field(
+    notifications: list[dict[str, Any]] = Field(
         default_factory=list, description="Pending notifications"
     )
-    modal_state: Optional[Dict[str, Any]] = Field(
+    modal_state: dict[str, Any] | None = Field(
         default=None, description="Active modal state"
     )
-    loading_states: Dict[str, bool] = Field(
+    loading_states: dict[str, bool] = Field(
         default_factory=dict, description="Loading states by component"
     )
-    error_states: Dict[str, str] = Field(
+    error_states: dict[str, str] = Field(
         default_factory=dict, description="Error states by component"
     )
 
@@ -463,7 +462,7 @@ class ApplicationState(BaseModel):
 
     # State metadata
     state_version: str = Field(default="2.2.0", description="State schema version")
-    last_save: Optional[datetime] = Field(
+    last_save: datetime | None = Field(
         default=None, description="Last state save timestamp"
     )
     is_dirty: bool = Field(
@@ -508,7 +507,7 @@ class ApplicationState(BaseModel):
         self.is_dirty = False
         self.last_save = datetime.now()
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of the current application state."""
         return {
             "session_id": self.session_id,
@@ -556,8 +555,7 @@ class ApplicationState(BaseModel):
 
 
 def create_default_application_state() -> ApplicationState:
-    """
-    Create a default application state with sensible defaults.
+    """Create a default application state with sensible defaults.
 
     Returns:
         Initialized ApplicationState with default values
@@ -567,15 +565,14 @@ def create_default_application_state() -> ApplicationState:
 
 def create_application_state_from_legacy(
     legacy_mode: str = None,
-    legacy_history: List[Tuple[str, str]] = None,
+    legacy_history: list[tuple[str, str]] = None,
     legacy_system_prompt: str = None,
     legacy_temperature: float = None,
     legacy_similarity: float = None,
     legacy_citation_style: str = None,
     **kwargs,
 ) -> ApplicationState:
-    """
-    Create application state from legacy scattered variables.
+    """Create application state from legacy scattered variables.
 
     Args:
         legacy_mode: Legacy mode string
@@ -630,9 +627,8 @@ def create_application_state_from_legacy(
     return state
 
 
-def validate_application_state(state: ApplicationState) -> Tuple[bool, List[str]]:
-    """
-    Validate an application state and return validation results.
+def validate_application_state(state: ApplicationState) -> tuple[bool, list[str]]:
+    """Validate an application state and return validation results.
 
     Args:
         state: ApplicationState to validate
@@ -673,10 +669,9 @@ def validate_application_state(state: ApplicationState) -> Tuple[bool, List[str]
 
 
 def migrate_state_schema(
-    old_state: Dict[str, Any], from_version: str, to_version: str
+    old_state: dict[str, Any], from_version: str, to_version: str
 ) -> ApplicationState:
-    """
-    Migrate state from one schema version to another.
+    """Migrate state from one schema version to another.
 
     Args:
         old_state: State dictionary in old format
@@ -706,9 +701,8 @@ def migrate_state_schema(
 
 def serialize_application_state(
     state: ApplicationState, include_metadata: bool = True
-) -> Dict[str, Any]:
-    """
-    Serialize application state to a dictionary for persistence.
+) -> dict[str, Any]:
+    """Serialize application state to a dictionary for persistence.
 
     Args:
         state: ApplicationState to serialize
@@ -735,9 +729,8 @@ def serialize_application_state(
     return state_dict
 
 
-def deserialize_application_state(state_dict: Dict[str, Any]) -> ApplicationState:
-    """
-    Deserialize application state from a dictionary.
+def deserialize_application_state(state_dict: dict[str, Any]) -> ApplicationState:
+    """Deserialize application state from a dictionary.
 
     Args:
         state_dict: State dictionary to deserialize

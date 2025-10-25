@@ -9,24 +9,22 @@ Version: 0.6.2
 """
 
 import logging
+from typing import Any
+
 import gradio as gr
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
 
 class FeedsComponentBuilder:
-    """
-    Builder class for feed display interface components.
+    """Builder class for feed display interface components.
 
     This class provides methods to build various feed-related UI elements
     including RSS displays, CVE data, MITRE ATT&CK, and forum content.
     """
 
-    def __init__(self, services: Dict[str, Any]):
-        """
-        Initialize the feeds builder.
+    def __init__(self, services: dict[str, Any]):
+        """Initialize the feeds builder.
 
         Args:
             services: Dictionary of available services
@@ -37,8 +35,7 @@ class FeedsComponentBuilder:
         self.mitre_service = services.get("mitre")
 
     def build_feeds_interface(self) -> tuple:
-        """
-        Build feeds display interface components.
+        """Build feeds display interface components.
 
         Returns:
             Tuple of Gradio components for feeds display
@@ -97,8 +94,7 @@ class FeedsComponentBuilder:
     def format_feeds_display(
         self, feed_type: str, search_term: str = "", severity: str = "All"
     ) -> str:
-        """
-        Format feed display based on type and filters.
+        """Format feed display based on type and filters.
 
         Args:
             feed_type: Type of feed to display
@@ -120,8 +116,7 @@ class FeedsComponentBuilder:
             return self._get_default_feeds_html()
 
     def _format_rss_feeds(self, search_term: str = "") -> str:
-        """
-        Format RSS feeds for display.
+        """Format RSS feeds for display.
 
         Args:
             search_term: Optional search filter
@@ -145,13 +140,12 @@ class FeedsComponentBuilder:
                 return self._render_rss_html(feeds_data)
             except Exception as e:
                 logger.error(f"Failed to format RSS feeds: {e}")
-                return f"<p>Error loading RSS feeds: {str(e)}</p>"
+                return f"<p>Error loading RSS feeds: {e!s}</p>"
 
         return self._render_rss_html(self._get_sample_rss_data())
 
     def _format_cve_display(self, severity: str = "All", search_term: str = "") -> str:
-        """
-        Format CVE data for display.
+        """Format CVE data for display.
 
         Args:
             severity: Severity filter
@@ -177,8 +171,7 @@ class FeedsComponentBuilder:
         return self._render_cve_html(cve_data)
 
     def _format_mitre_display(self, search_term: str = "") -> str:
-        """
-        Format MITRE ATT&CK data for display.
+        """Format MITRE ATT&CK data for display.
 
         Args:
             search_term: Search filter
@@ -199,8 +192,7 @@ class FeedsComponentBuilder:
         return self._render_mitre_html(mitre_data)
 
     def _format_forum_display(self, search_term: str = "") -> str:
-        """
-        Format forum content for display.
+        """Format forum content for display.
 
         Args:
             search_term: Search filter
@@ -220,7 +212,7 @@ class FeedsComponentBuilder:
 
         return self._render_forum_html(forum_data)
 
-    def _render_rss_html(self, feeds_data: List[Dict]) -> str:
+    def _render_rss_html(self, feeds_data: list[dict]) -> str:
         """Render RSS feeds as HTML."""
         if not feeds_data:
             return "<div class='no-feeds'><p>No RSS feeds found.</p></div>"
@@ -240,7 +232,7 @@ class FeedsComponentBuilder:
         html += "</div>"
         return html
 
-    def _render_cve_html(self, cve_data: List[Dict]) -> str:
+    def _render_cve_html(self, cve_data: list[dict]) -> str:
         """Render CVE data as HTML."""
         if not cve_data:
             return "<div class='no-cves'><p>No CVE entries found.</p></div>"
@@ -259,7 +251,7 @@ class FeedsComponentBuilder:
         html += "</div>"
         return html
 
-    def _render_mitre_html(self, mitre_data: List[Dict]) -> str:
+    def _render_mitre_html(self, mitre_data: list[dict]) -> str:
         """Render MITRE ATT&CK data as HTML."""
         if not mitre_data:
             return "<div class='no-mitre'><p>No MITRE ATT&CK data found.</p></div>"
@@ -279,7 +271,7 @@ class FeedsComponentBuilder:
         html += "</div>"
         return html
 
-    def _render_forum_html(self, forum_data: List[Dict]) -> str:
+    def _render_forum_html(self, forum_data: list[dict]) -> str:
         """Render forum posts as HTML."""
         if not forum_data:
             return "<div class='no-posts'><p>No forum posts found.</p></div>"
@@ -318,7 +310,7 @@ class FeedsComponentBuilder:
         </div>
         """
 
-    def _get_sample_rss_data(self) -> List[Dict]:
+    def _get_sample_rss_data(self) -> list[dict]:
         """Get sample RSS feed data."""
         return [
             {
@@ -337,7 +329,7 @@ class FeedsComponentBuilder:
             },
         ]
 
-    def _get_sample_cve_data(self) -> List[Dict]:
+    def _get_sample_cve_data(self) -> list[dict]:
         """Get sample CVE data."""
         return [
             {
@@ -356,7 +348,7 @@ class FeedsComponentBuilder:
             },
         ]
 
-    def _get_sample_mitre_data(self) -> List[Dict]:
+    def _get_sample_mitre_data(self) -> list[dict]:
         """Get sample MITRE ATT&CK data."""
         return [
             {
@@ -375,7 +367,7 @@ class FeedsComponentBuilder:
             },
         ]
 
-    def _get_sample_forum_data(self) -> List[Dict]:
+    def _get_sample_forum_data(self) -> list[dict]:
         """Get sample forum data."""
         return [
             {

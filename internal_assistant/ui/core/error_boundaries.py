@@ -1,5 +1,4 @@
-"""
-UI Error Boundaries Implementation
+"""UI Error Boundaries Implementation
 
 This module provides comprehensive error boundary infrastructure for the Gradio-based UI,
 implementing graceful error handling with fallback UIs and user-friendly error messages.
@@ -8,13 +7,15 @@ Part of Phase 2: Error Boundaries Implementation for production readiness.
 """
 
 import logging
-import traceback
 import time
+import traceback
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
 from functools import wraps
+from typing import Any
+
 import gradio as gr
 
 logger = logging.getLogger(__name__)
@@ -53,22 +54,20 @@ class ErrorInfo:
     category: ErrorCategory
     traceback: str
     user_message: str
-    recovery_suggestions: List[str]
-    context: Dict[str, Any]
+    recovery_suggestions: list[str]
+    context: dict[str, Any]
     is_recoverable: bool = True
 
 
 class UIErrorBoundary(ABC):
-    """
-    Base class for UI error boundaries.
+    """Base class for UI error boundaries.
 
     Provides the foundation for implementing error boundaries around UI components,
     with automatic error detection, logging, and fallback UI generation.
     """
 
-    def __init__(self, component_name: str, fallback_message: Optional[str] = None):
-        """
-        Initialize error boundary.
+    def __init__(self, component_name: str, fallback_message: str | None = None):
+        """Initialize error boundary.
 
         Args:
             component_name: Name of the component being protected
@@ -78,17 +77,16 @@ class UIErrorBoundary(ABC):
         self.fallback_message = (
             fallback_message or f"{component_name} temporarily unavailable"
         )
-        self._error_history: List[ErrorInfo] = []
+        self._error_history: list[ErrorInfo] = []
         self._error_count = 0
         self._last_error_time = 0.0
         self._is_in_fallback_mode = False
-        self._recovery_callback: Optional[Callable] = None
+        self._recovery_callback: Callable | None = None
 
         logger.info(f"Error boundary initialized for component: {component_name}")
 
     def wrap_function(self, func: Callable) -> Callable:
-        """
-        Decorator to wrap functions with error boundary protection.
+        """Decorator to wrap functions with error boundary protection.
 
         Args:
             func: Function to protect
@@ -255,7 +253,7 @@ class UIErrorBoundary(ABC):
 
     def _generate_user_guidance(
         self, exception: Exception, category: ErrorCategory
-    ) -> tuple[str, List[str]]:
+    ) -> tuple[str, list[str]]:
         """Generate user-friendly message and recovery suggestions."""
         base_messages = {
             ErrorCategory.NETWORK: (
@@ -344,7 +342,7 @@ class UIErrorBoundary(ABC):
         """Set callback to call when component recovers."""
         self._recovery_callback = callback
 
-    def get_error_summary(self) -> Dict[str, Any]:
+    def get_error_summary(self) -> dict[str, Any]:
         """Get summary of errors for debugging."""
         recent_errors = [
             e for e in self._error_history if time.time() - e.timestamp < 3600
@@ -365,8 +363,7 @@ class UIErrorBoundary(ABC):
 
 
 class ComponentErrorHandler(UIErrorBoundary):
-    """
-    Error handler for Gradio components with fallback UI generation.
+    """Error handler for Gradio components with fallback UI generation.
 
     Creates appropriate fallback UIs based on component type and error severity.
     """
@@ -375,10 +372,9 @@ class ComponentErrorHandler(UIErrorBoundary):
         self,
         component_name: str,
         component_type: str = "generic",
-        fallback_message: Optional[str] = None,
+        fallback_message: str | None = None,
     ):
-        """
-        Initialize component error handler.
+        """Initialize component error handler.
 
         Args:
             component_name: Name of the component
@@ -390,7 +386,6 @@ class ComponentErrorHandler(UIErrorBoundary):
 
     def _create_fallback_ui(self, error_info: ErrorInfo) -> Any:
         """Create appropriate fallback UI based on component type and error severity."""
-
         # Create fallback based on component type
         if self.component_type == "chat":
             return self._create_chat_fallback(error_info)
@@ -480,13 +475,12 @@ class ComponentErrorHandler(UIErrorBoundary):
 
 
 class ErrorReporter:
-    """
-    Centralized error reporting and logging system.
+    """Centralized error reporting and logging system.
     """
 
     def __init__(self):
-        self._error_log: List[ErrorInfo] = []
-        self._error_handlers: Dict[str, ComponentErrorHandler] = {}
+        self._error_log: list[ErrorInfo] = []
+        self._error_handlers: dict[str, ComponentErrorHandler] = {}
 
     def register_handler(self, handler: ComponentErrorHandler) -> None:
         """Register an error handler."""
@@ -515,7 +509,7 @@ class ErrorReporter:
                 f"Low severity error in {error_info.component_name}: {error_info.error_message}"
             )
 
-    def get_error_dashboard(self) -> Dict[str, Any]:
+    def get_error_dashboard(self) -> dict[str, Any]:
         """Get comprehensive error dashboard data."""
         current_time = time.time()
         recent_errors = [
@@ -560,10 +554,9 @@ error_reporter = ErrorReporter()
 def create_error_boundary(
     component_name: str,
     component_type: str = "generic",
-    fallback_message: Optional[str] = None,
+    fallback_message: str | None = None,
 ) -> ComponentErrorHandler:
-    """
-    Factory function to create and register error boundaries.
+    """Factory function to create and register error boundaries.
 
     Args:
         component_name: Name of the component to protect
@@ -579,8 +572,7 @@ def create_error_boundary(
 
 
 def with_error_boundary(component_name: str, component_type: str = "generic"):
-    """
-    Decorator to automatically wrap functions with error boundaries.
+    """Decorator to automatically wrap functions with error boundaries.
 
     Args:
         component_name: Name of the component
@@ -600,8 +592,7 @@ def with_error_boundary(component_name: str, component_type: str = "generic"):
 
 
 class ErrorUIComponents:
-    """
-    Reusable error display components for consistent error presentation across the UI.
+    """Reusable error display components for consistent error presentation across the UI.
 
     Provides:
     - Inline error messages
@@ -614,8 +605,7 @@ class ErrorUIComponents:
     def create_inline_error(
         message: str, error_type: str = "error", show_retry: bool = True
     ) -> str:
-        """
-        Create an inline error message component.
+        """Create an inline error message component.
 
         Args:
             message: Error message to display
@@ -658,8 +648,7 @@ class ErrorUIComponents:
     def create_error_toast(
         message: str, duration: int = 5000, error_type: str = "error"
     ) -> str:
-        """
-        Create an error toast notification.
+        """Create an error toast notification.
 
         Args:
             message: Error message to display
@@ -722,8 +711,7 @@ class ErrorUIComponents:
     def create_loading_state(
         message: str = "Loading...", show_spinner: bool = True
     ) -> str:
-        """
-        Create a loading state indicator.
+        """Create a loading state indicator.
 
         Args:
             message: Loading message to display
@@ -773,8 +761,7 @@ class ErrorUIComponents:
         show_retry_btn: bool = True,
         retry_action: str = None,
     ) -> str:
-        """
-        Create an error state indicator with optional retry.
+        """Create an error state indicator with optional retry.
 
         Args:
             message: Error message to display
@@ -827,8 +814,7 @@ class ErrorUIComponents:
     def create_fallback_component(
         component_name: str, error_message: str = None
     ) -> str:
-        """
-        Create a fallback component when the main component fails.
+        """Create a fallback component when the main component fails.
 
         Args:
             component_name: Name of the failed component
@@ -860,8 +846,7 @@ class ErrorUIComponents:
 
     @staticmethod
     def create_status_indicator(status: str, message: str = None) -> str:
-        """
-        Create a status indicator for various states.
+        """Create a status indicator for various states.
 
         Args:
             status: Status type (loading, success, error, warning)
@@ -905,8 +890,7 @@ class ErrorUIComponents:
 
 
 def create_error_display(error_type: str, message: str, **kwargs) -> str:
-    """
-    Factory function to create error displays.
+    """Factory function to create error displays.
 
     Args:
         error_type: Type of error display (inline, toast, state, fallback, status)

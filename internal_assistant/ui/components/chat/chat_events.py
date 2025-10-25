@@ -1,5 +1,4 @@
-"""
-Chat Event Handlers
+"""Chat Event Handlers
 
 This module contains all event handlers for the chat interface components.
 Extracted from ui.py as part of Phase 1 refactoring to decouple event handling
@@ -10,25 +9,21 @@ import logging
 import re
 import time
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
-import gradio as gr
 from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.types import TokenGen
 
 from internal_assistant.server.chat.chat_service import ChatService, CompletionGen
-from internal_assistant.server.chunks.chunks_service import Chunk, ChunksService
-from internal_assistant.ui.core.error_boundaries import (
-    create_error_boundary,
-    with_error_boundary,
-)
+from internal_assistant.server.chunks.chunks_service import ChunksService
 from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.recipes.summarize.summarize_service import (
     SummarizeService,
 )
-from internal_assistant.ui.core.event_router import EventHandler
+from internal_assistant.ui.core.error_boundaries import (
+    create_error_boundary,
+)
 from internal_assistant.ui.models.source import Source
-from internal_assistant.open_ai.extensions.context_filter import ContextFilter
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +56,7 @@ def normalize_mode(mode: str) -> str:
 
 
 class ChatEventHandler:
-    """
-    Handles all chat-related events including message sending, clearing,
+    """Handles all chat-related events including message sending, clearing,
     retrying, and mode changes.
     """
 
@@ -76,8 +70,7 @@ class ChatEventHandler:
         create_context_filter_func,
         system_prompt_getter,
     ):
-        """
-        Initialize chat event handler with required services.
+        """Initialize chat event handler with required services.
 
         Args:
             chat_service: Service for chat operations
@@ -104,16 +97,15 @@ class ChatEventHandler:
     def chat_wrapper(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float,
         response_temperature: float,
         citation_style: str,
         response_length: str,
-    ) -> Tuple[List[List[str]], str]:
-        """
-        Main chat processing function extracted from ui.py lines 5680-5812.
+    ) -> tuple[list[list[str]], str]:
+        """Main chat processing function extracted from ui.py lines 5680-5812.
 
         This matches the exact signature and behavior of the original chat_wrapper.
         Protected by error boundary for graceful failure handling.
@@ -145,16 +137,15 @@ class ChatEventHandler:
     def _chat_wrapper_protected(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float,
         response_temperature: float,
         citation_style: str,
         response_length: str,
-    ) -> Tuple[List[List[str]], str]:
-        """
-        Protected version of chat wrapper with error boundary handling.
+    ) -> tuple[list[list[str]], str]:
+        """Protected version of chat wrapper with error boundary handling.
         """
 
         @self.chat_error_boundary.wrap_function
@@ -186,16 +177,15 @@ class ChatEventHandler:
     def _execute_chat_logic(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float,
         response_temperature: float,
         citation_style: str,
         response_length: str,
-    ) -> Tuple[List[List[str]], str]:
-        """
-        Core chat processing logic separated for error boundary protection.
+    ) -> tuple[list[list[str]], str]:
+        """Core chat processing logic separated for error boundary protection.
         """
         # Add user message to history
         if message.strip():
@@ -308,7 +298,7 @@ class ChatEventHandler:
                         if mode == Modes.DOCUMENT_ASSISTANT.value
                         else "General Assistant"
                     )
-                    full_response = f"⚠️ **{mode_name} - Unexpected Error**\n\nSomething went wrong while generating your response.\n\n**Error details**: {str(e)}\n\n**What you can try:**\n• **Rephrase**: Try asking your question differently\n• **Switch modes**: Try the other assistant mode\n• **Simpler query**: Break complex questions into parts\n• **Contact support**: If this keeps happening"
+                    full_response = f"⚠️ **{mode_name} - Unexpected Error**\n\nSomething went wrong while generating your response.\n\n**Error details**: {e!s}\n\n**What you can try:**\n• **Rephrase**: Try asking your question differently\n• **Switch modes**: Try the other assistant mode\n• **Simpler query**: Break complex questions into parts\n• **Contact support**: If this keeps happening"
 
             # Basic cleanup of spacing and formatting
             if full_response:
@@ -361,7 +351,7 @@ class ChatEventHandler:
     def _chat(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float = 0.7,
@@ -370,8 +360,7 @@ class ChatEventHandler:
         response_length: str = "Medium",
         *_: Any,
     ) -> Iterable[str]:
-        """
-        Internal chat method that matches the original ui.py implementation.
+        """Internal chat method that matches the original ui.py implementation.
         This method is extracted from lines 238-356 of ui.py.
         """
         # Validate input to prevent None/empty vectors from breaking vector search
@@ -420,8 +409,8 @@ class ChatEventHandler:
                 full_response += str(token)
                 yield full_response
 
-        def build_history() -> List[ChatMessage]:
-            history_messages: List[ChatMessage] = []
+        def build_history() -> list[ChatMessage]:
+            history_messages: list[ChatMessage] = []
 
             for interaction in history:
                 history_messages.append(
@@ -467,7 +456,7 @@ class ChatEventHandler:
                     yield "📄 **Document Assistant Mode - No Documents Available**\n\nI'm in Document Assistant mode but couldn't find any uploaded documents to search. Here's what you can do:\n\n• **📁 Upload Files**: Use the Upload tab to add documents\n• **📂 Upload Folders**: Use the Folder tab to ingest directories\n• **🤖 Switch Mode**: Use General Assistant for questions that don't require documents\n\n**Supported formats**: PDF, Word, Excel, PowerPoint, Text, Markdown, and more\n\nOnce documents are uploaded, I'll search through them to provide contextual answers."
                     return
             except Exception as e:
-                yield f"⚠️ **Document Assistant Mode - Error**\n\nI couldn't access your document library. This might be a temporary issue.\n\n**Try these solutions:**\n• Refresh the page and try again\n• Switch to General Assistant mode for non-document questions\n• Check if your documents are still uploading\n\nIf the problem persists, please contact support."
+                yield "⚠️ **Document Assistant Mode - Error**\n\nI couldn't access your document library. This might be a temporary issue.\n\n**Try these solutions:**\n• Refresh the page and try again\n• Switch to General Assistant mode for non-document questions\n• Check if your documents are still uploading\n\nIf the problem persists, please contact support."
                 return
 
             context_filter = self.create_context_filter()
@@ -489,8 +478,7 @@ class ChatEventHandler:
             yield from yield_deltas(query_stream)
 
     def _get_mode_indicator_html(self, mode: str) -> str:
-        """
-        Generate HTML indicator for the current chat mode.
+        """Generate HTML indicator for the current chat mode.
         Extracted from ui.py on_mode_change function.
         """
         if mode == Modes.DOCUMENT_ASSISTANT.value:
@@ -510,9 +498,8 @@ class ChatEventHandler:
         """
         return indicator_html
 
-    def clear_chat(self) -> Tuple[List, str]:
-        """
-        Clear the chat history.
+    def clear_chat(self) -> tuple[list, str]:
+        """Clear the chat history.
 
         Returns:
             Tuple of (empty_history, empty_mode_indicator)
@@ -521,10 +508,9 @@ class ChatEventHandler:
         return [], ""
 
     def retry_last_message(
-        self, history: List[List[str]]
-    ) -> Tuple[List[List[str]], str]:
-        """
-        Retry the last message. Extracted from ui.py lines 5868-5875.
+        self, history: list[list[str]]
+    ) -> tuple[list[list[str]], str]:
+        """Retry the last message. Extracted from ui.py lines 5868-5875.
 
         Args:
             history: Current chat history
@@ -541,10 +527,9 @@ class ChatEventHandler:
         return history, ""
 
     def undo_last_message(
-        self, history: List[List[str]]
-    ) -> Tuple[List[List[str]], str]:
-        """
-        Remove the last message pair from chat history.
+        self, history: list[list[str]]
+    ) -> tuple[list[list[str]], str]:
+        """Remove the last message pair from chat history.
 
         Args:
             history: Current chat history
@@ -558,8 +543,7 @@ class ChatEventHandler:
         return history, ""
 
     def on_mode_change(self, selected_mode: str) -> str:
-        """
-        Handle mode changes. Extracted from ui.py lines 5831-5848.
+        """Handle mode changes. Extracted from ui.py lines 5831-5848.
 
         Args:
             selected_mode: The selected mode
@@ -571,8 +555,7 @@ class ChatEventHandler:
 
 
 class ChatEventHandlerBuilder:
-    """
-    Builder class for creating chat event handlers with dependency injection.
+    """Builder class for creating chat event handlers with dependency injection.
     """
 
     def __init__(
@@ -585,8 +568,7 @@ class ChatEventHandlerBuilder:
         create_context_filter_func,
         system_prompt_getter,
     ):
-        """
-        Initialize the builder with required services.
+        """Initialize the builder with required services.
 
         Args:
             chat_service: Service for chat operations
@@ -607,8 +589,7 @@ class ChatEventHandlerBuilder:
         self._handler = None
 
     def get_handler(self) -> ChatEventHandler:
-        """
-        Get or create the chat event handler instance.
+        """Get or create the chat event handler instance.
 
         Returns:
             ChatEventHandler instance
@@ -626,8 +607,7 @@ class ChatEventHandlerBuilder:
         return self._handler
 
     def get_handler(self) -> ChatEventHandler:
-        """
-        Get or create the chat event handler instance.
+        """Get or create the chat event handler instance.
 
         Returns:
             ChatEventHandler instance

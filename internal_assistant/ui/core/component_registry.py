@@ -1,5 +1,4 @@
-"""
-Component Registry
+"""Component Registry
 
 This module provides a centralized registry for managing UI components in the
 Internal Assistant system. It handles component registration, dependency resolution,
@@ -12,17 +11,16 @@ The ComponentRegistry ensures:
 - Component references are available for cross-component communication
 """
 
-from typing import Any, Dict, List, Optional, Set, Tuple
 import logging
+from typing import Any
 
-from .ui_component import UIComponent, ServiceContainer
+from .ui_component import ServiceContainer, UIComponent
 
 logger = logging.getLogger(__name__)
 
 
 class ComponentRegistry:
-    """
-    Registry for managing UI components and their dependencies.
+    """Registry for managing UI components and their dependencies.
 
     This class provides centralized management of UI components, including:
     - Component registration and retrieval
@@ -32,23 +30,21 @@ class ComponentRegistry:
     """
 
     def __init__(self, service_container: ServiceContainer):
-        """
-        Initialize the component registry.
+        """Initialize the component registry.
 
         Args:
             service_container: Container with available services
         """
         self.service_container = service_container
-        self._components: Dict[str, UIComponent] = {}
-        self._component_classes: Dict[str, type] = {}
-        self._dependencies: Dict[str, Set[str]] = {}
-        self._built_components: Set[str] = set()
+        self._components: dict[str, UIComponent] = {}
+        self._component_classes: dict[str, type] = {}
+        self._dependencies: dict[str, set[str]] = {}
+        self._built_components: set[str] = set()
 
     def register_component_class(
-        self, name: str, component_class: type, dependencies: Optional[List[str]] = None
+        self, name: str, component_class: type, dependencies: list[str] | None = None
     ) -> None:
-        """
-        Register a component class that can be instantiated later.
+        """Register a component class that can be instantiated later.
 
         Args:
             name: Unique name for this component
@@ -65,8 +61,7 @@ class ComponentRegistry:
         logger.debug(f"Registered component class: {name}")
 
     def register_component_instance(self, component: UIComponent) -> None:
-        """
-        Register an already-instantiated component.
+        """Register an already-instantiated component.
 
         Args:
             component: Component instance to register
@@ -77,8 +72,7 @@ class ComponentRegistry:
         logger.debug(f"Registered component instance: {component.component_id}")
 
     def get_component(self, name: str) -> UIComponent:
-        """
-        Get a component by name, instantiating if necessary.
+        """Get a component by name, instantiating if necessary.
 
         Args:
             name: Name of the component to retrieve
@@ -103,7 +97,7 @@ class ComponentRegistry:
         """Check if a component is registered."""
         return name in self._components or name in self._component_classes
 
-    def get_all_components(self) -> Dict[str, UIComponent]:
+    def get_all_components(self) -> dict[str, UIComponent]:
         """Get all instantiated components."""
         # Ensure all registered classes are instantiated
         for name in self._component_classes:
@@ -111,9 +105,8 @@ class ComponentRegistry:
                 self.get_component(name)
         return self._components.copy()
 
-    def get_build_order(self) -> List[str]:
-        """
-        Calculate the order components should be built based on dependencies.
+    def get_build_order(self) -> list[str]:
+        """Calculate the order components should be built based on dependencies.
 
         Returns:
             List of component names in build order
@@ -153,9 +146,8 @@ class ComponentRegistry:
 
         return result
 
-    def build_all_components(self) -> Dict[str, Any]:
-        """
-        Build all components in dependency order.
+    def build_all_components(self) -> dict[str, Any]:
+        """Build all components in dependency order.
 
         Returns:
             Dictionary mapping component names to their built interfaces
@@ -186,8 +178,7 @@ class ComponentRegistry:
         return built_interfaces
 
     def register_all_events(self, demo) -> None:
-        """
-        Register events for all built components.
+        """Register events for all built components.
 
         Args:
             demo: The main gr.Blocks context
@@ -197,9 +188,8 @@ class ComponentRegistry:
             component.register_events(demo)
             logger.debug(f"Registered events for component: {name}")
 
-    def get_component_refs(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Get component references from all built components.
+    def get_component_refs(self) -> dict[str, dict[str, Any]]:
+        """Get component references from all built components.
 
         Returns:
             Nested dictionary: {component_name: {ref_name: component}}
@@ -210,9 +200,8 @@ class ComponentRegistry:
                 refs[name] = component.get_component_refs()
         return refs
 
-    def validate_all_dependencies(self) -> Dict[str, List[str]]:
-        """
-        Validate dependencies for all registered components.
+    def validate_all_dependencies(self) -> dict[str, list[str]]:
+        """Validate dependencies for all registered components.
 
         Returns:
             Dictionary mapping component names to lists of missing dependencies
@@ -228,8 +217,7 @@ class ComponentRegistry:
         return validation_results
 
     def _instantiate_component(self, name: str) -> UIComponent:
-        """
-        Instantiate a component class with proper service injection.
+        """Instantiate a component class with proper service injection.
 
         Args:
             name: Name of the component to instantiate
@@ -250,8 +238,7 @@ class ComponentRegistry:
 
 
 class ComponentFactory:
-    """
-    Factory for creating common component configurations.
+    """Factory for creating common component configurations.
 
     This class provides convenient methods for creating and configuring
     standard component setups used throughout the application.
@@ -259,8 +246,7 @@ class ComponentFactory:
 
     @staticmethod
     def create_basic_registry(service_container: ServiceContainer) -> ComponentRegistry:
-        """
-        Create a component registry with basic component types.
+        """Create a component registry with basic component types.
 
         Args:
             service_container: Container with application services
@@ -280,8 +266,7 @@ class ComponentFactory:
 
     @staticmethod
     def create_service_container_from_injector(injector) -> ServiceContainer:
-        """
-        Create a service container from the application's dependency injector.
+        """Create a service container from the application's dependency injector.
 
         Args:
             injector: Application dependency injector
@@ -290,9 +275,9 @@ class ComponentFactory:
             Service container with injected services
         """
         from internal_assistant.server.chat.chat_service import ChatService
-        from internal_assistant.server.ingest.ingest_service import IngestService
-        from internal_assistant.server.feeds.feeds_service import RSSFeedService
         from internal_assistant.server.chunks.chunks_service import ChunksService
+        from internal_assistant.server.feeds.feeds_service import RSSFeedService
+        from internal_assistant.server.ingest.ingest_service import IngestService
         from internal_assistant.server.recipes.summarize.summarize_service import (
             SummarizeService,
         )

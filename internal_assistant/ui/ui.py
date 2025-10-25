@@ -2,17 +2,15 @@
 
 import asyncio
 import logging
-import re
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Callable
+from typing import Any
 
 import gradio as gr  # type: ignore
 from fastapi import FastAPI
-from gradio.themes.utils.colors import slate  # type: ignore
 from injector import inject, singleton
 from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
 from llama_index.core.types import TokenGen
@@ -23,30 +21,25 @@ from internal_assistant.di import global_injector
 from internal_assistant.open_ai.extensions.context_filter import ContextFilter
 from internal_assistant.server.chat.chat_service import ChatService, CompletionGen
 from internal_assistant.server.chunks.chunks_service import Chunk, ChunksService
+from internal_assistant.server.feeds.feeds_service import RSSFeedService
 from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.recipes.summarize.summarize_service import (
     SummarizeService,
 )
-from internal_assistant.server.feeds.feeds_service import RSSFeedService
 from internal_assistant.settings.settings import settings
-from internal_assistant.ui.core.error_boundaries import (
-    create_error_boundary,
-    error_reporter,
-)
-from internal_assistant.ui.ui_strings import (
-    UI_TAB_TITLE,
-    CHAT_HEADER,
-    UPLOAD_BUTTON,
-    DELETE_BUTTON,
-    DELETE_ALL_BUTTON,
-    SEARCH_ALL_BUTTON,
-    SIDEBAR_UPLOAD,
-    SIDEBAR_MODE,
-    SIDEBAR_ADVANCED,
-)
+from internal_assistant.ui.components.chat.chat_events import ChatEventHandlerBuilder
 from internal_assistant.ui.components.chat.chat_interface import (
     create_chat_interface,
     get_chat_component_refs,
+)
+from internal_assistant.ui.components.documents.document_events import (
+    DocumentEventHandlerBuilder,
+)
+from internal_assistant.ui.components.documents.document_library import (
+    DocumentLibraryBuilder,
+)
+from internal_assistant.ui.components.documents.document_state import (
+    DocumentStateManager,
 )
 from internal_assistant.ui.components.documents.document_upload import (
     create_document_upload_interface,
@@ -55,52 +48,44 @@ from internal_assistant.ui.components.documents.document_upload import (
 from internal_assistant.ui.components.documents.document_utility import (
     DocumentUtilityBuilder,
 )
-from internal_assistant.ui.components.documents.document_library import (
-    DocumentLibraryBuilder,
-)
-from internal_assistant.ui.components.documents.document_events import (
-    DocumentEventHandlerBuilder,
-)
-from internal_assistant.ui.components.documents.document_state import (
-    DocumentStateManager,
-)
-from internal_assistant.ui.components.feeds.feeds_display import FeedsDisplayBuilder
-from internal_assistant.ui.components.feeds.display_utility import DisplayUtilityBuilder
 from internal_assistant.ui.components.feeds.complex_display import ComplexDisplayBuilder
+from internal_assistant.ui.components.feeds.display_utility import DisplayUtilityBuilder
 from internal_assistant.ui.components.feeds.external_info import (
     create_external_info_interface,
     get_external_info_component_refs,
 )
-from internal_assistant.ui.styles.css_manager import CSSManager
-from internal_assistant.ui.core.event_router import EventRouter, EventBridge
-from tools.Javascript.js_manager import JSManager
-from internal_assistant.ui.components.chat.chat_events import ChatEventHandlerBuilder
+from internal_assistant.ui.components.feeds.feeds_display import FeedsDisplayBuilder
 from internal_assistant.ui.components.feeds.feeds_events import FeedsEventHandlerBuilder
 from internal_assistant.ui.components.settings.settings_events import (
     SettingsEventHandlerBuilder,
 )
-from internal_assistant.ui.services.mitre_loader import get_mitre_loader
-
-# Phase 2: State Management Integration
-from internal_assistant.ui.state import (
-    StateStore,
-    ApplicationState,
-    MessageBus,
-    SessionManager,
-    StateIntegrationManager,
-    GradioStateSync,
-    create_default_session_manager,
-    create_application_state_from_legacy,
-    create_gradio_sync,
+from internal_assistant.ui.core.error_boundaries import (
+    create_error_boundary,
+    error_reporter,
 )
+from internal_assistant.ui.core.event_router import EventBridge, EventRouter
+from internal_assistant.ui.services.mitre_loader import get_mitre_loader
+from internal_assistant.ui.services.performance_optimizer import PerformanceOptimizer
 
 # Phase 3: Service Layer Integration
 from internal_assistant.ui.services.ui_service_integration import (
-    UIServiceIntegration,
     ServiceCompatibilityLayer,
     create_ui_service_integration,
 )
-from internal_assistant.ui.services.performance_optimizer import PerformanceOptimizer
+
+# Phase 2: State Management Integration
+from internal_assistant.ui.state import (
+    MessageBus,
+    StateIntegrationManager,
+    create_application_state_from_legacy,
+    create_default_session_manager,
+    create_gradio_sync,
+)
+from internal_assistant.ui.styles.css_manager import CSSManager
+from internal_assistant.ui.ui_strings import (
+    UI_TAB_TITLE,
+)
+from tools.Javascript.js_manager import JSManager
 
 logger = logging.getLogger(__name__)
 
@@ -147,8 +132,7 @@ LEGACY_MODE_MAPPING = {
 
 
 def normalize_mode(mode: str) -> str:
-    """
-    Normalize any mode string to one of the two supported modes.
+    """Normalize any mode string to one of the two supported modes.
     Provides backward compatibility for legacy mode names.
     """
     if mode in LEGACY_MODE_MAPPING:
@@ -282,7 +266,11 @@ class InternalAssistantUI:
             library_builder=self._doc_library_builder,
             upload_file_method=self._upload_file,
             get_model_status_method=self._doc_state_manager.get_model_status,
-            document_service_facade=self._ui_service_integration.document_service if self._use_service_facades else None,
+            document_service_facade=(
+                self._ui_service_integration.document_service
+                if self._use_service_facades
+                else None
+            ),
         )
 
         # Set the event builder reference in state manager
@@ -361,7 +349,6 @@ class InternalAssistantUI:
         self._message_bus = MessageBus()
 
         # Initialize session manager for conversation persistence
-        from pathlib import Path
 
         session_storage_path = PROJECT_ROOT_PATH / "local_data" / "sessions"
         self._session_manager = create_default_session_manager(
@@ -402,8 +389,7 @@ class InternalAssistantUI:
         logger.info("✅ InternalAssistantUI __init__ completed successfully!")
 
     def _load_force_dark_js(self) -> str:
-        """
-        Load the force dark theme JavaScript.
+        """Load the force dark theme JavaScript.
 
         Returns:
             JavaScript code for forcing dark theme
@@ -454,7 +440,7 @@ class InternalAssistantUI:
         self._state_integration.set_state_value("settings.system_prompt", new_prompt)
 
     def _register_component_state_bindings(
-        self, component_refs: Dict[str, Any]
+        self, component_refs: dict[str, Any]
     ) -> None:
         """Register UI components with the new Gradio-State synchronization system for automatic UI updates."""
         try:
@@ -518,7 +504,7 @@ class InternalAssistantUI:
             logger.error(f"Failed to register component state bindings: {e}")
 
     def _register_components_with_message_bus(
-        self, component_refs: Dict[str, Any]
+        self, component_refs: dict[str, Any]
     ) -> None:
         """Register UI components with the MessageBus for cross-component communication."""
         try:
@@ -723,9 +709,8 @@ class InternalAssistantUI:
 
         return handler
 
-    def _create_ui_sync_handler(self, component_names: List[str]) -> Callable:
-        """
-        Create a handler that applies pending UI updates from state changes.
+    def _create_ui_sync_handler(self, component_names: list[str]) -> Callable:
+        """Create a handler that applies pending UI updates from state changes.
 
         This is the key method that makes state changes automatically update the UI.
         Use this in Gradio event handlers to apply state-driven updates.
@@ -739,10 +724,9 @@ class InternalAssistantUI:
         return self._gradio_sync.create_update_handler(component_names)
 
     def _create_bidirectional_handler(
-        self, component_name: str, state_path: str, update_components: List[str] = None
+        self, component_name: str, state_path: str, update_components: list[str] = None
     ) -> Callable:
-        """
-        Create a bidirectional handler that updates state and then syncs UI.
+        """Create a bidirectional handler that updates state and then syncs UI.
 
         This combines state update + UI sync in one handler.
 
@@ -876,7 +860,7 @@ class InternalAssistantUI:
                         yield "📄 **Document Assistant Mode - No Documents Available**\n\nI'm in Document Assistant mode but couldn't find any uploaded documents to search. Here's what you can do:\n\n• **📁 Upload Files**: Use the Upload tab to add documents\n• **📂 Upload Folders**: Use the Folder tab to ingest directories\n• **🤖 Switch Mode**: Use General Assistant for questions that don't require documents\n\n**Supported formats**: PDF, Word, Excel, PowerPoint, Text, Markdown, and more\n\nOnce documents are uploaded, I'll search through them to provide contextual answers."
                         return
                 except Exception as e:
-                    yield f"⚠️ **Document Assistant Mode - Error**\n\nI couldn't access your document library. This might be a temporary issue.\n\n**Try these solutions:**\n• Refresh the page and try again\n• Switch to General Assistant mode for non-document questions\n• Check if your documents are still uploading\n\nIf the problem persists, please contact support."
+                    yield "⚠️ **Document Assistant Mode - Error**\n\nI couldn't access your document library. This might be a temporary issue.\n\n**Try these solutions:**\n• Refresh the page and try again\n• Switch to General Assistant mode for non-document questions\n• Check if your documents are still uploading\n\nIf the problem persists, please contact support."
                     return
 
                 context_filter = self._create_context_filter()
@@ -1023,7 +1007,6 @@ class InternalAssistantUI:
             source_filter, days_filter
         )
 
-
     def _format_cve_display(
         self,
         source_filter: str = None,
@@ -1054,8 +1037,7 @@ class InternalAssistantUI:
     def _format_ai_security_feeds(
         self, time_filter: str = "7d", category_filter: str = "All"
     ) -> str:
-        """
-        Format AI & Security feeds for display.
+        """Format AI & Security feeds for display.
 
         Args:
             time_filter: Time filter (24h, 7d, 30d, 90d)
@@ -1076,8 +1058,7 @@ class InternalAssistantUI:
 
             # Use FeedsDisplayBuilder to format display
             feeds_html = self._feeds_display_builder.format_feeds_display(
-                source_filter=source_filter,
-                days_filter=days_filter
+                source_filter=source_filter, days_filter=days_filter
             )
 
             # If category filter is not "All", filter the HTML by category
@@ -1086,10 +1067,13 @@ class InternalAssistantUI:
                 feeds_data = self._feeds_service.get_feeds(source_filter, days_filter)
 
                 # Filter feeds by category
-                category_sources = self._feeds_service.SOURCE_CATEGORIES.get(category_filter, [])
+                category_sources = self._feeds_service.SOURCE_CATEGORIES.get(
+                    category_filter, []
+                )
                 if category_sources:
                     filtered_feeds = [
-                        feed for feed in feeds_data
+                        feed
+                        for feed in feeds_data
                         if feed.get("source") in category_sources
                     ]
 
@@ -1123,8 +1107,7 @@ class InternalAssistantUI:
             </div>"""
 
     def _build_filtered_feeds_html(self, feeds_data: list) -> str:
-        """
-        Build HTML for filtered feeds list.
+        """Build HTML for filtered feeds list.
 
         Args:
             feeds_data: List of feed dictionaries
@@ -1234,8 +1217,7 @@ class InternalAssistantUI:
         return self._display_utility_builder.get_domain_techniques(domain)
 
     def _get_mitre_loading_status(self) -> tuple[str, str]:
-        """
-        Get current MITRE loading status for UI updates.
+        """Get current MITRE loading status for UI updates.
 
         Returns:
             Tuple of (status_html, content_html)
@@ -1287,8 +1269,7 @@ class InternalAssistantUI:
         return status_html, content_html
 
     def _format_mitre_display_from_cache(self, cached_data: dict) -> str:
-        """
-        Format MITRE display using cached data for optimal performance.
+        """Format MITRE display using cached data for optimal performance.
 
         Args:
             cached_data: Cached MITRE data from AsyncMitreDataLoader
@@ -1323,7 +1304,7 @@ class InternalAssistantUI:
 
             # Display techniques grouped by tactic
             for tactic, tactic_techniques in tactics_dict.items():
-                html_content += f"<div class='tactic-section'>"
+                html_content += "<div class='tactic-section'>"
                 html_content += (
                     f"<h5 style='color: #2c5aa0; margin: 10px 0 5px 0;'>{tactic}</h5>"
                 )
@@ -1358,8 +1339,7 @@ class InternalAssistantUI:
             return self._format_mitre_display()  # Fallback to regular display
 
     def _refresh_mitre_data_async(self) -> tuple[str, str]:
-        """
-        Refresh MITRE data asynchronously and return immediate status.
+        """Refresh MITRE data asynchronously and return immediate status.
 
         Returns:
             Tuple of (status_html, content_html)
@@ -1386,7 +1366,7 @@ class InternalAssistantUI:
         except Exception as e:
             logger.error(f"Error refreshing MITRE data: {e}")
             status_html = (
-                f"<div class='feed-status error'>❌ Refresh failed: {str(e)}</div>"
+                f"<div class='feed-status error'>❌ Refresh failed: {e!s}</div>"
             )
             content_html = """
             <div class='feed-content'>
@@ -1400,8 +1380,7 @@ class InternalAssistantUI:
             return status_html, content_html
 
     def _show_active_threats(self) -> str:
-        """
-        Show active threats with attack chains in MITRE panel.
+        """Show active threats with attack chains in MITRE panel.
 
         Returns:
             HTML string with active threats display
@@ -1423,7 +1402,7 @@ class InternalAssistantUI:
                         Error Loading Active Threats
                     </div>
                     <div style='font-size: 12px; color: #888; margin-bottom: 16px;'>
-                        {str(e)}
+                        {e!s}
                     </div>
                     <div style='font-size: 11px; color: #666;'>
                         Click "Refresh MITRE Data" to try again or check application logs for details.
@@ -1433,8 +1412,7 @@ class InternalAssistantUI:
             """
 
     async def _auto_refresh_all_panels_on_startup(self):
-        """
-        Auto-refresh all feed panels when server starts (no cached data).
+        """Auto-refresh all feed panels when server starts (no cached data).
         This ensures users see fresh data on every server restart.
 
         Returns:
@@ -1459,24 +1437,28 @@ class InternalAssistantUI:
             except Exception as e:
                 logger.error(f"Failed to format AI feeds: {e}")
                 ai_feed_html = "<div style='padding: 20px; text-align: center; color: #666;'>Click refresh to load AI feeds</div>"
-                ai_feed_status_html = "<div class='feed-status warning'>⚠️ AI feeds not loaded</div>"
+                ai_feed_status_html = (
+                    "<div class='feed-status warning'>⚠️ AI feeds not loaded</div>"
+                )
 
             # Extract status and HTML from each result
             return (
-                results[0][0], results[0][1],  # feed_status, feed_display
-                results[1][0], results[1][1],  # cve_status, cve_display
-                ai_feed_status_html, ai_feed_html,  # ai_feed_status, ai_feed_display
+                results[0][0],
+                results[0][1],  # feed_status, feed_display
+                results[1][0],
+                results[1][1],  # cve_status, cve_display
+                ai_feed_status_html,
+                ai_feed_html,  # ai_feed_status, ai_feed_display
             )
         except Exception as e:
             logger.error(f"Auto-refresh failed: {e}", exc_info=True)
-            error_msg = f"⚠️ Auto-refresh failed: {str(e)}"
+            error_msg = f"⚠️ Auto-refresh failed: {e!s}"
             empty_html = "<div style='padding: 20px; text-align: center; color: #666;'>Please click refresh manually</div>"
             # Return error for all 3 panels
             return (error_msg, empty_html) * 3
 
     def _check_mitre_update_status(self) -> tuple[str, str]:
-        """
-        Check for MITRE data updates and return current status.
+        """Check for MITRE data updates and return current status.
         This can be called periodically to update the UI when background loading completes.
 
         Returns:
@@ -1489,8 +1471,7 @@ class InternalAssistantUI:
         return self._complex_display_builder.get_recent_documents_html()
 
     def _upload_file(self, files: list[str]) -> tuple[str, str, str]:
-        """
-        Upload files with enhanced error handling and user feedback.
+        """Upload files with enhanced error handling and user feedback.
 
         Args:
             files: List of file paths to upload
@@ -1527,7 +1508,9 @@ class InternalAssistantUI:
                         large_files.append(f"{path.name} ({size // (1024*1024)}MB)")
 
                     paths.append(path)
-                    logger.info("📤 [UPLOAD_FLOW] File: %s (size: %s bytes)", path.name, size)
+                    logger.info(
+                        "📤 [UPLOAD_FLOW] File: %s (size: %s bytes)", path.name, size
+                    )
                 else:
                     invalid_files.append(str(path))
                     logger.error("📤 [UPLOAD_FLOW] File not found: %s", file_path)
@@ -1549,32 +1532,49 @@ class InternalAssistantUI:
             # Get document count before upload
             try:
                 docs_before = self._ingest_service.list_ingested()
-                logger.info("📤 [UPLOAD_FLOW] Documents in index before upload: %d", len(docs_before))
+                logger.info(
+                    "📤 [UPLOAD_FLOW] Documents in index before upload: %d",
+                    len(docs_before),
+                )
             except Exception as e:
-                logger.warning("📤 [UPLOAD_FLOW] Error checking docs before upload: %s", e)
+                logger.warning(
+                    "📤 [UPLOAD_FLOW] Error checking docs before upload: %s", e
+                )
                 docs_before = []
 
             # Prepare files for ingestion
             files_to_ingest = [(str(path.name), path) for path in paths]
-            logger.info("📤 [UPLOAD_FLOW] Preparing to upload %d files (total size: %.2f MB)",
-                       len(files_to_ingest), total_size / (1024 * 1024))
+            logger.info(
+                "📤 [UPLOAD_FLOW] Preparing to upload %d files (total size: %.2f MB)",
+                len(files_to_ingest),
+                total_size / (1024 * 1024),
+            )
 
             # Perform upload with comprehensive error handling
             try:
                 # Check ingest mode from settings
                 from internal_assistant.settings.settings import settings
+
                 ingest_mode = settings().embedding.ingest_mode
 
                 if ingest_mode == "simple":
-                    logger.info("📤 [UPLOAD_FLOW] Starting simple file-by-file ingestion...")
+                    logger.info(
+                        "📤 [UPLOAD_FLOW] Starting simple file-by-file ingestion..."
+                    )
                     ingested_docs = []
                     for file_name, file_path in files_to_ingest:
                         try:
-                            docs = self._ingest_service.ingest_file(file_name, file_path)
+                            docs = self._ingest_service.ingest_file(
+                                file_name, file_path
+                            )
                             ingested_docs.extend(docs)
-                            logger.info(f"📤 [UPLOAD_FLOW] Ingested file: {file_name} ({len(docs)} docs)")
+                            logger.info(
+                                f"📤 [UPLOAD_FLOW] Ingested file: {file_name} ({len(docs)} docs)"
+                            )
                         except Exception as e:
-                            logger.error(f"📤 [UPLOAD_FLOW] Failed to ingest {file_name}: {e}")
+                            logger.error(
+                                f"📤 [UPLOAD_FLOW] Failed to ingest {file_name}: {e}"
+                            )
                     logger.info("📤 [UPLOAD_FLOW] Simple ingestion completed")
                 else:
                     logger.info(f"📤 [UPLOAD_FLOW] Starting {ingest_mode} ingestion...")
@@ -1585,14 +1585,19 @@ class InternalAssistantUI:
                 try:
                     # Force a small delay to ensure persistence is complete
                     import time
+
                     time.sleep(0.2)
 
                     # Get fresh document list from disk
                     docs_after = self._ingest_service.list_ingested()
                     actual_ingested = len(ingested_docs)
 
-                    logger.info("📤 [UPLOAD_FLOW] Documents before: %d, after: %d, ingested: %d",
-                               len(docs_before), len(docs_after), actual_ingested)
+                    logger.info(
+                        "📤 [UPLOAD_FLOW] Documents before: %d, after: %d, ingested: %d",
+                        len(docs_before),
+                        len(docs_after),
+                        actual_ingested,
+                    )
 
                     # Use actual_ingested count as source of truth (more reliable than diff)
                     if actual_ingested > 0:
@@ -1602,27 +1607,41 @@ class InternalAssistantUI:
                         if large_files:
                             status_msg += f" ⚠️ Large files detected: {', '.join(large_files[:2])}{'...' if len(large_files) > 2 else ''}"
 
-                        logger.info("✅ [UPLOAD_FLOW] Upload successful: %d documents ingested", actual_ingested)
+                        logger.info(
+                            "✅ [UPLOAD_FLOW] Upload successful: %d documents ingested",
+                            actual_ingested,
+                        )
                     else:
                         # Check if documents actually increased
                         new_docs_count = len(docs_after) - len(docs_before)
                         if new_docs_count > 0:
                             status_msg = f"✅ Successfully uploaded {len(files_to_ingest)} file(s). {new_docs_count} document(s) added."
-                            logger.info("✅ [UPLOAD_FLOW] Upload successful via document count: %d new", new_docs_count)
+                            logger.info(
+                                "✅ [UPLOAD_FLOW] Upload successful via document count: %d new",
+                                new_docs_count,
+                            )
                         else:
-                            status_msg = f"⚠️ Upload completed but no new documents were added. Files may be duplicates or already exist in the knowledge base."
-                            logger.warning("⚠️ [UPLOAD_FLOW] No new documents detected - possible duplicates")
+                            status_msg = "⚠️ Upload completed but no new documents were added. Files may be duplicates or already exist in the knowledge base."
+                            logger.warning(
+                                "⚠️ [UPLOAD_FLOW] No new documents detected - possible duplicates"
+                            )
 
                 except Exception as e:
-                    logger.error("❌ [UPLOAD_FLOW] Error verifying upload success: %s", e)
+                    logger.error(
+                        "❌ [UPLOAD_FLOW] Error verifying upload success: %s", e
+                    )
                     # Don't show verification error to user if ingestion succeeded
                     if len(ingested_docs) > 0:
                         status_msg = f"✅ Upload completed: {len(ingested_docs)} documents processed."
                     else:
-                        status_msg = f"⚠️ Upload may have succeeded but verification failed: {str(e)}"
+                        status_msg = f"⚠️ Upload may have succeeded but verification failed: {e!s}"
 
             except Exception as e:
-                logger.error("❌ [UPLOAD_FLOW] Upload failed during ingestion: %s", e, exc_info=True)
+                logger.error(
+                    "❌ [UPLOAD_FLOW] Upload failed during ingestion: %s",
+                    e,
+                    exc_info=True,
+                )
 
                 # Provide specific error messages based on exception type
                 error_msg = "❌ Upload failed: "
@@ -1644,7 +1663,9 @@ class InternalAssistantUI:
             # Update UI components
             try:
                 updated_file_list = self._doc_utility_builder.format_file_list()
-                updated_document_library = self._doc_library_builder.get_document_library_html()
+                updated_document_library = (
+                    self._doc_library_builder.get_document_library_html()
+                )
 
                 return (updated_file_list, status_msg, updated_document_library)
 
@@ -1652,15 +1673,19 @@ class InternalAssistantUI:
                 logger.error("❌ [UPLOAD_FLOW] Error updating UI components: %s", e)
                 return (
                     self._doc_utility_builder.format_file_list(),
-                    f"{status_msg} ⚠️ UI update warning: {str(e)}",
+                    f"{status_msg} ⚠️ UI update warning: {e!s}",
                     self._doc_library_builder.get_document_library_html(),
                 )
 
         except Exception as e:
-            logger.error("❌ [UPLOAD_FLOW] Critical error in upload process: %s", e, exc_info=True)
+            logger.error(
+                "❌ [UPLOAD_FLOW] Critical error in upload process: %s",
+                e,
+                exc_info=True,
+            )
             return (
                 self._doc_utility_builder.format_file_list(),
-                f"❌ Critical upload error: {str(e)}",
+                f"❌ Critical upload error: {e!s}",
                 self._doc_library_builder.get_document_library_html(),
             )
 
@@ -1678,8 +1703,8 @@ class InternalAssistantUI:
                 return self._list_ingested_files(), "❌ Folder not found"
 
             # Import the LocalIngestWorker from the tools/data directory
-            import sys
             import os
+            import sys
 
             sys.path.append(
                 os.path.join(os.path.dirname(__file__), "..", "..", "tools", "data")
@@ -1687,12 +1712,13 @@ class InternalAssistantUI:
 
             try:
                 from ingest_folder import LocalIngestWorker
+
                 from internal_assistant.settings.settings import settings
             except ImportError as e:
                 logger.error(f"Failed to import LocalIngestWorker: {e}")
                 return (
                     self._list_ingested_files(),
-                    f"❌ Folder ingestion not available: {str(e)}",
+                    f"❌ Folder ingestion not available: {e!s}",
                 )
 
             # Initialize worker with UI-friendly settings
@@ -1711,7 +1737,7 @@ class InternalAssistantUI:
 
         except Exception as e:
             logger.error(f"Folder ingestion failed: {e}", exc_info=True)
-            return self._list_ingested_files(), f"❌ Ingestion failed: {str(e)}"
+            return self._list_ingested_files(), f"❌ Ingestion failed: {e!s}"
 
     def _create_context_filter(self) -> ContextFilter | None:
         """Create a context filter using all available documents."""
@@ -1766,7 +1792,7 @@ class InternalAssistantUI:
             title=UI_TAB_TITLE,
             theme=gr.themes.Base(),
             css=self._css_manager.load_styles(),
-            head='<script>'
+            head="<script>"
             + self._load_force_dark_js()
             + "</script>"
             + """<script>
@@ -2308,8 +2334,8 @@ class InternalAssistantUI:
                                 """
                                 )
 
-                            # Enhanced AI Configuration Controls (hidden, to be moved to sidebar)
-                            with gr.Group(visible=False) as enhanced_ai_controls:
+                            # Enhanced AI Configuration Controls
+                            with gr.Group(visible=True) as enhanced_ai_controls:
                                 # Model Selection
                                 model_selection = gr.Radio(
                                     choices=[
@@ -2510,7 +2536,7 @@ class InternalAssistantUI:
                                     "AI Security",
                                     "Cybersecurity News",
                                     "Government Alerts",
-                                    "Regulatory"
+                                    "Regulatory",
                                 ],
                                 value="All",
                                 label=None,
@@ -2521,7 +2547,7 @@ class InternalAssistantUI:
                         # Time Range Display (shows current filter)
                         ai_feed_time_range_display = gr.HTML(
                             "<div class='time-range-display'>📅 Last 7 days</div>",
-                            elem_classes=["time-display"]
+                            elem_classes=["time-display"],
                         )
 
                         # Hidden state to track current time filter
@@ -2530,12 +2556,14 @@ class InternalAssistantUI:
                         # Status Display
                         ai_feed_status = gr.HTML(
                             "<div class='feed-status'>Loading AI & Security feeds...</div>",
-                            elem_classes=["feed-status-display"]
+                            elem_classes=["feed-status-display"],
                         )
 
                         # Feed Display - Initial empty state
                         try:
-                            initial_ai_feed_html = self._format_ai_security_feeds("7d", "All")
+                            initial_ai_feed_html = self._format_ai_security_feeds(
+                                "7d", "All"
+                            )
                         except Exception as e:
                             logger.warning(f"Failed to load initial AI feeds: {e}")
                             initial_ai_feed_html = """
@@ -2557,7 +2585,6 @@ class InternalAssistantUI:
                         gr.HTML(
                             '<div class="feed-resize-handle" id="ai-feed-resize-handle"></div>'
                         )
-
 
             # Mode change handler for explanation update - now handled by SettingsEventHandler
             # Advanced Settings Event Handlers - now handled by SettingsEventHandler
@@ -2621,15 +2648,21 @@ class InternalAssistantUI:
 
             # Folder upload handler - now uses Gradio UploadButton with enhanced error handling
             def handle_folder_upload(files):
-                logger.info("🔄 [PYTHON] handle_folder_upload called with Gradio UploadButton")
+                logger.info(
+                    "🔄 [PYTHON] handle_folder_upload called with Gradio UploadButton"
+                )
                 logger.info(f"🔄 [PYTHON] files received: {files}")
 
                 try:
                     if files and len(files) > 0:
-                        logger.info(f"🔄 [PYTHON] Processing {len(files)} files from folder upload")
+                        logger.info(
+                            f"🔄 [PYTHON] Processing {len(files)} files from folder upload"
+                        )
 
                         # Use the enhanced upload file method for multiple files
-                        updated_file_list, status_msg, updated_document_library = self._upload_file(files)
+                        updated_file_list, status_msg, updated_document_library = (
+                            self._upload_file(files)
+                        )
 
                         # Prefix folder upload status message
                         if "✅" in status_msg:
@@ -2638,9 +2671,16 @@ class InternalAssistantUI:
                             folder_status_msg = f"📁 Folder Upload Failed: {status_msg}"
 
                         # Get updated model status
-                        updated_model_status = self._doc_state_manager.get_model_status()
+                        updated_model_status = (
+                            self._doc_state_manager.get_model_status()
+                        )
 
-                        return (updated_file_list, folder_status_msg, updated_document_library, updated_model_status)
+                        return (
+                            updated_file_list,
+                            folder_status_msg,
+                            updated_document_library,
+                            updated_model_status,
+                        )
                     else:
                         return (
                             self._doc_utility_builder.format_file_list(),
@@ -2650,10 +2690,13 @@ class InternalAssistantUI:
                         )
 
                 except Exception as e:
-                    logger.error(f"❌ [PYTHON] Error processing folder upload: {e}", exc_info=True)
+                    logger.error(
+                        f"❌ [PYTHON] Error processing folder upload: {e}",
+                        exc_info=True,
+                    )
                     return (
                         self._doc_utility_builder.format_file_list(),
-                        f"📁 ❌ Folder upload error: {str(e)}",
+                        f"📁 ❌ Folder upload error: {e!s}",
                         self._doc_library_builder.get_document_library_html(),
                         self._doc_state_manager.get_model_status(),
                     )
@@ -2661,7 +2704,12 @@ class InternalAssistantUI:
             folder_upload_button.upload(
                 fn=handle_folder_upload,
                 inputs=[folder_upload_button],
-                outputs=[ingested_dataset, upload_status_msg, document_library_content, model_status_display],
+                outputs=[
+                    ingested_dataset,
+                    upload_status_msg,
+                    document_library_content,
+                    model_status_display,
+                ],
             )
 
             # JavaScript bridge for getting selected files
@@ -2695,11 +2743,15 @@ class InternalAssistantUI:
                 try:
                     # Test 1: List current documents
                     current_docs = self._ingest_service.list_ingested()
-                    logger.info(f"🧪 [TEST] Current documents in system: {len(current_docs)}")
+                    logger.info(
+                        f"🧪 [TEST] Current documents in system: {len(current_docs)}"
+                    )
 
                     # Test 2: File list formatting
                     file_list_html = self._doc_utility_builder.format_file_list()
-                    logger.info(f"🧪 [TEST] File list HTML length: {len(file_list_html)}")
+                    logger.info(
+                        f"🧪 [TEST] File list HTML length: {len(file_list_html)}"
+                    )
 
                     # Test 3: Document library formatting
                     library_html = self._doc_library_builder.get_document_library_html()
@@ -2713,35 +2765,50 @@ class InternalAssistantUI:
                         "clear_all_button": clear_all_button,
                         "upload_status_msg": upload_status_msg,
                         "selected_files_bridge": selected_files_bridge,
-                        "selected_files_state": selected_files_state
+                        "selected_files_state": selected_files_state,
                     }
 
                     for name, component in test_components.items():
-                        logger.info(f"🧪 [TEST] Component {name}: {type(component).__name__}")
+                        logger.info(
+                            f"🧪 [TEST] Component {name}: {type(component).__name__}"
+                        )
 
                     # Test 5: JavaScript bridge verification
-                    current_bridge_value = selected_files_bridge.value if hasattr(selected_files_bridge, 'value') else 'N/A'
-                    logger.info(f"🧪 [TEST] Current bridge value: {current_bridge_value}")
+                    current_bridge_value = (
+                        selected_files_bridge.value
+                        if hasattr(selected_files_bridge, "value")
+                        else "N/A"
+                    )
+                    logger.info(
+                        f"🧪 [TEST] Current bridge value: {current_bridge_value}"
+                    )
 
-                    logger.info("✅ [TEST] Document management operations test completed successfully")
+                    logger.info(
+                        "✅ [TEST] Document management operations test completed successfully"
+                    )
                     return "✅ Diagnostic test completed - check logs for details"
 
                 except Exception as e:
-                    logger.error(f"❌ [TEST] Document management test failed: {e}", exc_info=True)
-                    return f"❌ Diagnostic test failed: {str(e)}"
+                    logger.error(
+                        f"❌ [TEST] Document management test failed: {e}", exc_info=True
+                    )
+                    return f"❌ Diagnostic test failed: {e!s}"
 
             # Add diagnostic button (hidden by default, can be shown for debugging)
             with gr.Row(visible=False) as diagnostic_row:
-                diagnostic_btn = gr.Button("🧪 Test Document Operations", elem_classes=["modern-button"])
+                diagnostic_btn = gr.Button(
+                    "🧪 Test Document Operations", elem_classes=["modern-button"]
+                )
                 diagnostic_output = gr.HTML()
 
             diagnostic_btn.click(
-                fn=test_document_operations,
-                outputs=[diagnostic_output]
+                fn=test_document_operations, outputs=[diagnostic_output]
             )
 
             # Integration verification on startup
-            logger.info("🔧 [INTEGRATION] Starting document management integration verification...")
+            logger.info(
+                "🔧 [INTEGRATION] Starting document management integration verification..."
+            )
 
             # Verify all critical components exist
             critical_components = {
@@ -2755,7 +2822,7 @@ class InternalAssistantUI:
                 "selected_files_bridge": selected_files_bridge,
                 "selected_files_state": selected_files_state,
                 "ingested_dataset": ingested_dataset,
-                "document_library_content": document_library_content
+                "document_library_content": document_library_content,
             }
 
             missing_components = []
@@ -2763,10 +2830,14 @@ class InternalAssistantUI:
                 if component is None:
                     missing_components.append(name)
                 else:
-                    logger.info(f"✅ [INTEGRATION] Component {name}: {type(component).__name__}")
+                    logger.info(
+                        f"✅ [INTEGRATION] Component {name}: {type(component).__name__}"
+                    )
 
             if missing_components:
-                logger.error(f"❌ [INTEGRATION] Missing critical components: {missing_components}")
+                logger.error(
+                    f"❌ [INTEGRATION] Missing critical components: {missing_components}"
+                )
             else:
                 logger.info("✅ [INTEGRATION] All critical components verified")
 
@@ -2774,7 +2845,9 @@ class InternalAssistantUI:
             logger.info("🔧 [INTEGRATION] Verifying event handlers...")
             logger.info("✅ [INTEGRATION] Upload button handler: upload_and_refresh")
             logger.info("✅ [INTEGRATION] Folder upload handler: handle_folder_upload")
-            logger.info("✅ [INTEGRATION] Remove button handler: handle_remove_selected (JavaScript API)")
+            logger.info(
+                "✅ [INTEGRATION] Remove button handler: handle_remove_selected (JavaScript API)"
+            )
             logger.info("✅ [INTEGRATION] Clear all handler: clear_all_documents")
 
             # Verify service dependencies
@@ -2793,7 +2866,9 @@ class InternalAssistantUI:
                     else:
                         logger.error(f"❌ [INTEGRATION] Service {service}: Missing")
 
-                logger.info("🎉 [INTEGRATION] Document management system integration verification completed!")
+                logger.info(
+                    "🎉 [INTEGRATION] Document management system integration verification completed!"
+                )
                 logger.info("🚀 [INTEGRATION] System ready for document operations")
 
             except Exception as e:
@@ -2801,10 +2876,18 @@ class InternalAssistantUI:
 
             # Log enhanced debugging instructions for users
             logger.info("📝 [INTEGRATION] Debugging instructions:")
-            logger.info("📝 [INTEGRATION] 1. Open browser console to see JavaScript debug messages")
-            logger.info("📝 [INTEGRATION] 2. Use window.testBridge(['file1.txt']) in console to test bridge")
-            logger.info("📝 [INTEGRATION] 3. Add ?debug=true to URL for periodic bridge status checks")
-            logger.info("📝 [INTEGRATION] 4. Check application logs for detailed Python debugging")
+            logger.info(
+                "📝 [INTEGRATION] 1. Open browser console to see JavaScript debug messages"
+            )
+            logger.info(
+                "📝 [INTEGRATION] 2. Use window.testBridge(['file1.txt']) in console to test bridge"
+            )
+            logger.info(
+                "📝 [INTEGRATION] 3. Add ?debug=true to URL for periodic bridge status checks"
+            )
+            logger.info(
+                "📝 [INTEGRATION] 4. Check application logs for detailed Python debugging"
+            )
 
             # Remove Selected button - JavaScript-based approach
             # NOTE: Gradio 4.15.0 doesn't support _js parameter or bridge updates from JavaScript
@@ -2815,7 +2898,12 @@ class InternalAssistantUI:
             # Primary deletion operation
             clear_all_button.click(
                 self._doc_event_builder.clear_all_documents,
-                outputs=[ingested_dataset, clear_status_msg, document_library_content, model_status_display],
+                outputs=[
+                    ingested_dataset,
+                    clear_status_msg,
+                    document_library_content,
+                    model_status_display,
+                ],
                 show_progress=True,
             ).then(
                 # Force complete UI refresh after deletion
@@ -3056,23 +3144,51 @@ class InternalAssistantUI:
             # Time filter buttons automatically refresh and filter feeds
 
             time_24h_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler("24h"),
-                outputs=[feed_status, time_range_display, current_time_filter, feed_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
+                    "24h"
+                ),
+                outputs=[
+                    feed_status,
+                    time_range_display,
+                    current_time_filter,
+                    feed_display,
+                ],
             )
 
             time_7d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler("7d"),
-                outputs=[feed_status, time_range_display, current_time_filter, feed_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
+                    "7d"
+                ),
+                outputs=[
+                    feed_status,
+                    time_range_display,
+                    current_time_filter,
+                    feed_display,
+                ],
             )
 
             time_30d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler("30d"),
-                outputs=[feed_status, time_range_display, current_time_filter, feed_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
+                    "30d"
+                ),
+                outputs=[
+                    feed_status,
+                    time_range_display,
+                    current_time_filter,
+                    feed_display,
+                ],
             )
 
             time_90d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler("90d"),
-                outputs=[feed_status, time_range_display, current_time_filter, feed_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
+                    "90d"
+                ),
+                outputs=[
+                    feed_status,
+                    time_range_display,
+                    current_time_filter,
+                    feed_display,
+                ],
             )
 
             # CVE Tracking Event Handlers - now handled by FeedsEventHandler
@@ -3085,28 +3201,57 @@ class InternalAssistantUI:
 
             # CVE Time filter buttons automatically refresh and filter CVE data
             cve_time_24h_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler("24h"),
-                outputs=[cve_status, cve_time_range_display, cve_current_time_filter, cve_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler(
+                    "24h"
+                ),
+                outputs=[
+                    cve_status,
+                    cve_time_range_display,
+                    cve_current_time_filter,
+                    cve_display,
+                ],
             )
 
             cve_time_7d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler("7d"),
-                outputs=[cve_status, cve_time_range_display, cve_current_time_filter, cve_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler(
+                    "7d"
+                ),
+                outputs=[
+                    cve_status,
+                    cve_time_range_display,
+                    cve_current_time_filter,
+                    cve_display,
+                ],
             )
 
             cve_time_30d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler("30d"),
-                outputs=[cve_status, cve_time_range_display, cve_current_time_filter, cve_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler(
+                    "30d"
+                ),
+                outputs=[
+                    cve_status,
+                    cve_time_range_display,
+                    cve_current_time_filter,
+                    cve_display,
+                ],
             )
 
             cve_time_90d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler("90d"),
-                outputs=[cve_status, cve_time_range_display, cve_current_time_filter, cve_display],
+                fn=self._feeds_event_builder.create_refresh_and_filter_cve_handler(
+                    "90d"
+                ),
+                outputs=[
+                    cve_status,
+                    cve_time_range_display,
+                    cve_current_time_filter,
+                    cve_display,
+                ],
             )
 
             # Wire up AI & Security Feed handlers
             def create_ai_feed_handler(time_filter: str):
                 """Create handler for AI feed time filter buttons."""
+
                 async def handler(category_filter):
                     # Refresh feeds
                     try:
@@ -3115,9 +3260,13 @@ class InternalAssistantUI:
                         logger.warning(f"Failed to refresh feeds: {e}")
 
                     # Update display
-                    feeds_html = self._format_ai_security_feeds(time_filter, category_filter)
+                    feeds_html = self._format_ai_security_feeds(
+                        time_filter, category_filter
+                    )
                     status_html = f"<div class='feed-status success'>✅ Showing AI & Security feeds from last {time_filter}</div>"
-                    time_display_html = f"<div class='time-range-display'>📅 Last {time_filter}</div>"
+                    time_display_html = (
+                        f"<div class='time-range-display'>📅 Last {time_filter}</div>"
+                    )
 
                     return status_html, time_display_html, time_filter, feeds_html
 
@@ -3127,48 +3276,73 @@ class InternalAssistantUI:
             ai_feed_time_24h_btn.click(
                 fn=create_ai_feed_handler("24h"),
                 inputs=[ai_feed_category_dropdown],
-                outputs=[ai_feed_status, ai_feed_time_range_display, ai_feed_current_time_filter, ai_feed_display]
+                outputs=[
+                    ai_feed_status,
+                    ai_feed_time_range_display,
+                    ai_feed_current_time_filter,
+                    ai_feed_display,
+                ],
             )
 
             ai_feed_time_7d_btn.click(
                 fn=create_ai_feed_handler("7d"),
                 inputs=[ai_feed_category_dropdown],
-                outputs=[ai_feed_status, ai_feed_time_range_display, ai_feed_current_time_filter, ai_feed_display]
+                outputs=[
+                    ai_feed_status,
+                    ai_feed_time_range_display,
+                    ai_feed_current_time_filter,
+                    ai_feed_display,
+                ],
             )
 
             ai_feed_time_30d_btn.click(
                 fn=create_ai_feed_handler("30d"),
                 inputs=[ai_feed_category_dropdown],
-                outputs=[ai_feed_status, ai_feed_time_range_display, ai_feed_current_time_filter, ai_feed_display]
+                outputs=[
+                    ai_feed_status,
+                    ai_feed_time_range_display,
+                    ai_feed_current_time_filter,
+                    ai_feed_display,
+                ],
             )
 
             ai_feed_time_90d_btn.click(
                 fn=create_ai_feed_handler("90d"),
                 inputs=[ai_feed_category_dropdown],
-                outputs=[ai_feed_status, ai_feed_time_range_display, ai_feed_current_time_filter, ai_feed_display]
+                outputs=[
+                    ai_feed_status,
+                    ai_feed_time_range_display,
+                    ai_feed_current_time_filter,
+                    ai_feed_display,
+                ],
             )
 
             # Category dropdown handler
             def ai_feed_category_handler(category_filter, current_time_filter):
                 """Handle category filter changes."""
-                feeds_html = self._format_ai_security_feeds(current_time_filter, category_filter)
+                feeds_html = self._format_ai_security_feeds(
+                    current_time_filter, category_filter
+                )
                 status_html = f"<div class='feed-status success'>✅ Filtered by: {category_filter}</div>"
                 return status_html, feeds_html
 
             ai_feed_category_dropdown.change(
                 fn=ai_feed_category_handler,
                 inputs=[ai_feed_category_dropdown, ai_feed_current_time_filter],
-                outputs=[ai_feed_status, ai_feed_display]
+                outputs=[ai_feed_status, ai_feed_display],
             )
 
             # Auto-refresh all panels on UI startup (no cached data)
             blocks.load(
                 fn=self._auto_refresh_all_panels_on_startup,
                 outputs=[
-                    feed_status, feed_display,
-                    cve_status, cve_display,
-                    ai_feed_status, ai_feed_display
-                ]
+                    feed_status,
+                    feed_display,
+                    cve_status,
+                    cve_display,
+                    ai_feed_status,
+                    ai_feed_display,
+                ],
             )
 
             # CRITICAL FIX: Refresh document count on page load
@@ -3183,7 +3357,9 @@ class InternalAssistantUI:
                 logger.info("🔄 [PAGE_LOAD] Page loaded, refreshing document status...")
                 updated_model_status = self._doc_state_manager.get_model_status()
                 updated_file_list = self._doc_utility_builder.format_file_list()
-                updated_document_library = self._doc_library_builder.get_document_library_html()
+                updated_document_library = (
+                    self._doc_library_builder.get_document_library_html()
+                )
                 logger.info("✅ [PAGE_LOAD] Document status refreshed")
 
                 return (
@@ -3215,8 +3391,7 @@ class InternalAssistantUI:
         return self._ui_block
 
     def _build_ui_blocks_protected(self) -> gr.Blocks:
-        """
-        Protected UI building with global error boundary.
+        """Protected UI building with global error boundary.
         """
 
         @self.global_error_boundary.wrap_function
@@ -3239,8 +3414,7 @@ class InternalAssistantUI:
         gr.mount_gradio_app(app, blocks, path=path)
 
     def _create_emergency_fallback_ui(self) -> gr.Blocks:
-        """
-        Create emergency fallback UI when main UI fails to initialize.
+        """Create emergency fallback UI when main UI fails to initialize.
         """
         logger.info("Creating emergency fallback UI")
 
@@ -3327,7 +3501,7 @@ class InternalAssistantUI:
 
         return emergency_blocks
 
-    def _format_error_dashboard_html(self, dashboard: Dict[str, Any]) -> str:
+    def _format_error_dashboard_html(self, dashboard: dict[str, Any]) -> str:
         """Format error dashboard data as HTML."""
         html_parts = ["<div class='error-details'><h4>📊 Detailed Error Dashboard</h4>"]
 
@@ -3360,13 +3534,12 @@ class InternalAssistantUI:
         return "".join(html_parts)
 
     def _report_critical_error(self, error: Exception) -> None:
-        """
-        Report critical application error to centralized error reporting system.
+        """Report critical application error to centralized error reporting system.
         """
         from internal_assistant.ui.core.error_boundaries import (
+            ErrorCategory,
             ErrorInfo,
             ErrorSeverity,
-            ErrorCategory,
         )
 
         # Create comprehensive error info

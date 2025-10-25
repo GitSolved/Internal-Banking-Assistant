@@ -1,14 +1,12 @@
 """MITRE ATT&CK API endpoints for Internal Assistant."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, List, Any, Optional
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query
 
 from internal_assistant.server.threat_intelligence.mitre_attack_service import (
-    MitreAttackService,
     AttackDomain,
-    AttackTechnique,
-    AttackTactic,
-    ThreatGroup,
+    MitreAttackService,
 )
 
 mitre_attack_router = APIRouter(prefix="/v1/mitre-attack", tags=["MITRE ATT&CK"])
@@ -17,11 +15,11 @@ mitre_attack_router = APIRouter(prefix="/v1/mitre-attack", tags=["MITRE ATT&CK"]
 @mitre_attack_router.get("/techniques")
 async def get_techniques(
     domain: str = Query("enterprise-attack", description="ATT&CK domain"),
-    search: Optional[str] = Query(None, description="Search query"),
+    search: str | None = Query(None, description="Search query"),
     banking_only: bool = Query(
         False, description="Show only banking-relevant techniques"
     ),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get MITRE ATT&CK techniques."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -59,12 +57,12 @@ async def get_techniques(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching techniques: {str(e)}"
+            status_code=500, detail=f"Error fetching techniques: {e!s}"
         )
 
 
 @mitre_attack_router.get("/techniques/{technique_id}")
-async def get_technique_by_id(technique_id: str) -> Dict[str, Any]:
+async def get_technique_by_id(technique_id: str) -> dict[str, Any]:
     """Get specific MITRE ATT&CK technique by ID."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -93,14 +91,14 @@ async def get_technique_by_id(technique_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching technique: {str(e)}"
+            status_code=500, detail=f"Error fetching technique: {e!s}"
         )
 
 
 @mitre_attack_router.get("/tactics")
 async def get_tactics(
     domain: str = Query("enterprise-attack", description="ATT&CK domain")
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get MITRE ATT&CK tactics."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -126,11 +124,11 @@ async def get_tactics(
             ]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching tactics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching tactics: {e!s}")
 
 
 @mitre_attack_router.get("/tactics/{tactic_id}")
-async def get_tactic_by_id(tactic_id: str) -> Dict[str, Any]:
+async def get_tactic_by_id(tactic_id: str) -> dict[str, Any]:
     """Get specific MITRE ATT&CK tactic by ID."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -153,14 +151,14 @@ async def get_tactic_by_id(tactic_id: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching tactic: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching tactic: {e!s}")
 
 
 @mitre_attack_router.get("/groups")
 async def get_threat_groups(
     domain: str = Query("enterprise-attack", description="ATT&CK domain"),
     banking_only: bool = Query(False, description="Show only banking-targeting groups"),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get MITRE ATT&CK threat groups."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -192,11 +190,11 @@ async def get_threat_groups(
             ]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching groups: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching groups: {e!s}")
 
 
 @mitre_attack_router.get("/groups/{group_id}")
-async def get_group_by_id(group_id: str) -> Dict[str, Any]:
+async def get_group_by_id(group_id: str) -> dict[str, Any]:
     """Get specific MITRE ATT&CK threat group by ID."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -221,11 +219,11 @@ async def get_group_by_id(group_id: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching group: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching group: {e!s}")
 
 
 @mitre_attack_router.get("/banking/techniques")
-async def get_banking_techniques() -> List[Dict[str, Any]]:
+async def get_banking_techniques() -> list[dict[str, Any]]:
     """Get banking-relevant MITRE ATT&CK techniques."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -249,12 +247,12 @@ async def get_banking_techniques() -> List[Dict[str, Any]]:
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching banking techniques: {str(e)}"
+            status_code=500, detail=f"Error fetching banking techniques: {e!s}"
         )
 
 
 @mitre_attack_router.get("/banking/groups")
-async def get_banking_groups() -> List[Dict[str, Any]]:
+async def get_banking_groups() -> list[dict[str, Any]]:
     """Get banking-targeting MITRE ATT&CK threat groups."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -276,7 +274,7 @@ async def get_banking_groups() -> List[Dict[str, Any]]:
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching banking groups: {str(e)}"
+            status_code=500, detail=f"Error fetching banking groups: {e!s}"
         )
 
 
@@ -284,7 +282,7 @@ async def get_banking_groups() -> List[Dict[str, Any]]:
 async def search_mitre_data(
     query: str = Query(..., description="Search query"),
     domain: str = Query("enterprise-attack", description="ATT&CK domain"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search MITRE ATT&CK data."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -375,24 +373,24 @@ async def search_mitre_data(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error searching MITRE data: {str(e)}"
+            status_code=500, detail=f"Error searching MITRE data: {e!s}"
         )
 
 
 @mitre_attack_router.get("/cache/info")
-async def get_cache_info() -> Dict[str, Any]:
+async def get_cache_info() -> dict[str, Any]:
     """Get MITRE ATT&CK cache information."""
     try:
         async with MitreAttackService() as mitre_service:
             return mitre_service.get_cache_info()
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error getting cache info: {str(e)}"
+            status_code=500, detail=f"Error getting cache info: {e!s}"
         )
 
 
 @mitre_attack_router.post("/refresh")
-async def refresh_mitre_data() -> Dict[str, Any]:
+async def refresh_mitre_data() -> dict[str, Any]:
     """Refresh MITRE ATT&CK data cache."""
     try:
         async with MitreAttackService() as mitre_service:
@@ -409,4 +407,4 @@ async def refresh_mitre_data() -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error refreshing data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error refreshing data: {e!s}")

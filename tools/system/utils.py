@@ -202,12 +202,12 @@ Examples:
 
     # Wipe all data (WARNING: destructive!)
     python utils.py wipe
-        """
+        """,
     )
     parser.add_argument(
         "mode",
         choices=["wipe", "stats"],
-        help="Operation mode: wipe (clear all data) or stats (show statistics)"
+        help="Operation mode: wipe (clear all data) or stats (show statistics)",
     )
 
     args = parser.parse_args()

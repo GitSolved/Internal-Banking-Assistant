@@ -1,5 +1,4 @@
-"""
-MITRE ATT&CK Async Data Loader Service
+"""MITRE ATT&CK Async Data Loader Service
 
 This module provides asynchronous loading and caching of MITRE ATT&CK data
 to prevent blocking the UI during initialization.
@@ -9,16 +8,15 @@ Author: UI Optimization Team
 Date: 2025-09-26
 """
 
-import asyncio
 import json
 import logging
-import time
 import threading
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, Any, Optional, Callable
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -27,16 +25,15 @@ logger = logging.getLogger(__name__)
 class MitreDataCache:
     """Cache container for MITRE data with metadata."""
 
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: datetime
     version: str
     is_loading: bool = False
-    load_error: Optional[str] = None
+    load_error: str | None = None
 
 
 class AsyncMitreDataLoader:
-    """
-    Asynchronous MITRE ATT&CK data loader with caching and progressive loading support.
+    """Asynchronous MITRE ATT&CK data loader with caching and progressive loading support.
 
     Features:
     - Background data fetching without blocking UI
@@ -46,9 +43,8 @@ class AsyncMitreDataLoader:
     - Thread-safe operations
     """
 
-    def __init__(self, cache_dir: Optional[Path] = None, cache_ttl_hours: int = 24):
-        """
-        Initialize the async MITRE data loader.
+    def __init__(self, cache_dir: Path | None = None, cache_ttl_hours: int = 24):
+        """Initialize the async MITRE data loader.
 
         Args:
             cache_dir: Directory for cache storage (default: local_data/mitre_cache)
@@ -60,7 +56,7 @@ class AsyncMitreDataLoader:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Thread-safe cache and loading state
-        self._cache: Optional[MitreDataCache] = None
+        self._cache: MitreDataCache | None = None
         self._cache_lock = threading.RLock()
         self._loading_event = threading.Event()
         self._load_in_progress = False
@@ -81,8 +77,7 @@ class AsyncMitreDataLoader:
         )
 
     def add_progress_callback(self, callback: Callable[[str, float], None]) -> None:
-        """
-        Add a progress callback for UI updates.
+        """Add a progress callback for UI updates.
 
         Args:
             callback: Function that takes (status_message, progress_percent) parameters
@@ -103,8 +98,7 @@ class AsyncMitreDataLoader:
                 logger.warning(f"Progress callback error: {e}")
 
     def _load_from_cache(self) -> bool:
-        """
-        Load MITRE data from local cache if available and valid.
+        """Load MITRE data from local cache if available and valid.
 
         Returns:
             True if cache was loaded successfully, False otherwise
@@ -114,7 +108,7 @@ class AsyncMitreDataLoader:
                 logger.info("No MITRE cache file found")
                 return False
 
-            with open(self.cache_file, "r", encoding="utf-8") as f:
+            with open(self.cache_file, encoding="utf-8") as f:
                 cache_data = json.load(f)
 
             cache_timestamp = datetime.fromisoformat(cache_data["timestamp"])
@@ -138,9 +132,8 @@ class AsyncMitreDataLoader:
             logger.error(f"Failed to load MITRE cache: {e}")
             return False
 
-    def _save_to_cache(self, data: Dict[str, Any]) -> None:
-        """
-        Save MITRE data to local cache.
+    def _save_to_cache(self, data: dict[str, Any]) -> None:
+        """Save MITRE data to local cache.
 
         Args:
             data: MITRE data to cache
@@ -160,9 +153,8 @@ class AsyncMitreDataLoader:
         except Exception as e:
             logger.error(f"Failed to save MITRE cache: {e}")
 
-    def get_cached_data(self) -> Optional[Dict[str, Any]]:
-        """
-        Get currently cached MITRE data without loading.
+    def get_cached_data(self) -> dict[str, Any] | None:
+        """Get currently cached MITRE data without loading.
 
         Returns:
             Cached MITRE data or None if not available
@@ -173,8 +165,7 @@ class AsyncMitreDataLoader:
             return None
 
     def is_cache_valid(self) -> bool:
-        """
-        Check if the current cache is valid and not expired.
+        """Check if the current cache is valid and not expired.
 
         Returns:
             True if cache is valid, False otherwise
@@ -187,17 +178,15 @@ class AsyncMitreDataLoader:
             return age <= self.cache_ttl and not self._cache.load_error
 
     def is_loading(self) -> bool:
-        """
-        Check if data loading is currently in progress.
+        """Check if data loading is currently in progress.
 
         Returns:
             True if loading is in progress, False otherwise
         """
         return self._load_in_progress
 
-    def get_data_age(self) -> Optional[timedelta]:
-        """
-        Get the age of the current cached data.
+    def get_data_age(self) -> timedelta | None:
+        """Get the age of the current cached data.
 
         Returns:
             Age of cached data or None if no cache
@@ -208,8 +197,7 @@ class AsyncMitreDataLoader:
             return None
 
     def load_data_async(self, force_refresh: bool = False) -> None:
-        """
-        Start loading MITRE data asynchronously in the background.
+        """Start loading MITRE data asynchronously in the background.
 
         Args:
             force_refresh: If True, bypass cache and force fresh data load
@@ -226,8 +214,7 @@ class AsyncMitreDataLoader:
         self._executor.submit(self._load_data_background, force_refresh)
 
     def _load_data_background(self, force_refresh: bool = False) -> None:
-        """
-        Background method to load MITRE data from threat analyzer.
+        """Background method to load MITRE data from threat analyzer.
 
         Args:
             force_refresh: If True, bypass cache validation
@@ -289,7 +276,7 @@ class AsyncMitreDataLoader:
             logger.info("MITRE data loaded successfully in background")
 
         except Exception as e:
-            error_msg = f"Failed to load MITRE data: {str(e)}"
+            error_msg = f"Failed to load MITRE data: {e!s}"
             logger.error(error_msg)
 
             with self._cache_lock:
@@ -297,15 +284,14 @@ class AsyncMitreDataLoader:
                     self._cache.is_loading = False
                     self._cache.load_error = error_msg
 
-            self._notify_progress(f"Error loading MITRE data: {str(e)}", 0.0)
+            self._notify_progress(f"Error loading MITRE data: {e!s}", 0.0)
 
         finally:
             self._load_in_progress = False
             self._loading_event.set()
 
-    def wait_for_data(self, timeout: float = 30.0) -> Optional[Dict[str, Any]]:
-        """
-        Wait for data to be loaded (blocking operation).
+    def wait_for_data(self, timeout: float = 30.0) -> dict[str, Any] | None:
+        """Wait for data to be loaded (blocking operation).
 
         Args:
             timeout: Maximum time to wait in seconds
@@ -322,9 +308,8 @@ class AsyncMitreDataLoader:
         logger.warning(f"Timed out waiting for MITRE data after {timeout} seconds")
         return None
 
-    def get_loading_status(self) -> Dict[str, Any]:
-        """
-        Get the current loading status and metadata.
+    def get_loading_status(self) -> dict[str, Any]:
+        """Get the current loading status and metadata.
 
         Returns:
             Dictionary with loading status information
@@ -375,12 +360,11 @@ class AsyncMitreDataLoader:
 
 
 # Global instance for application-wide use
-_mitre_loader_instance: Optional[AsyncMitreDataLoader] = None
+_mitre_loader_instance: AsyncMitreDataLoader | None = None
 
 
 def get_mitre_loader() -> AsyncMitreDataLoader:
-    """
-    Get the global MITRE data loader instance.
+    """Get the global MITRE data loader instance.
 
     Returns:
         Global AsyncMitreDataLoader instance
@@ -392,10 +376,9 @@ def get_mitre_loader() -> AsyncMitreDataLoader:
 
 
 def initialize_mitre_loader(
-    cache_dir: Optional[Path] = None, cache_ttl_hours: int = 24
+    cache_dir: Path | None = None, cache_ttl_hours: int = 24
 ) -> AsyncMitreDataLoader:
-    """
-    Initialize the global MITRE data loader with custom settings.
+    """Initialize the global MITRE data loader with custom settings.
 
     Args:
         cache_dir: Directory for cache storage

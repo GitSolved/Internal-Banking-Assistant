@@ -1,5 +1,4 @@
-"""
-UI Components Package
+"""UI Components Package
 
 This package contains modular UI components extracted from the monolithic ui.py file.
 Each component handles a specific aspect of the user interface.
@@ -7,13 +6,13 @@ Each component handles a specific aspect of the user interface.
 
 from .chat import ChatComponent
 from .documents import DocumentComponent
-from .feeds import FeedComponent, ComplexDisplayBuilder
+from .feeds import ComplexDisplayBuilder, FeedComponent
 from .sidebar import SidebarComponent
 
 __all__ = [
     "ChatComponent",
+    "ComplexDisplayBuilder",
     "DocumentComponent",
     "FeedComponent",
-    "ComplexDisplayBuilder",
     "SidebarComponent",
 ]

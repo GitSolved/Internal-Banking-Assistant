@@ -1,6 +1,6 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from internal_assistant.settings.settings_loader import load_active_settings
 
@@ -89,7 +89,9 @@ class ServerSettings(BaseModel):
     env_name: str = Field(
         description="Name of the environment (prod, staging, local...)"
     )
-    port: int = Field(description="Port of Internal Assistant FastAPI server, defaults to 8001")
+    port: int = Field(
+        description="Port of Internal Assistant FastAPI server, defaults to 8001"
+    )
     cors: CorsSettings = Field(
         description="CORS configuration", default=CorsSettings(enabled=False)
     )

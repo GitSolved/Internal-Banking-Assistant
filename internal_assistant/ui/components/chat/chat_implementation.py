@@ -1,5 +1,4 @@
-"""
-Chat Component Implementation
+"""Chat Component Implementation
 
 This module contains the actual implementation for the chat component,
 extracted and refactored from the monolithic ui.py file.
@@ -8,16 +7,14 @@ extracted and refactored from the monolithic ui.py file.
 import logging
 import time
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
 import gradio as gr
-
 from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
-from llama_index.core.types import TokenGen
 
+from internal_assistant.server.chat.chat_service import CompletionGen
 from internal_assistant.ui.core.ui_component import UIComponent
 from internal_assistant.ui.models.modes import Modes, normalize_mode
-from internal_assistant.ui.models.source import Source
-from internal_assistant.server.chat.chat_service import CompletionGen
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +23,16 @@ SOURCES_SEPARATOR = "<hr>Sources: \n"
 
 
 class ChatComponentImpl(UIComponent):
-    """
-    Actual implementation of the chat interface component.
+    """Actual implementation of the chat interface component.
 
     This component provides the real chat functionality extracted from ui.py,
     replacing the placeholder implementation.
     """
 
     def __init__(
-        self, component_id: str = "chat", services: Optional[Dict[str, Any]] = None
+        self, component_id: str = "chat", services: dict[str, Any] | None = None
     ):
-        """
-        Initialize the chat component with actual services.
+        """Initialize the chat component with actual services.
 
         Args:
             component_id: Unique identifier for this component
@@ -54,13 +49,12 @@ class ChatComponentImpl(UIComponent):
         if self.has_service("ingest"):
             self.ingest_service = self.get_service("ingest")
 
-    def get_required_services(self) -> List[str]:
+    def get_required_services(self) -> list[str]:
         """Specify required services for this component."""
         return ["chat", "ingest"]
 
-    def build_interface(self) -> Dict[str, Any]:
-        """
-        Build the chat interface components with full functionality.
+    def build_interface(self) -> dict[str, Any]:
+        """Build the chat interface components with full functionality.
 
         Returns:
             Dictionary of Gradio components for the chat interface
@@ -180,8 +174,7 @@ class ChatComponentImpl(UIComponent):
         return self._component_refs
 
     def register_events(self, demo: gr.Blocks) -> None:
-        """
-        Register event handlers for the chat component.
+        """Register event handlers for the chat component.
 
         Args:
             demo: The main gr.Blocks context
@@ -269,14 +262,14 @@ class ChatComponentImpl(UIComponent):
 
         logger.debug(f"Registered events for {self.component_id}")
 
-    def get_component_refs(self) -> Dict[str, Any]:
+    def get_component_refs(self) -> dict[str, Any]:
         """Get references to this component's Gradio components."""
         return self._component_refs.copy()
 
     def _chat(
         self,
         message: str,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt_input: str,
         similarity_threshold: float = 0.7,
@@ -285,8 +278,7 @@ class ChatComponentImpl(UIComponent):
         response_length: str = "Medium",
         *_: Any,
     ) -> Any:
-        """
-        Handle chat message processing.
+        """Handle chat message processing.
 
         This is the core chat functionality extracted from ui.py.
         """
@@ -345,7 +337,7 @@ class ChatComponentImpl(UIComponent):
 
                 except Exception as e:
                     logger.error(f"Chat error: {e}")
-                    history[-1][1] = f"Error: {str(e)}"
+                    history[-1][1] = f"Error: {e!s}"
                     yield history
             else:
                 history[-1][1] = "Chat service not available"
@@ -367,7 +359,7 @@ class ChatComponentImpl(UIComponent):
 
                 except Exception as e:
                     logger.error(f"Chat error: {e}")
-                    history[-1][1] = f"Error: {str(e)}"
+                    history[-1][1] = f"Error: {e!s}"
                     yield history
             else:
                 # Fallback if no service
@@ -377,8 +369,7 @@ class ChatComponentImpl(UIComponent):
     def _yield_deltas(
         self, completion_gen: CompletionGen, citation_style: str
     ) -> Iterable[str]:
-        """
-        Handle streaming response deltas.
+        """Handle streaming response deltas.
 
         Extracted from ui.py _chat method.
         """
@@ -415,9 +406,8 @@ class ChatComponentImpl(UIComponent):
 
         yield full_response
 
-    def _build_history(self, history: List[List[str]]) -> List[ChatMessage]:
-        """
-        Build chat message history.
+    def _build_history(self, history: list[list[str]]) -> list[ChatMessage]:
+        """Build chat message history.
 
         Extracted from ui.py _chat method.
         """
@@ -438,14 +428,14 @@ class ChatComponentImpl(UIComponent):
         # Limit to 20 messages to avoid context overflow
         return history_messages[-20:]
 
-    def _clear_chat(self) -> List:
+    def _clear_chat(self) -> list:
         """Clear the chat history."""
         logger.debug("Chat history cleared")
         return []
 
     def _retry_last(
         self,
-        history: List[List[str]],
+        history: list[list[str]],
         mode: str,
         system_prompt: str,
         similarity_threshold: float,

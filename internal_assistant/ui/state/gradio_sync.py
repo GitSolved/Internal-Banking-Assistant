@@ -1,5 +1,4 @@
-"""
-Gradio-State Synchronization System
+"""Gradio-State Synchronization System
 
 This module provides automatic synchronization between the centralized state
 management system and Gradio UI components. It solves the critical issue where
@@ -9,14 +8,15 @@ Part of Phase 2.5: State Management Integration Fix
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from threading import Lock
-import gradio as gr
-from dataclasses import dataclass, field
 from collections import defaultdict
+from collections.abc import Callable
+from dataclasses import dataclass
+from threading import Lock
+from typing import Any
 
-from .state_manager import StateObserver, StateChange, StateStore
-from .app_state import ApplicationState
+import gradio as gr
+
+from .state_manager import StateChange, StateObserver, StateStore
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +28,17 @@ class ComponentBinding:
     component_name: str
     component_ref: Any  # Gradio component reference
     state_path: str
-    transform_to_ui: Optional[Callable[[Any], Any]] = (
+    transform_to_ui: Callable[[Any], Any] | None = (
         None  # Transform state value for UI
     )
-    transform_from_ui: Optional[Callable[[Any], Any]] = (
+    transform_from_ui: Callable[[Any], Any] | None = (
         None  # Transform UI value for state
     )
-    update_trigger: Optional[Any] = None  # Component event that triggers state update
+    update_trigger: Any | None = None  # Component event that triggers state update
 
 
 class GradioStateSync:
-    """
-    Manages synchronization between Gradio components and centralized state.
+    """Manages synchronization between Gradio components and centralized state.
 
     This class solves the critical issue where state observers can't directly
     update Gradio components. Instead, it maintains a queue of pending updates
@@ -47,19 +46,18 @@ class GradioStateSync:
     """
 
     def __init__(self, state_store: StateStore):
-        """
-        Initialize Gradio state synchronization.
+        """Initialize Gradio state synchronization.
 
         Args:
             state_store: The centralized state store to sync with
         """
         self.state_store = state_store
-        self._bindings: Dict[str, ComponentBinding] = {}
-        self._state_to_components: Dict[str, List[str]] = defaultdict(list)
-        self._pending_updates: Dict[str, Any] = {}
-        self._update_callbacks: Dict[str, List[Callable]] = defaultdict(list)
+        self._bindings: dict[str, ComponentBinding] = {}
+        self._state_to_components: dict[str, list[str]] = defaultdict(list)
+        self._pending_updates: dict[str, Any] = {}
+        self._update_callbacks: dict[str, list[Callable]] = defaultdict(list)
         self._lock = Lock()
-        self._observers: Dict[str, StateObserver] = {}
+        self._observers: dict[str, StateObserver] = {}
 
         logger.info("GradioStateSync initialized")
 
@@ -69,11 +67,10 @@ class GradioStateSync:
         component_ref: Any,
         state_path: str,
         bidirectional: bool = True,
-        transform_to_ui: Optional[Callable[[Any], Any]] = None,
-        transform_from_ui: Optional[Callable[[Any], Any]] = None,
+        transform_to_ui: Callable[[Any], Any] | None = None,
+        transform_from_ui: Callable[[Any], Any] | None = None,
     ) -> None:
-        """
-        Bind a Gradio component to a state path with automatic synchronization.
+        """Bind a Gradio component to a state path with automatic synchronization.
 
         Args:
             component_name: Unique name for the component
@@ -155,9 +152,8 @@ class GradioStateSync:
                 except Exception as e:
                     logger.error(f"Update callback error for {component_name}: {e}")
 
-    def get_pending_updates(self) -> Dict[str, Any]:
-        """
-        Get all pending UI updates and clear the queue.
+    def get_pending_updates(self) -> dict[str, Any]:
+        """Get all pending UI updates and clear the queue.
 
         Returns:
             Dictionary of component names to their new values
@@ -167,9 +163,8 @@ class GradioStateSync:
             self._pending_updates.clear()
             return updates
 
-    def create_update_handler(self, component_names: List[str]) -> Callable:
-        """
-        Create a Gradio event handler that applies pending updates.
+    def create_update_handler(self, component_names: list[str]) -> Callable:
+        """Create a Gradio event handler that applies pending updates.
 
         This is the key to making state changes update the UI. Use this
         handler in Gradio event callbacks to apply state changes.
@@ -181,7 +176,7 @@ class GradioStateSync:
             Handler function that returns updated values for components
         """
 
-        def handler(*args) -> Tuple[Any, ...]:
+        def handler(*args) -> tuple[Any, ...]:
             updates = self.get_pending_updates()
             results = []
 
@@ -210,8 +205,7 @@ class GradioStateSync:
     def create_state_update_handler(
         self, component_name: str, state_path: str
     ) -> Callable:
-        """
-        Create a handler that updates state when a component changes.
+        """Create a handler that updates state when a component changes.
 
         Args:
             component_name: Name of the component
@@ -245,8 +239,7 @@ class GradioStateSync:
     def register_update_callback(
         self, component_name: str, callback: Callable[[Any], None]
     ) -> None:
-        """
-        Register a callback to be called when a component needs updating.
+        """Register a callback to be called when a component needs updating.
 
         This is useful for complex components that need custom update logic.
 
@@ -258,9 +251,8 @@ class GradioStateSync:
             self._update_callbacks[component_name].append(callback)
             logger.debug(f"Registered update callback for {component_name}")
 
-    def sync_all_components(self) -> Dict[str, Any]:
-        """
-        Get current values for all bound components from state.
+    def sync_all_components(self) -> dict[str, Any]:
+        """Get current values for all bound components from state.
 
         Returns:
             Dictionary of component names to their current values
@@ -280,10 +272,9 @@ class GradioStateSync:
         return values
 
     def create_periodic_sync_handler(
-        self, component_names: List[str], interval_ms: int = 500
-    ) -> Tuple[Callable, Any]:
-        """
-        Create a periodic sync handler that updates components at regular intervals.
+        self, component_names: list[str], interval_ms: int = 500
+    ) -> tuple[Callable, Any]:
+        """Create a periodic sync handler that updates components at regular intervals.
 
         This ensures UI stays in sync even if individual updates are missed.
 
@@ -295,7 +286,7 @@ class GradioStateSync:
             Tuple of (handler function, Timer component)
         """
 
-        def sync_handler() -> Tuple[Any, ...]:
+        def sync_handler() -> tuple[Any, ...]:
             values = self.sync_all_components()
             results = []
 
@@ -317,8 +308,7 @@ class GradioStateSync:
         return sync_handler, timer
 
     def unbind_component(self, component_name: str) -> None:
-        """
-        Remove a component binding and its observer.
+        """Remove a component binding and its observer.
 
         Args:
             component_name: Name of component to unbind
@@ -346,8 +336,7 @@ class GradioStateSync:
 
 
 def create_gradio_sync(state_store: StateStore) -> GradioStateSync:
-    """
-    Factory function to create a GradioStateSync instance.
+    """Factory function to create a GradioStateSync instance.
 
     Args:
         state_store: The state store to sync with

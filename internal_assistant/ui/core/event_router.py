@@ -1,5 +1,4 @@
-"""
-Event Router
+"""Event Router
 
 This module provides centralized event handling and routing for the Internal Assistant
 UI system. It manages the complex web of Gradio event handlers while maintaining
@@ -12,17 +11,18 @@ The EventRouter ensures:
 - Component events can be easily debugged and traced
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
-import logging
 import functools
+import logging
+from collections.abc import Callable
+from typing import Any
+
 import gradio as gr
 
 logger = logging.getLogger(__name__)
 
 
 class EventHandler:
-    """
-    Wrapper for event handler functions with metadata.
+    """Wrapper for event handler functions with metadata.
 
     This class provides additional functionality around event handlers,
     including logging, error handling, and performance monitoring.
@@ -33,10 +33,9 @@ class EventHandler:
         handler_func: Callable,
         component_id: str,
         event_type: str,
-        description: Optional[str] = None,
+        description: str | None = None,
     ):
-        """
-        Initialize an event handler.
+        """Initialize an event handler.
 
         Args:
             handler_func: The actual handler function
@@ -54,8 +53,7 @@ class EventHandler:
         self.wrapped_handler = self._wrap_handler(handler_func)
 
     def _wrap_handler(self, func: Callable) -> Callable:
-        """
-        Wrap a handler function with logging and error handling.
+        """Wrap a handler function with logging and error handling.
 
         Args:
             func: Original handler function
@@ -87,8 +85,7 @@ class EventHandler:
 
 
 class EventRouter:
-    """
-    Central router for managing UI event handlers.
+    """Central router for managing UI event handlers.
 
     This class provides a structured way to register, organize, and manage
     event handlers across multiple UI components. It ensures proper event
@@ -97,19 +94,18 @@ class EventRouter:
 
     def __init__(self):
         """Initialize the event router."""
-        self._handlers: Dict[str, List[EventHandler]] = {}
-        self._registered_events: List[Tuple[str, str, Any]] = []
-        self._component_refs: Dict[str, Dict[str, Any]] = {}
+        self._handlers: dict[str, list[EventHandler]] = {}
+        self._registered_events: list[tuple[str, str, Any]] = []
+        self._component_refs: dict[str, dict[str, Any]] = {}
 
     def register_handler(
         self,
         component_id: str,
         event_type: str,
         handler_func: Callable,
-        description: Optional[str] = None,
+        description: str | None = None,
     ) -> EventHandler:
-        """
-        Register an event handler for a component.
+        """Register an event handler for a component.
 
         Args:
             component_id: ID of the component
@@ -130,9 +126,8 @@ class EventRouter:
         logger.debug(f"Registered event handler: {handler.description}")
         return handler
 
-    def register_component_refs(self, component_id: str, refs: Dict[str, Any]) -> None:
-        """
-        Register component references for event binding.
+    def register_component_refs(self, component_id: str, refs: dict[str, Any]) -> None:
+        """Register component references for event binding.
 
         Args:
             component_id: ID of the component
@@ -142,8 +137,7 @@ class EventRouter:
         logger.debug(f"Registered component refs for: {component_id}")
 
     def bind_events(self, demo: gr.Blocks) -> None:
-        """
-        Bind all registered event handlers to their components within the Gradio context.
+        """Bind all registered event handlers to their components within the Gradio context.
 
         Args:
             demo: The main gr.Blocks context where events should be registered
@@ -159,10 +153,9 @@ class EventRouter:
         demo: gr.Blocks,
         component_id: str,
         handler: EventHandler,
-        component_refs: Dict[str, Any],
+        component_refs: dict[str, Any],
     ) -> None:
-        """
-        Bind a single event handler to its component.
+        """Bind a single event handler to its component.
 
         Args:
             demo: Gradio blocks context
@@ -182,9 +175,8 @@ class EventRouter:
         except Exception as e:
             logger.error(f"Failed to bind event {handler.description}: {e}")
 
-    def get_handlers_for_component(self, component_id: str) -> List[EventHandler]:
-        """
-        Get all event handlers for a specific component.
+    def get_handlers_for_component(self, component_id: str) -> list[EventHandler]:
+        """Get all event handlers for a specific component.
 
         Args:
             component_id: ID of the component
@@ -194,17 +186,16 @@ class EventRouter:
         """
         return self._handlers.get(component_id, [])
 
-    def get_all_handlers(self) -> Dict[str, List[EventHandler]]:
+    def get_all_handlers(self) -> dict[str, list[EventHandler]]:
         """Get all registered event handlers."""
         return self._handlers.copy()
 
-    def get_registered_events(self) -> List[Tuple[str, str, Any]]:
+    def get_registered_events(self) -> list[tuple[str, str, Any]]:
         """Get list of all registered events."""
         return self._registered_events.copy()
 
     def remove_component_handlers(self, component_id: str) -> None:
-        """
-        Remove all event handlers for a component.
+        """Remove all event handlers for a component.
 
         Args:
             component_id: ID of the component
@@ -213,9 +204,8 @@ class EventRouter:
             del self._handlers[component_id]
             logger.debug(f"Removed all handlers for component: {component_id}")
 
-    def get_handler_stats(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Get statistics about event handler usage.
+    def get_handler_stats(self) -> dict[str, dict[str, Any]]:
+        """Get statistics about event handler usage.
 
         Returns:
             Dictionary with handler statistics
@@ -242,26 +232,23 @@ class EventRouter:
 
 
 class EventBridge:
-    """
-    Bridge for handling cross-component communication.
+    """Bridge for handling cross-component communication.
 
     This class provides a way for components to communicate with each other
     through events without direct coupling.
     """
 
     def __init__(self, router: EventRouter):
-        """
-        Initialize the event bridge.
+        """Initialize the event bridge.
 
         Args:
             router: The main event router
         """
         self.router = router
-        self._subscribers: Dict[str, List[Callable]] = {}
+        self._subscribers: dict[str, list[Callable]] = {}
 
     def subscribe(self, event_name: str, callback: Callable) -> None:
-        """
-        Subscribe to a cross-component event.
+        """Subscribe to a cross-component event.
 
         Args:
             event_name: Name of the event to subscribe to
@@ -274,8 +261,7 @@ class EventBridge:
         logger.debug(f"Subscribed to event: {event_name}")
 
     def publish(self, event_name: str, data: Any = None) -> None:
-        """
-        Publish a cross-component event.
+        """Publish a cross-component event.
 
         Args:
             event_name: Name of the event
@@ -291,8 +277,7 @@ class EventBridge:
         logger.debug(f"Published event: {event_name}")
 
     def unsubscribe(self, event_name: str, callback: Callable) -> None:
-        """
-        Unsubscribe from a cross-component event.
+        """Unsubscribe from a cross-component event.
 
         Args:
             event_name: Name of the event
@@ -307,8 +292,7 @@ class EventBridge:
 
 
 def create_gradio_event_helper():
-    """
-    Create helper functions for common Gradio event patterns.
+    """Create helper functions for common Gradio event patterns.
 
     Returns:
         Dictionary of helper functions for Gradio events
@@ -317,8 +301,8 @@ def create_gradio_event_helper():
     def create_click_handler(
         component: Any,
         handler: Callable,
-        inputs: Optional[List[Any]] = None,
-        outputs: Optional[List[Any]] = None,
+        inputs: list[Any] | None = None,
+        outputs: list[Any] | None = None,
     ) -> None:
         """Helper for creating click event handlers."""
         component.click(fn=handler, inputs=inputs or [], outputs=outputs or [])
@@ -326,8 +310,8 @@ def create_gradio_event_helper():
     def create_change_handler(
         component: Any,
         handler: Callable,
-        inputs: Optional[List[Any]] = None,
-        outputs: Optional[List[Any]] = None,
+        inputs: list[Any] | None = None,
+        outputs: list[Any] | None = None,
     ) -> None:
         """Helper for creating change event handlers."""
         component.change(fn=handler, inputs=inputs or [], outputs=outputs or [])
@@ -335,8 +319,8 @@ def create_gradio_event_helper():
     def create_submit_handler(
         component: Any,
         handler: Callable,
-        inputs: Optional[List[Any]] = None,
-        outputs: Optional[List[Any]] = None,
+        inputs: list[Any] | None = None,
+        outputs: list[Any] | None = None,
     ) -> None:
         """Helper for creating submit event handlers."""
         component.submit(fn=handler, inputs=inputs or [], outputs=outputs or [])

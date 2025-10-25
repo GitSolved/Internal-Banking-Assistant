@@ -4,7 +4,7 @@ This module contains components for RSS feeds, CVE data, MITRE ATT&CK,
 forum data display functionality, and complex display builders.
 """
 
-from .feed_component import FeedComponent
 from .complex_display import ComplexDisplayBuilder
+from .feed_component import FeedComponent
 
-__all__ = ["FeedComponent", "ComplexDisplayBuilder"]
+__all__ = ["ComplexDisplayBuilder", "FeedComponent"]

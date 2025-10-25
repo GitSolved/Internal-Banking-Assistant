@@ -1,17 +1,13 @@
-"""
-Feeds Event Handlers
+"""Feeds Event Handlers
 
 This module contains all event handlers for RSS feeds and threat intelligence components.
 Extracted from ui.py as part of Phase 1 refactoring to decouple event handling
 from UI construction.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import datetime, timedelta
-
-import gradio as gr
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
 
@@ -19,14 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class FeedsEventHandler:
-    """
-    Handles all feed-related events including RSS feed refresh, filtering,
+    """Handles all feed-related events including RSS feed refresh, filtering,
     and threat intelligence updates.
     """
 
     def __init__(self, feeds_service: RSSFeedService, display_utility=None):
-        """
-        Initialize feeds event handler with required services.
+        """Initialize feeds event handler with required services.
 
         Args:
             feeds_service: Service for RSS feed operations
@@ -35,9 +29,8 @@ class FeedsEventHandler:
         self.feeds_service = feeds_service
         self.display_utility = display_utility
 
-    async def refresh_feeds(self) -> Tuple[str, str]:
-        """
-        Refresh RSS feeds and update display.
+    async def refresh_feeds(self) -> tuple[str, str]:
+        """Refresh RSS feeds and update display.
         Extracted from ui.py lines 5907-5971 (~62 lines).
 
         Returns:
@@ -86,13 +79,13 @@ class FeedsEventHandler:
             return status_msg, feed_html
 
         except Exception as e:
-            error_msg = f"Failed to refresh RSS feeds: {str(e)}"
+            error_msg = f"Failed to refresh RSS feeds: {e!s}"
             logger.error(error_msg)
 
             error_html = f"""
             <div class="error-message">
                 <h3>⚠️ RSS Feed Refresh Failed</h3>
-                <p><strong>Error:</strong> {str(e)}</p>
+                <p><strong>Error:</strong> {e!s}</p>
                 <p><strong>Solutions:</strong></p>
                 <ul>
                     <li>Check your internet connection</li>
@@ -101,13 +94,10 @@ class FeedsEventHandler:
                 </ul>
             </div>
             """
-            return f"❌ Error: {str(e)}", error_html
+            return f"❌ Error: {e!s}", error_html
 
-    def filter_cve(
-        self, time_filter: str, cve_content: str
-    ) -> Tuple[str, str, str]:
-        """
-        Filter CVE data by time period.
+    def filter_cve(self, time_filter: str, cve_content: str) -> tuple[str, str, str]:
+        """Filter CVE data by time period.
 
         Args:
             time_filter: Time filter period (24h, 7d, 30d, 90d)
@@ -155,7 +145,7 @@ class FeedsEventHandler:
             <div class='feed-content error'>
                 <div style='text-align: center; color: #d32f2f; padding: 20px;'>
                     <div>⚠️ Error filtering CVE data</div>
-                    <div style='font-size: 12px; margin-top: 8px;'>{str(e)}</div>
+                    <div style='font-size: 12px; margin-top: 8px;'>{e!s}</div>
                 </div>
             </div>"""
             return (
@@ -166,9 +156,8 @@ class FeedsEventHandler:
 
     def filter_feeds(
         self, time_filter: str, feeds_content: str
-    ) -> Tuple[str, str, str]:
-        """
-        Filter feeds by time period.
+    ) -> tuple[str, str, str]:
+        """Filter feeds by time period.
         Extracted from ui.py lines 5923-5961 (~38 lines).
 
         Args:
@@ -251,7 +240,7 @@ class FeedsEventHandler:
             return time_range_html, display_text, filtered_html
 
         except Exception as e:
-            error_msg = f"Failed to filter feeds: {str(e)}"
+            error_msg = f"Failed to filter feeds: {e!s}"
             logger.error(error_msg)
             filter_display_map = {
                 "24h": "24 hours",
@@ -264,14 +253,13 @@ class FeedsEventHandler:
             return (
                 time_range_html,
                 display_text,
-                f"<div class='error-message'>Filter error: {str(e)}</div>",
+                f"<div class='error-message'>Filter error: {e!s}</div>",
             )
 
     def _is_feed_within_timeframe(
-        self, feed: Dict[str, Any], cutoff_date: datetime
+        self, feed: dict[str, Any], cutoff_date: datetime
     ) -> bool:
-        """
-        Check if feed is within the specified timeframe.
+        """Check if feed is within the specified timeframe.
 
         Args:
             feed: Feed item dictionary
@@ -292,9 +280,8 @@ class FeedsEventHandler:
                     pub_date = datetime.fromisoformat(published)
                     # Make cutoff_date timezone-aware if pub_date is
                     if pub_date.tzinfo is not None and cutoff_date.tzinfo is None:
-                        from datetime import timezone
 
-                        cutoff_date = cutoff_date.replace(tzinfo=timezone.utc)
+                        cutoff_date = cutoff_date.replace(tzinfo=UTC)
                     return pub_date >= cutoff_date
                 except (ValueError, AttributeError):
                     pass
@@ -320,9 +307,8 @@ class FeedsEventHandler:
             logger.warning(f"Error checking feed timeframe: {e}")
             return True  # Include items that cause errors
 
-    def _parse_time_filter(self, time_filter: str) -> Optional[int]:
-        """
-        Parse time filter string to hours.
+    def _parse_time_filter(self, time_filter: str) -> int | None:
+        """Parse time filter string to hours.
 
         Args:
             time_filter: Time filter (24h, 7d, 30d, 90d)
@@ -333,9 +319,8 @@ class FeedsEventHandler:
         filter_map = {"24h": 24, "7d": 24 * 7, "30d": 24 * 30, "90d": 24 * 90}
         return filter_map.get(time_filter.lower())
 
-    def _format_feeds_html(self, feeds: List[Dict[str, Any]]) -> str:
-        """
-        Format feeds data into HTML.
+    def _format_feeds_html(self, feeds: list[dict[str, Any]]) -> str:
+        """Format feeds data into HTML.
 
         Args:
             feeds: List of feed data dictionaries from RSSFeedService.get_feeds()
@@ -376,9 +361,8 @@ class FeedsEventHandler:
         html_parts.append("</div>")
         return "".join(html_parts)
 
-    async def refresh_cve_data(self) -> Tuple[str, str]:
-        """
-        Refresh CVE (Common Vulnerabilities and Exposures) data.
+    async def refresh_cve_data(self) -> tuple[str, str]:
+        """Refresh CVE (Common Vulnerabilities and Exposures) data.
         Automatically shows last 7 days of CVE data (filtered by time).
 
         Returns:
@@ -405,29 +389,30 @@ class FeedsEventHandler:
                 None,  # source_filter
                 "All Severities",  # severity_filter
                 "All Vendors",  # vendor_filter
-                7  # days_filter = 7 days
+                7,  # days_filter = 7 days
             )
 
             status_msg = "✅ CVE data refreshed (showing last 7 days)"
-            logger.info(f"CVE data refresh completed with 7-day filter")
+            logger.info("CVE data refresh completed with 7-day filter")
             return status_msg, cve_html
 
         except Exception as e:
-            error_msg = f"Failed to refresh CVE data: {str(e)}"
+            error_msg = f"Failed to refresh CVE data: {e!s}"
             logger.error(error_msg)
 
             error_html = f"""
             <div class="error-message">
                 <h3>⚠️ CVE Data Refresh Failed</h3>
-                <p><strong>Error:</strong> {str(e)}</p>
+                <p><strong>Error:</strong> {e!s}</p>
                 <p>Please try again later or check your network connection.</p>
             </div>
             """
-            return f"❌ Error: {str(e)}", error_html
+            return f"❌ Error: {e!s}", error_html
 
-    async def refresh_and_filter_feeds(self, time_filter: str) -> Tuple[str, str, str, str]:
-        """
-        Refresh RSS feeds from source and filter by time period.
+    async def refresh_and_filter_feeds(
+        self, time_filter: str
+    ) -> tuple[str, str, str, str]:
+        """Refresh RSS feeds from source and filter by time period.
         Combines refresh and filter operations for time filter buttons.
 
         Args:
@@ -437,7 +422,9 @@ class FeedsEventHandler:
             Tuple of (status_message, time_range_display_html, filter_state, filtered_html)
         """
         try:
-            logger.info(f"Refreshing and filtering feeds with time_filter={time_filter}")
+            logger.info(
+                f"Refreshing and filtering feeds with time_filter={time_filter}"
+            )
 
             # First refresh feeds from source
             async with self.feeds_service as service:
@@ -459,7 +446,12 @@ class FeedsEventHandler:
                         <p><em>Try again in a few minutes.</em></p>
                     </div>
                     """
-                    return "Failed to refresh feeds", time_range_html, display_text, error_html
+                    return (
+                        "Failed to refresh feeds",
+                        time_range_html,
+                        display_text,
+                        error_html,
+                    )
 
             # Now filter the refreshed data by time
             filter_display_map = {
@@ -474,17 +466,28 @@ class FeedsEventHandler:
             # Parse time filter to hours
             filter_hours = self._parse_time_filter(time_filter)
             if filter_hours is None:
-                return "Invalid time filter", time_range_html, display_text, "Invalid time filter specified."
+                return (
+                    "Invalid time filter",
+                    time_range_html,
+                    display_text,
+                    "Invalid time filter specified.",
+                )
 
             # Calculate cutoff date and filter feeds
             cutoff_date = datetime.now() - timedelta(hours=filter_hours)
             feeds = self.feeds_service.get_feeds()
 
             if not feeds:
-                return "No feeds available", time_range_html, display_text, "<div class='no-content'>No feeds available</div>"
+                return (
+                    "No feeds available",
+                    time_range_html,
+                    display_text,
+                    "<div class='no-content'>No feeds available</div>",
+                )
 
             filtered_feeds = [
-                feed for feed in feeds
+                feed
+                for feed in feeds
                 if self._is_feed_within_timeframe(feed, cutoff_date)
             ]
 
@@ -495,7 +498,12 @@ class FeedsEventHandler:
                     <p>No feeds found for the last {display_text}.</p>
                 </div>
                 """
-                return f"No feeds in last {display_text}", time_range_html, display_text, empty_html
+                return (
+                    f"No feeds in last {display_text}",
+                    time_range_html,
+                    display_text,
+                    empty_html,
+                )
 
             filtered_html = self._format_feeds_html(filtered_feeds)
             status_msg = f"✅ Refreshed {len(filtered_feeds)} feeds ({display_text})"
@@ -512,12 +520,13 @@ class FeedsEventHandler:
             }
             display_text = filter_display_map.get(time_filter, "7 days")
             time_range_html = f"<div style='font-size: 12px; font-weight: 600; color: #0077BE; margin-bottom: 4px; margin-top: 8px;'>⏰ TIME RANGE: {display_text}</div>"
-            error_html = f"<div class='error-message'>Error: {str(e)}</div>"
-            return f"❌ Error: {str(e)}", time_range_html, display_text, error_html
+            error_html = f"<div class='error-message'>Error: {e!s}</div>"
+            return f"❌ Error: {e!s}", time_range_html, display_text, error_html
 
-    async def refresh_and_filter_cve(self, time_filter: str) -> Tuple[str, str, str, str]:
-        """
-        Refresh CVE data from source and filter by time period.
+    async def refresh_and_filter_cve(
+        self, time_filter: str
+    ) -> tuple[str, str, str, str]:
+        """Refresh CVE data from source and filter by time period.
         Combines refresh and filter operations for CVE time filter buttons.
 
         Args:
@@ -527,7 +536,9 @@ class FeedsEventHandler:
             Tuple of (status_message, time_range_display_html, filter_state, filtered_html)
         """
         try:
-            logger.info(f"Refreshing and filtering CVE data with time_filter={time_filter}")
+            logger.info(
+                f"Refreshing and filtering CVE data with time_filter={time_filter}"
+            )
 
             # First refresh feeds from source (CVE data comes from feeds)
             async with self.feeds_service as service:
@@ -549,7 +560,12 @@ class FeedsEventHandler:
                         <p><em>Try again in a few minutes.</em></p>
                     </div>
                     """
-                    return "Failed to refresh CVE data", time_range_html, display_text, error_html
+                    return (
+                        "Failed to refresh CVE data",
+                        time_range_html,
+                        display_text,
+                        error_html,
+                    )
 
             # Map time filter to days for CVE filtering
             filter_days_map = {
@@ -589,12 +605,11 @@ class FeedsEventHandler:
             }
             display_text = filter_display_map.get(time_filter, "7 days")
             time_range_html = f"<div style='font-size: 12px; font-weight: 600; color: #0077BE; margin-bottom: 4px; margin-top: 8px;'>⏰ TIME RANGE: {display_text}</div>"
-            error_html = f"<div class='error-message'>Error: {str(e)}</div>"
-            return f"❌ Error: {str(e)}", time_range_html, display_text, error_html
+            error_html = f"<div class='error-message'>Error: {e!s}</div>"
+            return f"❌ Error: {e!s}", time_range_html, display_text, error_html
 
-    async def refresh_mitre_data(self) -> Tuple[str, str]:
-        """
-        Refresh MITRE ATT&CK framework data from official API.
+    async def refresh_mitre_data(self) -> tuple[str, str]:
+        """Refresh MITRE ATT&CK framework data from official API.
         Fetches actual techniques, tactics, and threat groups from MITRE ATT&CK.
 
         Returns:
@@ -647,13 +662,13 @@ class FeedsEventHandler:
                 return status_msg, mitre_html
 
         except Exception as e:
-            error_msg = f"Failed to refresh MITRE data: {str(e)}"
+            error_msg = f"Failed to refresh MITRE data: {e!s}"
             logger.error(error_msg)
 
             error_html = f"""
             <div class="error-message">
                 <h3>⚠️ MITRE ATT&CK Refresh Failed</h3>
-                <p><strong>Error:</strong> {str(e)}</p>
+                <p><strong>Error:</strong> {e!s}</p>
                 <p><strong>Solutions:</strong></p>
                 <ul>
                     <li>Check your internet connection</li>
@@ -662,11 +677,12 @@ class FeedsEventHandler:
                 </ul>
             </div>
             """
-            return f"❌ Error: {str(e)}", error_html
+            return f"❌ Error: {e!s}", error_html
 
-    def _format_mitre_attack_data(self, mitre_service, sector: str = "Financial") -> str:
-        """
-        Format MITRE ATT&CK data into HTML.
+    def _format_mitre_attack_data(
+        self, mitre_service, sector: str = "Financial"
+    ) -> str:
+        """Format MITRE ATT&CK data into HTML.
 
         Args:
             mitre_service: MitreAttackService instance with loaded data
@@ -681,7 +697,8 @@ class FeedsEventHandler:
         sector_techniques = mitre_service.get_sector_relevant_techniques(sector)
         sector_groups = mitre_service.get_sector_threat_groups(sector)
 
-        html_parts = [f"""
+        html_parts = [
+            f"""
         <div class="mitre-attack-container">
             <div class="mitre-header">
                 <h3>🎯 MITRE ATT&CK Framework Data</h3>
@@ -690,22 +707,26 @@ class FeedsEventHandler:
                    <strong>Threat Groups:</strong> {cache_info['groups_count']}</p>
                 <p><strong>Sector-Relevant:</strong> {len(sector_techniques)} techniques | {len(sector_groups)} threat groups</p>
             </div>
-        """]
+        """
+        ]
 
         # Display sector-relevant threat groups
         if sector_groups:
-            html_parts.append("""
+            html_parts.append(
+                """
             <div class="mitre-section">
                 <h4 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 20px;">
                     🚨 High-Priority Threat Groups (Targeting Banking/Financial Sector)
                 </h4>
-            """)
+            """
+            )
 
             for group in sector_groups[:10]:  # Show top 10
                 aliases_str = ", ".join(group.aliases[:3]) if group.aliases else "None"
                 techniques_count = len(group.techniques) if group.techniques else 0
 
-                html_parts.append(f"""
+                html_parts.append(
+                    f"""
                 <div class="threat-group" style="border-left: 4px solid #d32f2f; padding-left: 12px; margin-bottom: 16px; background-color: #ffebee; padding: 12px; border-radius: 4px;">
                     <h5 style="margin: 0 0 8px 0; color: #b71c1c;">
                         <span style="color: #d32f2f;">🎯</span> {group.name}
@@ -719,23 +740,31 @@ class FeedsEventHandler:
                         <a href="{group.url}" target="_blank" style="color: #0066cc;">View Details</a>
                     </div>
                 </div>
-                """)
+                """
+                )
 
             html_parts.append("</div>")
 
         # Display sector-relevant techniques (sample)
         if sector_techniques:
-            html_parts.append("""
+            html_parts.append(
+                """
             <div class="mitre-section">
                 <h4 style="color: #FF6B35; border-bottom: 2px solid #FF6B35; padding-bottom: 8px; margin-top: 20px;">
                     ⚠️ Key Techniques to Monitor
                 </h4>
-            """)
+            """
+            )
 
             for technique in sector_techniques[:15]:  # Show top 15
-                platforms_str = ", ".join(technique.platforms[:3]) if technique.platforms else "Multiple"
+                platforms_str = (
+                    ", ".join(technique.platforms[:3])
+                    if technique.platforms
+                    else "Multiple"
+                )
 
-                html_parts.append(f"""
+                html_parts.append(
+                    f"""
                 <div class="technique-item" style="border-left: 4px solid #FF6B35; padding-left: 12px; margin-bottom: 16px; background-color: #fff3e0; padding: 12px; border-radius: 4px;">
                     <h5 style="margin: 0 0 8px 0; color: #E65100;">
                         <span style="background-color: #FF6B35; color: white; padding: 2px 8px; border-radius: 3px; font-family: monospace; font-size: 0.85em;">
@@ -751,13 +780,15 @@ class FeedsEventHandler:
                         <a href="{technique.url}" target="_blank" style="color: #0066cc;">View Details</a>
                     </div>
                 </div>
-                """)
+                """
+                )
 
             html_parts.append("</div>")
 
         # Footer with cache info
         last_refresh = cache_info.get("last_refresh", "Never")
-        html_parts.append(f"""
+        html_parts.append(
+            f"""
             <div class="mitre-footer" style="margin-top: 20px; padding: 12px; background-color: #e3f2fd; border-radius: 4px; border-left: 4px solid #2196F3;">
                 <p style="margin: 0; color: #0d47a1;"><strong>ℹ️ Data Source:</strong></p>
                 <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #1565c0;">
@@ -768,27 +799,27 @@ class FeedsEventHandler:
                 </ul>
             </div>
         </div>
-        """)
+        """
+        )
 
         return "".join(html_parts)
 
 
-
 class FeedsEventHandlerBuilder:
-    """
-    Builder class for creating feeds event handlers with dependency injection.
+    """Builder class for creating feeds event handlers with dependency injection.
     """
 
     def __init__(self, feeds_service: RSSFeedService):
-        """
-        Initialize the builder with required services.
+        """Initialize the builder with required services.
 
         Args:
             feeds_service: Service for RSS feed operations
         """
         self.feeds_service = feeds_service
         # Create display_utility for CVE filtering with threat analyzer
-        from internal_assistant.ui.components.feeds.display_utility import DisplayUtilityBuilder
+        from internal_assistant.ui.components.feeds.display_utility import (
+            DisplayUtilityBuilder,
+        )
 
         # Get threat analyzer from dependency injection for MITRE integration
         threat_analyzer = None
@@ -797,17 +828,19 @@ class FeedsEventHandlerBuilder:
             from internal_assistant.server.threat_intelligence.threat_analyzer import (
                 ThreatIntelligenceAnalyzer,
             )
+
             threat_analyzer = global_injector.get(ThreatIntelligenceAnalyzer)
             logger.debug("ThreatIntelligenceAnalyzer loaded for CVE MITRE integration")
         except Exception as e:
-            logger.warning(f"Could not load ThreatIntelligenceAnalyzer for CVE display: {e}")
+            logger.warning(
+                f"Could not load ThreatIntelligenceAnalyzer for CVE display: {e}"
+            )
 
         self.display_utility = DisplayUtilityBuilder(feeds_service, threat_analyzer)
         self._handler = None
 
     def get_handler(self) -> FeedsEventHandler:
-        """
-        Get or create the feeds event handler instance.
+        """Get or create the feeds event handler instance.
 
         Returns:
             FeedsEventHandler instance
@@ -859,7 +892,6 @@ class FeedsEventHandlerBuilder:
             return await self.get_handler().refresh_mitre_data()
 
         return wrapper
-
 
     def create_refresh_and_filter_feeds_handler(self, time_filter: str):
         """Create handler for refreshing and filtering RSS feeds by time period."""

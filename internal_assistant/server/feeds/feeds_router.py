@@ -1,16 +1,16 @@
 """Router for RSS feeds API endpoints."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from injector import inject
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from internal_assistant.server.utils.auth import authenticated
-from internal_assistant.server.feeds.feeds_service import RSSFeedService
-from internal_assistant.server.feeds.background_refresh import BackgroundRefreshService
 from internal_assistant.di import global_injector
+from internal_assistant.server.feeds.background_refresh import BackgroundRefreshService
+from internal_assistant.server.feeds.feeds_service import RSSFeedService
+from internal_assistant.server.utils.auth import authenticated
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +20,10 @@ feeds_router = APIRouter(prefix="/v1/feeds", dependencies=[Depends(authenticated
 class FeedRequest(BaseModel):
     """Request model for feed filtering."""
 
-    source: Optional[str] = Field(
+    source: str | None = Field(
         None, description="Filter by source (FINRA, Federal Reserve, FinCEN)"
     )
-    days: Optional[int] = Field(None, description="Filter by days (7, 30, etc.)")
+    days: int | None = Field(None, description="Filter by days (7, 30, etc.)")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -31,10 +31,10 @@ class FeedRequest(BaseModel):
 class FeedResponse(BaseModel):
     """Response model for feed data."""
 
-    items: List[Dict[str, Any]]
+    items: list[dict[str, Any]]
     total_count: int
-    sources: List[str]
-    cache_info: Dict[str, Any]
+    sources: list[str]
+    cache_info: dict[str, Any]
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
@@ -50,21 +50,21 @@ class AddFeedRequest(BaseModel):
 class FeedHealthResponse(BaseModel):
     total_sources: int
     categories: int
-    last_refresh: Optional[str]
+    last_refresh: str | None
     cache_size: int
-    sources: Dict[str, Any]
+    sources: dict[str, Any]
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 @feeds_router.get("/health")
-async def health_check() -> Dict[str, str]:
+async def health_check() -> dict[str, str]:
     """Health check endpoint for feeds service."""
     return {"status": "healthy", "service": "feeds"}
 
 
 @feeds_router.post("/refresh")
 @inject
-async def refresh_feeds(feed_service: RSSFeedService = Depends()) -> Dict[str, Any]:
+async def refresh_feeds(feed_service: RSSFeedService = Depends()) -> dict[str, Any]:
     """Manually trigger feed refresh."""
     try:
         async with feed_service:
@@ -109,7 +109,7 @@ async def get_feeds(
 
 @feeds_router.get("/sources")
 @inject
-async def get_sources(feed_service: RSSFeedService = Depends()) -> Dict[str, List[str]]:
+async def get_sources(feed_service: RSSFeedService = Depends()) -> dict[str, list[str]]:
     """Get available feed sources."""
     try:
         return {"sources": feed_service.get_available_sources()}
@@ -122,7 +122,7 @@ async def get_sources(feed_service: RSSFeedService = Depends()) -> Dict[str, Lis
 @inject
 async def start_background_refresh(
     feed_service: RSSFeedService = Depends(),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Start background RSS feed refresh service."""
     try:
         # Create background service (would be better as singleton in production)
@@ -153,7 +153,7 @@ async def start_background_refresh(
 @inject
 async def get_background_status(
     feed_service: RSSFeedService = Depends(),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get background refresh service status."""
     try:
         # In production, this would reference the same singleton instance
@@ -171,7 +171,7 @@ async def add_feed_source(
     feeds_service: RSSFeedService = Depends(
         lambda: global_injector.get(RSSFeedService)
     ),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Add a new RSS feed source dynamically."""
     success = feeds_service.add_feed_source(
         name=request.name,
@@ -195,7 +195,7 @@ async def remove_feed_source(
     feeds_service: RSSFeedService = Depends(
         lambda: global_injector.get(RSSFeedService)
     ),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Remove an RSS feed source."""
     success = feeds_service.remove_feed_source(feed_name)
 
@@ -215,5 +215,3 @@ async def get_feed_health(
 ) -> FeedHealthResponse:
     """Get health status of all RSS feed sources."""
     return feeds_service.get_feed_health_status()
-
-

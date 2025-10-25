@@ -1,5 +1,4 @@
-"""
-Document Service Facade
+"""Document Service Facade
 
 Provides clean abstraction for document management services with
 batch processing, progress tracking, and intelligent caching.
@@ -7,43 +6,41 @@ batch processing, progress tracking, and intelligent caching.
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import List, Tuple, Dict, Any, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import tempfile
+from typing import Any
 
+from internal_assistant.server.chunks.chunks_service import Chunk, ChunksService
 from internal_assistant.server.ingest.ingest_service import IngestService
-from internal_assistant.server.chunks.chunks_service import ChunksService, Chunk
 from internal_assistant.server.ingest.model import IngestedDoc
-from .service_facade import ServiceFacade, ServiceHealth
+
+from .service_facade import ServiceFacade
 
 logger = logging.getLogger(__name__)
 
 
 class DocumentServiceFacade(ServiceFacade[IngestService]):
-    """
-    Facade for document management services with enhanced batch processing,
+    """Facade for document management services with enhanced batch processing,
     intelligent caching, and comprehensive progress tracking.
     """
 
     def __init__(
         self,
         ingest_service: IngestService,
-        chunks_service: Optional[ChunksService] = None,
+        chunks_service: ChunksService | None = None,
     ):
         super().__init__(ingest_service, "document_service")
         self.chunks_service = chunks_service
-        self._processing_queue: Dict[str, Dict] = {}
-        self._document_cache: Dict[str, List[IngestedDoc]] = {}
+        self._processing_queue: dict[str, dict] = {}
+        self._document_cache: dict[str, list[IngestedDoc]] = {}
         self._last_document_refresh = 0
         self._batch_processor = ThreadPoolExecutor(
             max_workers=3, thread_name_prefix="doc-batch"
         )
 
     @ServiceFacade.with_cache(ttl=30, key_func=lambda self: "ingested_files")
-    def list_ingested_files(self, force_refresh: bool = False) -> List[List[str]]:
-        """
-        Get list of ingested files with intelligent caching.
+    def list_ingested_files(self, force_refresh: bool = False) -> list[list[str]]:
+        """Get list of ingested files with intelligent caching.
 
         Args:
             force_refresh: If True, bypass cache and force fresh data fetch
@@ -98,9 +95,8 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
             return [["[ERROR: Could not load files]"]]
 
     @ServiceFacade.with_retry(max_retries=3, base_delay=1.0)
-    def bulk_ingest(self, files_to_ingest: List[Tuple[str, Path]]) -> Dict[str, Any]:
-        """
-        Perform bulk ingestion with progress tracking and error recovery.
+    def bulk_ingest(self, files_to_ingest: list[tuple[str, Path]]) -> dict[str, Any]:
+        """Perform bulk ingestion with progress tracking and error recovery.
 
         Args:
             files_to_ingest: List of (filename, path) tuples
@@ -166,9 +162,8 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
             }
 
     @ServiceFacade.with_retry(max_retries=2, base_delay=1.0)
-    def ingest_folder(self, folder_path: Path, **kwargs) -> Tuple[List, str]:
-        """
-        Ingest entire folder with progress tracking.
+    def ingest_folder(self, folder_path: Path, **kwargs) -> tuple[list, str]:
+        """Ingest entire folder with progress tracking.
 
         Args:
             folder_path: Path to folder to ingest
@@ -185,7 +180,6 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
 
             # Import the LocalIngestWorker
             import sys
-            import os
             from pathlib import Path as PathLib
 
             tools_path = (
@@ -195,12 +189,13 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
 
             try:
                 from ingest_folder import LocalIngestWorker
+
                 from internal_assistant.settings.settings import settings
             except ImportError as e:
                 logger.error(f"Failed to import LocalIngestWorker: {e}")
                 return (
                     self.list_ingested_files(),
-                    f"❌ Folder ingestion not available: {str(e)}",
+                    f"❌ Folder ingestion not available: {e!s}",
                 )
 
             # Initialize worker with UI-friendly settings
@@ -222,12 +217,11 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
 
         except Exception as e:
             logger.error(f"Folder ingestion failed: {e}", exc_info=True)
-            return self.list_ingested_files(), f"❌ Ingestion failed: {str(e)}"
+            return self.list_ingested_files(), f"❌ Ingestion failed: {e!s}"
 
     @ServiceFacade.with_retry(max_retries=2, base_delay=0.5)
     def delete_document(self, doc_id: str) -> None:
-        """
-        Delete a single document and clear the cache.
+        """Delete a single document and clear the cache.
 
         Args:
             doc_id: Document ID to delete
@@ -247,24 +241,30 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
 
             # Verify deletion
             import time
+
             time.sleep(0.3)  # Brief delay for persistence
 
             remaining_docs = self.service.list_ingested()
             if any(doc.doc_id == doc_id for doc in remaining_docs):
-                logger.error(f"❌ [FACADE] Document {doc_id} still exists after deletion!")
-                raise RuntimeError(f"Document deletion verification failed for {doc_id}")
+                logger.error(
+                    f"❌ [FACADE] Document {doc_id} still exists after deletion!"
+                )
+                raise RuntimeError(
+                    f"Document deletion verification failed for {doc_id}"
+                )
 
             logger.info(f"✅ [FACADE] Deletion verified for {doc_id}")
 
         except Exception as e:
-            logger.error(f"❌ [FACADE] Failed to delete document {doc_id}: {e}", exc_info=True)
+            logger.error(
+                f"❌ [FACADE] Failed to delete document {doc_id}: {e}", exc_info=True
+            )
             self.clear_cache()  # Clear cache even on failure
             raise
 
     @ServiceFacade.with_retry(max_retries=2, base_delay=0.5)
-    def delete_all_documents(self) -> Tuple[List, str]:
-        """
-        Delete all ingested documents with confirmation.
+    def delete_all_documents(self) -> tuple[list, str]:
+        """Delete all ingested documents with confirmation.
 
         Returns:
             Tuple of (updated file list, status message)
@@ -291,27 +291,39 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
 
             # Force a fresh fetch to verify deletion
             import time
+
             time.sleep(0.5)  # Brief delay to ensure persistence
 
             remaining_docs = self.service.list_ingested()
             if len(remaining_docs) > 0:
-                logger.error(f"❌ [DELETE_ALL] Deletion incomplete: {len(remaining_docs)} documents remain")
-                return self.list_ingested_files(force_refresh=True), f"⚠️ Partial delete: {len(remaining_docs)} documents remain"
+                logger.error(
+                    f"❌ [DELETE_ALL] Deletion incomplete: {len(remaining_docs)} documents remain"
+                )
+                return (
+                    self.list_ingested_files(force_refresh=True),
+                    f"⚠️ Partial delete: {len(remaining_docs)} documents remain",
+                )
 
-            logger.info(f"✅ [DELETE_ALL] Successfully deleted {document_count} documents")
+            logger.info(
+                f"✅ [DELETE_ALL] Successfully deleted {document_count} documents"
+            )
             return [], f"✅ Successfully deleted {document_count} documents"
 
         except Exception as e:
-            logger.error(f"❌ [DELETE_ALL] Failed to delete documents: {e}", exc_info=True)
+            logger.error(
+                f"❌ [DELETE_ALL] Failed to delete documents: {e}", exc_info=True
+            )
             self.clear_cache()  # Clear cache even on failure
-            return self.list_ingested_files(force_refresh=True), f"❌ Delete failed: {str(e)}"
+            return (
+                self.list_ingested_files(force_refresh=True),
+                f"❌ Delete failed: {e!s}",
+            )
 
     @ServiceFacade.with_cache(
         ttl=180, key_func=lambda self, query="": f"search_chunks:{query}"
     )
-    def search_chunks(self, query: str, limit: int = 10) -> List[Chunk]:
-        """
-        Search document chunks with caching.
+    def search_chunks(self, query: str, limit: int = 10) -> list[Chunk]:
+        """Search document chunks with caching.
 
         Args:
             query: Search query
@@ -335,9 +347,8 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
             logger.error(f"Chunk search failed: {e}")
             return []
 
-    def get_processing_status(self, batch_id: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Get processing status for batch operations.
+    def get_processing_status(self, batch_id: str | None = None) -> dict[str, Any]:
+        """Get processing status for batch operations.
 
         Args:
             batch_id: Specific batch ID, or None for all batches
@@ -361,8 +372,7 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
         }
 
     def cleanup_completed_batches(self, max_age_seconds: int = 3600) -> int:
-        """
-        Clean up old completed batch records.
+        """Clean up old completed batch records.
 
         Args:
             max_age_seconds: Maximum age for keeping completed batches
@@ -425,7 +435,7 @@ class DocumentServiceFacade(ServiceFacade[IngestService]):
         except Exception:
             return False
 
-    def get_service_info(self) -> Dict[str, Any]:
+    def get_service_info(self) -> dict[str, Any]:
         """Get comprehensive service information."""
         base_metrics = self.get_metrics()
 

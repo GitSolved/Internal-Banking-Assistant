@@ -1,42 +1,39 @@
-"""
-Service Factory
+"""Service Factory
 
 Factory for creating and configuring service facades and orchestrator
 with dependency injection integration.
 """
 
 import logging
-from typing import Optional, Any, Dict
+from typing import Any
 
 from internal_assistant.di import global_injector
 from internal_assistant.server.chat.chat_service import ChatService
-from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.chunks.chunks_service import ChunksService
 from internal_assistant.server.feeds.feeds_service import RSSFeedService
+from internal_assistant.server.ingest.ingest_service import IngestService
 from internal_assistant.server.recipes.summarize.summarize_service import (
     SummarizeService,
 )
 
-from .service_orchestrator import ServiceOrchestrator
 from .chat_service_facade import ChatServiceFacade
 from .document_service_facade import DocumentServiceFacade
 from .feeds_service_facade import FeedsServiceFacade
+from .service_orchestrator import ServiceOrchestrator
 
 logger = logging.getLogger(__name__)
 
 
 class ServiceFactory:
-    """
-    Factory for creating configured service facades and orchestrator.
+    """Factory for creating configured service facades and orchestrator.
     Integrates with the application's dependency injection system.
     """
 
     @staticmethod
     def create_service_orchestrator(
-        injector: Optional[Any] = None,
+        injector: Any | None = None,
     ) -> ServiceOrchestrator:
-        """
-        Create a fully configured service orchestrator.
+        """Create a fully configured service orchestrator.
 
         Args:
             injector: Optional dependency injector (uses global if not provided)
@@ -125,9 +122,8 @@ class ServiceFactory:
         return orchestrator
 
     @staticmethod
-    def create_chat_service_facade(injector: Optional[Any] = None) -> ChatServiceFacade:
-        """
-        Create a standalone chat service facade.
+    def create_chat_service_facade(injector: Any | None = None) -> ChatServiceFacade:
+        """Create a standalone chat service facade.
 
         Args:
             injector: Optional dependency injector
@@ -143,10 +139,9 @@ class ServiceFactory:
 
     @staticmethod
     def create_document_service_facade(
-        injector: Optional[Any] = None,
+        injector: Any | None = None,
     ) -> DocumentServiceFacade:
-        """
-        Create a standalone document service facade.
+        """Create a standalone document service facade.
 
         Args:
             injector: Optional dependency injector
@@ -170,10 +165,9 @@ class ServiceFactory:
 
     @staticmethod
     def create_feeds_service_facade(
-        injector: Optional[Any] = None,
+        injector: Any | None = None,
     ) -> FeedsServiceFacade:
-        """
-        Create a standalone feeds service facade.
+        """Create a standalone feeds service facade.
 
         Args:
             injector: Optional dependency injector
@@ -188,9 +182,8 @@ class ServiceFactory:
         return FeedsServiceFacade(feeds_service)
 
     @staticmethod
-    def create_service_mock_factory() -> Dict[str, Any]:
-        """
-        Create mock services for testing purposes.
+    def create_service_mock_factory() -> dict[str, Any]:
+        """Create mock services for testing purposes.
 
         Returns:
             Dictionary of mock service instances
@@ -232,8 +225,7 @@ class ServiceFactory:
 
     @staticmethod
     def create_test_orchestrator() -> ServiceOrchestrator:
-        """
-        Create orchestrator with mock services for testing.
+        """Create orchestrator with mock services for testing.
 
         Returns:
             ServiceOrchestrator with mock services
@@ -269,10 +261,9 @@ class ServiceFactory:
 
     @staticmethod
     def validate_service_configuration(
-        injector: Optional[Any] = None,
-    ) -> Dict[str, bool]:
-        """
-        Validate that all required services are available.
+        injector: Any | None = None,
+    ) -> dict[str, bool]:
+        """Validate that all required services are available.
 
         Args:
             injector: Optional dependency injector

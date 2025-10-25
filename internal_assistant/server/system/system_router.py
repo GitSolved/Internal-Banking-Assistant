@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, ConfigDict
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
 from injector import Injector
+from pydantic import BaseModel, ConfigDict
 
 from internal_assistant.server.chat.chat_service import ChatService
 from internal_assistant.server.utils.auth import authenticated

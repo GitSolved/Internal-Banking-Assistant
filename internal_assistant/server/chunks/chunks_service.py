@@ -4,7 +4,7 @@ from injector import inject, singleton
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage import StorageContext
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from internal_assistant.components.embedding.embedding_component import (
     EmbeddingComponent,

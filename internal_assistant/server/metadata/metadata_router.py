@@ -1,12 +1,13 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Request
-from internal_assistant.server.ingest.ingest_service import IngestService
+from injector import Injector
+from llama_index.core.storage.docstore.types import RefDocInfo
+
 from internal_assistant.components.node_store.node_store_component import (
     NodeStoreComponent,
 )
-from internal_assistant.server.ingest.model import IngestedDoc
-from injector import Injector, inject
-from llama_index.core.storage.docstore.types import RefDocInfo
-from typing import Annotated, Dict, Any
+from internal_assistant.server.ingest.ingest_service import IngestService
 
 
 def get_injector(request: Request) -> Injector:
