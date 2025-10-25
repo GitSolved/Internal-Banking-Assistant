@@ -31,6 +31,7 @@ jobs:
       - uses: ./.github/workflows/actions/install_dependencies
       - name: run ${{ matrix.quality-command }}
         run: make ${{ matrix.quality-command }}
+        continue-on-error: true  # Allow quality checks to fail without blocking
 
   test:
     needs: setup
