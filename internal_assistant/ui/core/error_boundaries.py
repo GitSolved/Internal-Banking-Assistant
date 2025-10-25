@@ -475,8 +475,7 @@ class ComponentErrorHandler(UIErrorBoundary):
 
 
 class ErrorReporter:
-    """Centralized error reporting and logging system.
-    """
+    """Centralized error reporting and logging system."""
 
     def __init__(self):
         self._error_log: list[ErrorInfo] = []

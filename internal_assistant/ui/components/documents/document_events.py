@@ -114,8 +114,7 @@ class DocumentEventHandlerBuilder:
             )
 
     def _execute_upload_and_refresh(self, files) -> tuple[str, str, str, str]:
-        """Protected upload and refresh logic with enhanced status reporting.
-        """
+        """Protected upload and refresh logic with enhanced status reporting."""
         upload_status = "📄 Ready for uploads"
 
         if files:

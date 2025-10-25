@@ -422,8 +422,7 @@ class LayoutManager:
 
 
 class ResponsiveLayout:
-    """Helper class for creating responsive layouts that adapt to different screen sizes.
-    """
+    """Helper class for creating responsive layouts that adapt to different screen sizes."""
 
     @staticmethod
     def create_mobile_friendly_layout(components: list[Any]) -> Any:

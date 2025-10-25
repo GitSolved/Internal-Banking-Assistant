@@ -654,8 +654,7 @@ class DocumentStateManager:
             return "error"
 
     def sync_document_state(self) -> None:
-        """Synchronize document state with the underlying services.
-        """
+        """Synchronize document state with the underlying services."""
         try:
             # Refresh document state from ingest service
             ingested_docs = self._ingest_service.list_ingested()

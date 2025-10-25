@@ -3391,8 +3391,7 @@ class InternalAssistantUI:
         return self._ui_block
 
     def _build_ui_blocks_protected(self) -> gr.Blocks:
-        """Protected UI building with global error boundary.
-        """
+        """Protected UI building with global error boundary."""
 
         @self.global_error_boundary.wrap_function
         def _protected_ui_build():
@@ -3414,8 +3413,7 @@ class InternalAssistantUI:
         gr.mount_gradio_app(app, blocks, path=path)
 
     def _create_emergency_fallback_ui(self) -> gr.Blocks:
-        """Create emergency fallback UI when main UI fails to initialize.
-        """
+        """Create emergency fallback UI when main UI fails to initialize."""
         logger.info("Creating emergency fallback UI")
 
         # Get error dashboard information
@@ -3534,8 +3532,7 @@ class InternalAssistantUI:
         return "".join(html_parts)
 
     def _report_critical_error(self, error: Exception) -> None:
-        """Report critical application error to centralized error reporting system.
-        """
+        """Report critical application error to centralized error reporting system."""
         from internal_assistant.ui.core.error_boundaries import (
             ErrorCategory,
             ErrorInfo,

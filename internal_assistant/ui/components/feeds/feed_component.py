@@ -363,9 +363,7 @@ class FeedComponent(UIComponent):
                 return self._render_rss_html(feeds_data)
             except Exception as e:
                 logger.error(f"Failed to get RSS feeds: {e}")
-                return (
-                    f"<div class='error'><p>Error loading RSS feeds: {e!s}</p></div>"
-                )
+                return f"<div class='error'><p>Error loading RSS feeds: {e!s}</p></div>"
 
         return """
         <div class="feed-display">
@@ -443,9 +441,7 @@ class FeedComponent(UIComponent):
                 return self._render_cve_html(cve_data)
             except Exception as e:
                 logger.error(f"Failed to get CVE data: {e}")
-                return (
-                    f"<div class='error'><p>Error loading CVE data: {e!s}</p></div>"
-                )
+                return f"<div class='error'><p>Error loading CVE data: {e!s}</p></div>"
 
         return """
         <div class="feed-display">
@@ -531,7 +527,9 @@ class FeedComponent(UIComponent):
                 return self._render_mitre_html(mitre_data)
             except Exception as e:
                 logger.error(f"Failed to get MITRE data: {e}")
-                return f"<div class='error'><p>Error loading MITRE data: {e!s}</p></div>"
+                return (
+                    f"<div class='error'><p>Error loading MITRE data: {e!s}</p></div>"
+                )
 
         return """
         <div class="feed-display">
@@ -613,7 +611,9 @@ class FeedComponent(UIComponent):
                 return self._render_forum_html(forum_data)
             except Exception as e:
                 logger.error(f"Failed to get forum data: {e}")
-                return f"<div class='error'><p>Error loading forum data: {e!s}</p></div>"
+                return (
+                    f"<div class='error'><p>Error loading forum data: {e!s}</p></div>"
+                )
 
         return """
         <div class="feed-display">

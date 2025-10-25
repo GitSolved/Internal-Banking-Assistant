@@ -56,9 +56,7 @@ async def get_techniques(
             ]
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching techniques: {e!s}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error fetching techniques: {e!s}")
 
 
 @mitre_attack_router.get("/techniques/{technique_id}")
@@ -90,9 +88,7 @@ async def get_technique_by_id(technique_id: str) -> dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching technique: {e!s}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error fetching technique: {e!s}")
 
 
 @mitre_attack_router.get("/tactics")
@@ -384,9 +380,7 @@ async def get_cache_info() -> dict[str, Any]:
         async with MitreAttackService() as mitre_service:
             return mitre_service.get_cache_info()
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error getting cache info: {e!s}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting cache info: {e!s}")
 
 
 @mitre_attack_router.post("/refresh")

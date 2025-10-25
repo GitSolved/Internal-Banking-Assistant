@@ -185,9 +185,7 @@ class ServiceOrchestrator:
         """
         return self._services.get(name)
 
-    def get_service_health(
-        self, name: str | None = None
-    ) -> dict[str, ServiceHealth]:
+    def get_service_health(self, name: str | None = None) -> dict[str, ServiceHealth]:
         """Get health status for services.
 
         Args:

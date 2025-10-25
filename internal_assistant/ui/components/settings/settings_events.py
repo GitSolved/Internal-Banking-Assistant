@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeneralAssistantEventHandler:
-    """Handles general assistant events including calculator and definition shortcuts.
-    """
+    """Handles general assistant events including calculator and definition shortcuts."""
 
     def __init__(self):
         """Initialize general assistant event handler."""
@@ -94,8 +93,7 @@ class GeneralAssistantEventHandler:
 
 
 class SettingsEventHandler:
-    """Handles settings-related events including system prompt management and defaults.
-    """
+    """Handles settings-related events including system prompt management and defaults."""
 
     def __init__(self, get_default_system_prompt_func, reset_settings_func):
         """Initialize settings event handler.
@@ -169,8 +167,7 @@ class SettingsEventHandler:
 
 
 class SettingsEventHandlerBuilder:
-    """Builder class for creating settings and general assistant event handlers.
-    """
+    """Builder class for creating settings and general assistant event handlers."""
 
     def __init__(self, get_default_system_prompt_func=None, reset_settings_func=None):
         """Initialize the builder with optional dependency injection.

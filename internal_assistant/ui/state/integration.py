@@ -197,9 +197,7 @@ class StateIntegrationManager:
         """
         return self.state_store.get(path, default)
 
-    def set_state_value(
-        self, path: str, value: Any, source: str | None = None
-    ) -> None:
+    def set_state_value(self, path: str, value: Any, source: str | None = None) -> None:
         """Set a value in the state.
 
         Args:

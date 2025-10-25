@@ -28,9 +28,7 @@ class ComponentBinding:
     component_name: str
     component_ref: Any  # Gradio component reference
     state_path: str
-    transform_to_ui: Callable[[Any], Any] | None = (
-        None  # Transform state value for UI
-    )
+    transform_to_ui: Callable[[Any], Any] | None = None  # Transform state value for UI
     transform_from_ui: Callable[[Any], Any] | None = (
         None  # Transform UI value for state
     )

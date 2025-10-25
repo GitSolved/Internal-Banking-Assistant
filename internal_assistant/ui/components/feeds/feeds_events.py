@@ -806,8 +806,7 @@ class FeedsEventHandler:
 
 
 class FeedsEventHandlerBuilder:
-    """Builder class for creating feeds event handlers with dependency injection.
-    """
+    """Builder class for creating feeds event handlers with dependency injection."""
 
     def __init__(self, feeds_service: RSSFeedService):
         """Initialize the builder with required services.

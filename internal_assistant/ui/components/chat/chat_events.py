@@ -145,8 +145,7 @@ class ChatEventHandler:
         citation_style: str,
         response_length: str,
     ) -> tuple[list[list[str]], str]:
-        """Protected version of chat wrapper with error boundary handling.
-        """
+        """Protected version of chat wrapper with error boundary handling."""
 
         @self.chat_error_boundary.wrap_function
         def _protected_chat_logic():
@@ -185,8 +184,7 @@ class ChatEventHandler:
         citation_style: str,
         response_length: str,
     ) -> tuple[list[list[str]], str]:
-        """Core chat processing logic separated for error boundary protection.
-        """
+        """Core chat processing logic separated for error boundary protection."""
         # Add user message to history
         if message.strip():
             history = history + [[message, None]]
@@ -555,8 +553,7 @@ class ChatEventHandler:
 
 
 class ChatEventHandlerBuilder:
-    """Builder class for creating chat event handlers with dependency injection.
-    """
+    """Builder class for creating chat event handlers with dependency injection."""
 
     def __init__(
         self,

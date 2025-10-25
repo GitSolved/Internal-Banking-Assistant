@@ -389,9 +389,7 @@ class UIComponentState(BaseModel):
 
     is_visible: bool = Field(default=True, description="Whether component is visible")
     is_expanded: bool = Field(default=True, description="Whether component is expanded")
-    height: int | None = Field(
-        default=None, description="Component height in pixels"
-    )
+    height: int | None = Field(default=None, description="Component height in pixels")
     width: int | None = Field(default=None, description="Component width in pixels")
     css_classes: list[str] = Field(
         default_factory=list, description="Active CSS classes"

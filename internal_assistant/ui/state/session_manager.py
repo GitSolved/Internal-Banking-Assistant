@@ -216,9 +216,7 @@ class SessionStorage:
                 f"Failed to save conversation history {history.session_id}: {e}"
             )
 
-    def load_conversation_history(
-        self, session_id: str
-    ) -> ConversationHistory | None:
+    def load_conversation_history(self, session_id: str) -> ConversationHistory | None:
         """Load conversation history from disk."""
         try:
             file_path = self.conversations_path / f"{session_id}.json"

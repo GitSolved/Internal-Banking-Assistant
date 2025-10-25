@@ -268,9 +268,7 @@ class RSSFeedService:
                             )
                     elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
                         try:
-                            published = datetime(
-                                *entry.updated_parsed[:6], tzinfo=UTC
-                            )
+                            published = datetime(*entry.updated_parsed[:6], tzinfo=UTC)
                         except (TypeError, ValueError) as e:
                             logger.warning(
                                 f"Invalid updated_parsed format for {getattr(entry, 'title', 'Unknown')}: {e}"
