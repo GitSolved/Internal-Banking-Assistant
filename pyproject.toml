@@ -87,7 +87,7 @@ clickhouse-connect = {version = "^0.7.19", optional = true}  # ← NOT USED: Cli
 boto3 = {version ="^1.35.26", optional = true}  # ← NOT USED: AWS SDK (not configured for Sagemaker)
 
 # Reranker dependencies (currently disabled in settings)
-torch = {version ="^2.4.1", optional = true}  # ← NOT USED: PyTorch (reranking disabled)
+torch = {version ="^2.9.0", optional = true}  # ← NOT USED: PyTorch (reranking disabled)
 sentence-transformers = {version ="^3.1.1", optional = true}  # ← NOT USED: Sentence transformers (reranking disabled)
 
 # UI dependencies (REQUIRED for Gradio interface - Non-optional for basic functionality)
