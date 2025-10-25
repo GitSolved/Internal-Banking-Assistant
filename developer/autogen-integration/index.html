@@ -1,0 +1,2264 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Private, secure, customizable GenAI development framework">
+      
+      
+        <meta name="author" content="Internal Assistant Team">
+      
+      
+        <link rel="canonical" href="https://gitsolved.github.io/Internal-Banking-Assistant/developer/autogen-integration/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.17">
+    
+    
+      
+        <title>AutoGen Integration Analysis for Internal Banking Assistant - Internal Assistant</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#autogen-integration-analysis-for-internal-banking-assistant" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Internal Assistant" class="md-header__button md-logo" aria-label="Internal Assistant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Internal Assistant
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AutoGen Integration Analysis for Internal Banking Assistant
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/GitSolved/Internal-Banking-Assistant" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitSolved/Internal-Banking-Assistant
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user/installation/concepts/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../compatibility/compatibility_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Compatibility Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/reference/api-reference/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/overview/" class="md-tabs__link">
+          
+  
+  
+  Developer
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Internal Assistant" class="md-nav__button md-logo" aria-label="Internal Assistant" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Internal Assistant
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/GitSolved/Internal-Banking-Assistant" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitSolved/Internal-Banking-Assistant
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Installation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/installation/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Main Concepts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/installation/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/installation/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/configuration/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Settings
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/configuration/llms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LLMs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Usage
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/usage/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/usage/ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Ingestion
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/usage/ingestion-reset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Ingestion Reset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/usage/summarize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Summarize
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compatibility/compatibility_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Compatibility Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/reference/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Developer
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Developer
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/data-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Lifecycle
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/package-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Package Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/documentation-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Documentation Guidelines
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Executive Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-compatibility-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Compatibility Analysis
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Project Compatibility Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strong-compatibility-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Strong Compatibility Points
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      🟡 Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autogen-v04-2025-key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      AutoGen v0.4 (2025) Key Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AutoGen v0.4 (2025) Key Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relevant-to-your-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      Relevant to Your Project
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposed-integration-architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proposed Integration Architectures
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Proposed Integration Architectures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-autogen-as-a-service-layer-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 1: AutoGen as a Service Layer (Recommended)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-hybrid-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 2: Hybrid Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-3-agent-enhanced-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 3: Agent-Enhanced RAG
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases-for-autogen-in-your-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases for AutoGen in Your Project
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases for AutoGen in Your Project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-multi-agent-threat-intelligence-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Multi-Agent Threat Intelligence Analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-automated-security-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Automated Security Research
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-document-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Document Processing Pipeline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-bankingcompliance-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Banking/Compliance Monitoring
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Roadmap
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Roadmap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-proof-of-concept-1-2-weeks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 1: Proof of Concept (1-2 weeks)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-integration-2-3-weeks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 2: Integration (2-3 weeks)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-specialized-agents-3-4-weeks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 3: Specialized Agents (3-4 weeks)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-production-1-2-weeks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 4: Production (1-2 weeks)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technical Requirements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies-to-add" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies to Add
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-autogen-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of AutoGen Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Benefits of AutoGen Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#advantages" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Advantages
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#challenges" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ Challenges
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-current-vs-autogen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comparison: Current vs AutoGen
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-starting-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommended Starting Point
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Starting Point">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#minimal-viable-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimal Viable Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test Script
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision Framework
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision Framework">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-autogen" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Use AutoGen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resources
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="autogen-integration-analysis-for-internal-banking-assistant">AutoGen Integration Analysis for Internal Banking Assistant</h1>
+<p>This document analyzes the feasibility and approach for integrating Microsoft AutoGen (v0.4+) multi-agent framework with the Internal Banking Assistant project.</p>
+<h2 id="executive-summary">Executive Summary</h2>
+<p><strong>Can AutoGen work on this project?</strong> ✅ <strong>Yes, absolutely!</strong></p>
+<p>AutoGen is highly compatible with this project and could provide significant benefits for:
+- Multi-agent threat intelligence analysis
+- Automated security research workflows
+- Collaborative document processing
+- Banking/compliance monitoring coordination</p>
+<h2 id="project-compatibility-analysis">Project Compatibility Analysis</h2>
+<h3 id="strong-compatibility-points">✅ <strong>Strong Compatibility Points</strong></h3>
+<ol>
+<li><strong>Python 3.11.x Support</strong></li>
+<li>Your project: Python 3.11.9 - 3.11.x</li>
+<li>AutoGen v0.4: Supports Python 3.10+</li>
+<li>
+<p><strong>Status</strong>: ✅ Perfect match</p>
+</li>
+<li>
+<p><strong>Local-First Architecture</strong></p>
+</li>
+<li>Your project: 100% local processing, no external APIs</li>
+<li>AutoGen: Can use local LLMs via Ollama</li>
+<li>
+<p><strong>Status</strong>: ✅ Your Foundation-Sec-8B model works with AutoGen</p>
+</li>
+<li>
+<p><strong>FastAPI Integration</strong></p>
+</li>
+<li>Your project: FastAPI-based API layer</li>
+<li>AutoGen: Can be integrated as FastAPI endpoints</li>
+<li>
+<p><strong>Status</strong>: ✅ Clean integration path exists</p>
+</li>
+<li>
+<p><strong>Async/Await Support</strong></p>
+</li>
+<li>Your project: Async FastAPI endpoints</li>
+<li>AutoGen v0.4: Event-driven, async architecture</li>
+<li>
+<p><strong>Status</strong>: ✅ Architecture alignment</p>
+</li>
+<li>
+<p><strong>RAG Pipeline</strong></p>
+</li>
+<li>Your project: LlamaIndex RAG with Qdrant</li>
+<li>AutoGen: Supports custom tools and knowledge bases</li>
+<li><strong>Status</strong>: ✅ Can enhance RAG with multi-agent reasoning</li>
+</ol>
+<h3 id="considerations">🟡 <strong>Considerations</strong></h3>
+<ol>
+<li><strong>Dependency Overlap</strong></li>
+<li>Both use LangChain/LlamaIndex ecosystems</li>
+<li>Potential version conflicts to manage</li>
+<li>
+<p><strong>Mitigation</strong>: Careful dependency pinning</p>
+</li>
+<li>
+<p><strong>Memory Footprint</strong></p>
+</li>
+<li>AutoGen adds overhead for agent coordination</li>
+<li>Your system already uses 64GB RAM efficiently</li>
+<li>
+<p><strong>Mitigation</strong>: Monitor and optimize agent count</p>
+</li>
+<li>
+<p><strong>Gradio UI Integration</strong></p>
+</li>
+<li>Your current UI is Gradio-based</li>
+<li>AutoGen has its own UI components</li>
+<li><strong>Mitigation</strong>: Custom integration layer needed</li>
+</ol>
+<h2 id="autogen-v04-2025-key-features">AutoGen v0.4 (2025) Key Features</h2>
+<h3 id="relevant-to-your-project">Relevant to Your Project</h3>
+<ol>
+<li>
+<p><strong>Event-Driven Architecture</strong>
+   <div class="highlight"><pre><span></span><code><span class="c1"># AutoGen&#39;s async messaging fits your FastAPI design</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_threat_intelligence</span><span class="p">():</span>
+    <span class="c1"># Multi-agent collaboration on security analysis</span>
+    <span class="n">orchestrator</span> <span class="o">=</span> <span class="n">OrchestratorAgent</span><span class="p">()</span>
+    <span class="n">researcher</span> <span class="o">=</span> <span class="n">ResearchAgent</span><span class="p">()</span>
+    <span class="n">analyst</span> <span class="o">=</span> <span class="n">AnalystAgent</span><span class="p">()</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Local LLM Support</strong>
+   <div class="highlight"><pre><span></span><code><span class="c1"># Use your existing Ollama setup</span>
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;foundation-sec-8b-q4_k_m&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:11434&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;api_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ollama&quot;</span>
+<span class="p">}</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Cross-Language Support</strong></p>
+</li>
+<li>Python (your primary language)</li>
+<li>
+<p>.NET (if needed for banking integrations)</p>
+</li>
+<li>
+<p><strong>Built-in Observability</strong></p>
+</li>
+<li>OpenTelemetry support</li>
+<li>Fits your logging infrastructure</li>
+</ol>
+<h2 id="proposed-integration-architectures">Proposed Integration Architectures</h2>
+<h3 id="option-1-autogen-as-a-service-layer-recommended">Option 1: AutoGen as a Service Layer (Recommended)</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────┐
+│           Your Current Stack                │
+├─────────────────────────────────────────────┤
+│  Gradio UI  →  FastAPI  →  LlamaIndex RAG   │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│         AutoGen Agent Layer (NEW)           │
+├─────────────────────────────────────────────┤
+│  • Threat Analysis Agents                   │
+│  • Document Processing Agents               │
+│  • Compliance Monitoring Agents             │
+│  • Research Coordination Agents             │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│        Shared Resources                     │
+├─────────────────────────────────────────────┤
+│  Foundation-Sec-8B (Ollama)                 │
+│  Qdrant Vector Store                        │
+│  RSS Feeds / External Data                  │
+└─────────────────────────────────────────────┘
+</code></pre></div>
+<p><strong>Implementation:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># internal_assistant/agents/autogen_service.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autogen</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssistantAgent</span><span class="p">,</span> <span class="n">UserProxyAgent</span><span class="p">,</span> <span class="n">GroupChat</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ThreatIntelligenceTeam</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">llm_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;foundation-sec-8b-q4_k_m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:11434&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;api_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ollama&quot;</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Agent 1: Feed Monitor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feed_monitor</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;FeedMonitor&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Monitor RSS feeds for security threats&quot;</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Agent 2: Threat Analyzer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threat_analyzer</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ThreatAnalyzer&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Analyze security threats for banking sector&quot;</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Agent 3: Compliance Checker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compliance_checker</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ComplianceChecker&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Check regulatory compliance implications&quot;</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Orchestrator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_chat</span> <span class="o">=</span> <span class="n">GroupChat</span><span class="p">(</span>
+            <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feed_monitor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threat_analyzer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">compliance_checker</span><span class="p">],</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span>
+        <span class="p">)</span>
+</code></pre></div></p>
+<h3 id="option-2-hybrid-architecture">Option 2: Hybrid Architecture</h3>
+<p>Keep your existing chat interface, add AutoGen for specialized tasks:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># internal_assistant/server/agents/agent_router.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">internal_assistant.agents.autogen_service</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreatIntelligenceTeam</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;/api/agents&quot;</span><span class="p">)</span>
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/analyze-threat&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">analyze_threat</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">threat_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-agent threat analysis using AutoGen&quot;&quot;&quot;</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">injector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ThreatIntelligenceTeam</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">team</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">threat_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;analysis&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
+</code></pre></div>
+<h3 id="option-3-agent-enhanced-rag">Option 3: Agent-Enhanced RAG</h3>
+<p>Use AutoGen to improve your RAG pipeline:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enhanced query processing with multi-agent reasoning</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentEnhancedRAG</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Agent 1: Query Decomposer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_agent</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;QueryDecomposer&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Break complex queries into sub-queries&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Agent 2: Document Retriever (uses your Qdrant)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retrieval_agent</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Retriever&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Retrieve relevant documents&quot;</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">qdrant_search_tool</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Agent 3: Synthesizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">synthesis_agent</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Synthesizer&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;Synthesize comprehensive answer&quot;</span>
+        <span class="p">)</span>
+</code></pre></div>
+<h2 id="use-cases-for-autogen-in-your-project">Use Cases for AutoGen in Your Project</h2>
+<h3 id="1-multi-agent-threat-intelligence-analysis">1. <strong>Multi-Agent Threat Intelligence Analysis</strong></h3>
+<p><strong>Current</strong>: Single LLM analyzes RSS feeds
+<strong>With AutoGen</strong>: Team of specialized agents collaborate</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Agents work together on threat analysis</span>
+<span class="n">team_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">threat_team</span><span class="o">.</span><span class="n">analyze_feed</span><span class="p">(</span>
+    <span class="n">feed_url</span><span class="o">=</span><span class="s2">&quot;https://www.cisa.gov/news.xml&quot;</span><span class="p">,</span>
+    <span class="n">focus_areas</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;banking&quot;</span><span class="p">,</span> <span class="s2">&quot;fintech&quot;</span><span class="p">,</span> <span class="s2">&quot;compliance&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Agent 1: Extracts threats from feed</span>
+<span class="c1"># Agent 2: Checks relevance to banking sector</span>
+<span class="c1"># Agent 3: Assesses compliance impact (FDIC, SEC, NY DFS)</span>
+<span class="c1"># Agent 4: Generates executive summary</span>
+</code></pre></div>
+<h3 id="2-automated-security-research">2. <strong>Automated Security Research</strong></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Research Agent Team</span>
+<span class="n">research_team</span> <span class="o">=</span> <span class="n">SecurityResearchTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">CVESearchAgent</span><span class="p">(),</span>      <span class="c1"># Search CVE databases</span>
+        <span class="n">ExploitAnalysisAgent</span><span class="p">(),</span> <span class="c1"># Analyze exploitation potential</span>
+        <span class="n">MitigationAgent</span><span class="p">(),</span>      <span class="c1"># Recommend mitigations</span>
+        <span class="n">ReportGeneratorAgent</span><span class="p">()</span>  <span class="c1"># Generate security report</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">research_team</span><span class="o">.</span><span class="n">research_vulnerability</span><span class="p">(</span><span class="s2">&quot;CVE-2025-1234&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="3-document-processing-pipeline">3. <strong>Document Processing Pipeline</strong></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Document Analysis Team</span>
+<span class="n">doc_team</span> <span class="o">=</span> <span class="n">DocumentProcessingTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">DocumentClassifierAgent</span><span class="p">(),</span>  <span class="c1"># Classify document type</span>
+        <span class="n">EntityExtractorAgent</span><span class="p">(),</span>     <span class="c1"># Extract entities</span>
+        <span class="n">ComplianceAnalyzerAgent</span><span class="p">(),</span>  <span class="c1"># Check compliance</span>
+        <span class="n">SummarizerAgent</span><span class="p">()</span>           <span class="c1"># Generate summary</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">doc_team</span><span class="o">.</span><span class="n">process_document</span><span class="p">(</span><span class="s2">&quot;regulatory_filing.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="4-bankingcompliance-monitoring">4. <strong>Banking/Compliance Monitoring</strong></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compliance Monitoring Team</span>
+<span class="n">compliance_team</span> <span class="o">=</span> <span class="n">ComplianceMonitoringTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">FDICMonitorAgent</span><span class="p">(),</span>   <span class="c1"># Monitor FDIC updates</span>
+        <span class="n">SECMonitorAgent</span><span class="p">(),</span>    <span class="c1"># Monitor SEC filings</span>
+        <span class="n">NYDFSMonitorAgent</span><span class="p">(),</span>  <span class="c1"># Monitor NY DFS regulations</span>
+        <span class="n">AnalystAgent</span><span class="p">()</span>        <span class="c1"># Synthesize implications</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">daily_report</span> <span class="o">=</span> <span class="k">await</span> <span class="n">compliance_team</span><span class="o">.</span><span class="n">generate_daily_report</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="implementation-roadmap">Implementation Roadmap</h2>
+<h3 id="phase-1-proof-of-concept-1-2-weeks">Phase 1: Proof of Concept (1-2 weeks)</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Install AutoGen v0.4 alongside existing stack</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Create simple 2-agent system (Feed Monitor + Analyzer)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Test with Foundation-Sec-8B via Ollama</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Validate no dependency conflicts</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Benchmark performance vs single-agent</li>
+</ul>
+<h3 id="phase-2-integration-2-3-weeks">Phase 2: Integration (2-3 weeks)</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Add AutoGen service layer to DI container</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Create FastAPI endpoints for agent teams</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Integrate with existing Qdrant vector store</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Add agent UI component to Gradio interface</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Implement observability (OpenTelemetry)</li>
+</ul>
+<h3 id="phase-3-specialized-agents-3-4-weeks">Phase 3: Specialized Agents (3-4 weeks)</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Threat Intelligence Team</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Document Processing Team</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Compliance Monitoring Team</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Security Research Team</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Test all teams end-to-end</li>
+</ul>
+<h3 id="phase-4-production-1-2-weeks">Phase 4: Production (1-2 weeks)</h3>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Performance optimization</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Memory management</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Error handling and fallbacks</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Documentation and training</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Deploy to production</li>
+</ul>
+<h2 id="technical-requirements">Technical Requirements</h2>
+<h3 id="dependencies-to-add">Dependencies to Add</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># pyproject.toml additions</span>
+<span class="k">[tool.poetry.dependencies]</span>
+<span class="c1"># AutoGen v0.4</span>
+<span class="n">pyautogen</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^0.4.0&quot;</span>
+
+<span class="c1"># Optional: For enhanced observability</span>
+<span class="n">opentelemetry-api</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^1.20.0&quot;</span>
+<span class="n">opentelemetry-sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^1.20.0&quot;</span>
+</code></pre></div>
+<h3 id="configuration">Configuration</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># config/settings.yaml additions</span>
+<span class="nt">autogen</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">max_agents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span><span class="w">  </span><span class="c1"># seconds</span>
+<span class="w">  </span><span class="nt">llm</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foundation-sec-8b-q4_k_m&quot;</span>
+<span class="w">    </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;http://localhost:11434&quot;</span>
+<span class="w">    </span><span class="nt">api_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ollama&quot;</span>
+<span class="w">  </span><span class="nt">observability</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">exporter</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;console&quot;</span><span class="w">  </span><span class="c1"># or &quot;otlp&quot; for production</span>
+</code></pre></div>
+<h2 id="benefits-of-autogen-integration">Benefits of AutoGen Integration</h2>
+<h3 id="advantages">✅ <strong>Advantages</strong></h3>
+<ol>
+<li><strong>Enhanced Analysis Quality</strong></li>
+<li>Multi-perspective threat analysis</li>
+<li>Collaborative reasoning</li>
+<li>
+<p>Reduced hallucinations through agent verification</p>
+</li>
+<li>
+<p><strong>Scalable Workflows</strong></p>
+</li>
+<li>Parallel agent execution</li>
+<li>Task decomposition</li>
+<li>
+<p>Specialized expertise per agent</p>
+</li>
+<li>
+<p><strong>Better Observability</strong></p>
+</li>
+<li>Built-in OpenTelemetry support</li>
+<li>Agent conversation tracking</li>
+<li>
+<p>Performance metrics</p>
+</li>
+<li>
+<p><strong>Code Reusability</strong></p>
+</li>
+<li>Pre-built agent templates</li>
+<li>Shareable agent configurations</li>
+<li>
+<p>Community contributions</p>
+</li>
+<li>
+<p><strong>Enterprise Ready</strong></p>
+</li>
+<li>Microsoft backing (now part of Microsoft Agent Framework)</li>
+<li>Production-grade reliability</li>
+<li>Commercial support available</li>
+</ol>
+<h3 id="challenges">⚠️ <strong>Challenges</strong></h3>
+<ol>
+<li><strong>Complexity</strong></li>
+<li>More moving parts to manage</li>
+<li>Agent coordination overhead</li>
+<li>
+<p>Debugging multi-agent conversations</p>
+</li>
+<li>
+<p><strong>Resource Usage</strong></p>
+</li>
+<li>Multiple LLM calls per query</li>
+<li>Increased memory footprint</li>
+<li>
+<p>Longer response times</p>
+</li>
+<li>
+<p><strong>Learning Curve</strong></p>
+</li>
+<li>New framework to learn</li>
+<li>Agent design patterns</li>
+<li>
+<p>Prompt engineering for teams</p>
+</li>
+<li>
+<p><strong>Dependency Management</strong></p>
+</li>
+<li>Potential version conflicts</li>
+<li>Additional maintenance burden</li>
+<li>Compatibility testing needed</li>
+</ol>
+<h2 id="comparison-current-vs-autogen">Comparison: Current vs AutoGen</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Current (Single Agent)</th>
+<th>With AutoGen (Multi-Agent)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Response Time</strong></td>
+<td>Fast (1-2s)</td>
+<td>Slower (5-10s) due to collaboration</td>
+</tr>
+<tr>
+<td><strong>Answer Quality</strong></td>
+<td>Good</td>
+<td>Better (multi-perspective)</td>
+</tr>
+<tr>
+<td><strong>Complexity</strong></td>
+<td>Low</td>
+<td>Medium-High</td>
+</tr>
+<tr>
+<td><strong>Specialization</strong></td>
+<td>General purpose</td>
+<td>Task-specific agents</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Basic logging</td>
+<td>Full OpenTelemetry</td>
+</tr>
+<tr>
+<td><strong>Resource Usage</strong></td>
+<td>1x LLM calls</td>
+<td>3-5x LLM calls</td>
+</tr>
+<tr>
+<td><strong>Maintenance</strong></td>
+<td>Simple</td>
+<td>Moderate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-starting-point">Recommended Starting Point</h2>
+<h3 id="minimal-viable-integration">Minimal Viable Integration</h3>
+<p>Start with a single use case to validate the approach:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># internal_assistant/agents/simple_threat_team.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">autogen</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssistantAgent</span><span class="p">,</span> <span class="n">GroupChat</span><span class="p">,</span> <span class="n">GroupChatManager</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SimpleThreatAnalysisTeam</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal AutoGen integration for threat analysis&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">llm_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;foundation-sec-8b-q4_k_m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:11434&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;api_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ollama&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.7</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Agent 1: Threat Detector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detector</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ThreatDetector&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a cybersecurity threat detector.</span>
+<span class="s2">            Analyze RSS feeds and identify potential security threats.</span>
+<span class="s2">            Focus on banking and fintech sectors.&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Agent 2: Risk Assessor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assessor</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;RiskAssessor&quot;</span><span class="p">,</span>
+            <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a risk assessment specialist.</span>
+<span class="s2">            Evaluate the severity and impact of identified threats.</span>
+<span class="s2">            Consider FDIC, SEC, and NY DFS compliance implications.&quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Group chat for collaboration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_chat</span> <span class="o">=</span> <span class="n">GroupChat</span><span class="p">(</span>
+            <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">assessor</span><span class="p">],</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">max_round</span><span class="o">=</span><span class="mi">4</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span> <span class="o">=</span> <span class="n">GroupChatManager</span><span class="p">(</span>
+            <span class="n">groupchat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group_chat</span><span class="p">,</span>
+            <span class="n">llm_config</span><span class="o">=</span><span class="n">llm_config</span>
+        <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feed_content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Analyze threat from feed content&quot;&quot;&quot;</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Analyze this security feed content:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">feed_content</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Start agent collaboration</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">detector</span><span class="o">.</span><span class="n">a_initiate_chat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">prompt</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">summary</span>
+</code></pre></div>
+<h3 id="test-script">Test Script</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># scripts/test_autogen.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">internal_assistant.agents.simple_threat_team</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleThreatAnalysisTeam</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_autogen</span><span class="p">():</span>
+    <span class="n">team</span> <span class="o">=</span> <span class="n">SimpleThreatAnalysisTeam</span><span class="p">()</span>
+
+    <span class="n">sample_feed</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    CISA Alert: New ransomware variant targeting financial institutions.</span>
+<span class="s2">    Exploits CVE-2025-1234 in banking software. Immediate patching recommended.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">team</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">sample_feed</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analysis Result:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">test_autogen</span><span class="p">())</span>
+</code></pre></div>
+<h2 id="decision-framework">Decision Framework</h2>
+<h3 id="when-to-use-autogen">When to Use AutoGen</h3>
+<p>✅ <strong>Use AutoGen when:</strong>
+- Tasks require multiple specialized perspectives
+- Complex multi-step workflows needed
+- Collaboration between agents adds value
+- Research/analysis tasks benefit from discussion
+- You need advanced observability</p>
+<p>❌ <strong>Skip AutoGen when:</strong>
+- Simple Q&amp;A queries
+- Speed is critical (&lt; 2s response time)
+- Resource constraints (limited RAM/CPU)
+- Single perspective is sufficient
+- Simplicity is prioritized</p>
+<h2 id="next-steps">Next Steps</h2>
+<ol>
+<li><strong>Evaluate</strong>: Review this analysis with your team</li>
+<li><strong>Decide</strong>: Choose integration approach (Option 1, 2, or 3)</li>
+<li><strong>Prototype</strong>: Implement Phase 1 POC with SimpleThreatAnalysisTeam</li>
+<li><strong>Measure</strong>: Benchmark vs current single-agent approach</li>
+<li><strong>Iterate</strong>: Expand based on results</li>
+</ol>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://microsoft.github.io/autogen/">AutoGen v0.4 Documentation</a></li>
+<li><a href="https://azure.microsoft.com/en-us/blog/introducing-microsoft-agent-framework/">Microsoft Agent Framework</a></li>
+<li><a href="https://github.com/microsoft/autogen">AutoGen GitHub</a></li>
+<li><a href="https://microsoft.github.io/autogen/docs/topics/llm-configuration">Ollama Integration Guide</a></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>Yes, AutoGen can work extremely well with this project!</strong></p>
+<p>The combination of:
+- Your local-first architecture (Foundation-Sec-8B via Ollama)
+- Python 3.11.x environment
+- FastAPI + async design
+- Existing RAG infrastructure (LlamaIndex + Qdrant)</p>
+<p>...makes this an ideal candidate for AutoGen integration.</p>
+<p><strong>Recommended approach</strong>: Start with Option 1 (AutoGen as Service Layer) and implement the SimpleThreatAnalysisTeam as a proof of concept. If successful, expand to more specialized agent teams.</p>
+<p>The benefits (enhanced analysis quality, specialized expertise, better observability) outweigh the costs (complexity, resource usage) for a cybersecurity intelligence platform where accuracy and depth matter more than raw speed.</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 25, 2025 15:06:34 UTC">October 25, 2025</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 25, 2025 15:06:34 UTC">October 25, 2025</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024 Internal Assistant Team
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+    
+  </body>
+</html>
