@@ -18,7 +18,7 @@ services:
   # Internal Assistant service for the Ollama CPU and GPU modes
   # This service builds from an external Dockerfile and runs the Ollama mode.
   internal-assistant-ollama:
-    image: ${PGPT_IMAGE:-internal-assistant}:${PGPT_TAG:-0.6.2}-ollama  # x-release-please-version
+    image: ${PGPT_IMAGE:-internal-assistant}:${PGPT_TAG:-0.0.1}-ollama  # x-release-please-version
     user: root
     build:
       context: ../../..
@@ -47,7 +47,7 @@ services:
   # Internal Assistant service for the local mode
   # This service builds from a local Dockerfile and runs the application in local mode.
   internal-assistant-llamacpp-cpu:
-    image: ${PGPT_IMAGE:-internal-assistant}:${PGPT_TAG:-0.6.2}-llamacpp-cpu # x-release-please-version
+    image: ${PGPT_IMAGE:-internal-assistant}:${PGPT_TAG:-0.0.1}-llamacpp-cpu # x-release-please-version
     user: root
     build:
       context: ../../..
