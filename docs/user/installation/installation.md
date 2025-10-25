@@ -7,7 +7,7 @@ Before starting, review the [Core Concepts](./concepts.md) to understand Interna
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/SecureYourGear/internal-assistant
+git clone https://github.com/GitSolved/Internal-Banking-Assistant
 cd internal-assistant
 ```
 

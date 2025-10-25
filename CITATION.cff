@@ -5,9 +5,9 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - name: "SecureYourGear"
-repository-code: 'https://github.com/SecureYourGear/internal-assistant'
-url: 'https://github.com/SecureYourGear/internal-assistant'
+  - name: "GitSolved"
+repository-code: 'https://github.com/GitSolved/Internal-Banking-Assistant'
+url: 'https://github.com/GitSolved/Internal-Banking-Assistant'
 license: Apache-2.0
 version: "0.6.2"
 date-released: '2025-01-17'

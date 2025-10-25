@@ -33,9 +33,9 @@
 name = "internal-assistant"
 version = "0.6.2"
 description = "Internal Cybersecurity Intelligence Platform"
-authors = ["SecureYourGear"]
-repository = "https://github.com/SecureYourGear/internal-assistant"
-homepage = "https://github.com/SecureYourGear/internal-assistant"
+authors = ["GitSolved"]
+repository = "https://github.com/GitSolved/Internal-Banking-Assistant"
+homepage = "https://github.com/GitSolved/Internal-Banking-Assistant"
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["cybersecurity", "ai", "llm", "rag", "threat-intelligence", "privacy", "local-ai", "ollama"]
@@ -44,7 +44,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "3.11.9"
+python = ">=3.11.9,<3.12.0"
 # Core dependencies
 fastapi = { extras = ["all"], version = ">=0.108.0,<0.115.0" }
 python-multipart = "^0.0.10"

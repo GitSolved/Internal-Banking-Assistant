@@ -244,7 +244,7 @@ Internal Assistant requires Python 3.11.9 and Poetry 2.0+.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/SecureYourGear/internal-assistant
+   git clone https://github.com/GitSolved/Internal-Banking-Assistant
    cd internal-assistant
    ```
 

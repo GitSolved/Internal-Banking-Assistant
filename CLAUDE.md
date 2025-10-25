@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Internal Assistant** is a privacy-focused cybersecurity intelligence platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for threat analysis and security research using the Foundation-Sec-8B model.
+**Internal Banking Assistant** (package name: `internal-assistant`) is a privacy-focused cybersecurity intelligence platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for banking, compliance, and security teams to automate risk monitoring, track vulnerabilities, and streamline regulatory research using the Foundation-Sec-8B model.
+
+**Note**: Repository is named `Internal-Banking-Assistant` but the Python package is `internal_assistant` (with underscore).
 
 **Key Technologies:**
-- Python 3.11.9 (exact version required)
+- Python 3.11.9+ (3.11.9 through 3.11.x supported)
 - FastAPI (API layer)
 - LlamaIndex (RAG pipeline)
 - Gradio (Web UI)
@@ -53,6 +55,26 @@ make wipe             # Delete all data (requires confirmation)
 poetry run mkdocs serve   # Serve docs at http://localhost:8000
 poetry run mkdocs build   # Build static docs site
 make api-docs         # Generate OpenAPI documentation
+```
+
+### Utility Tools
+```bash
+# Environment verification
+poetry run verify-env        # Check Python version and dependencies
+
+# Testing utilities
+poetry run verify-tests      # Verify test fixes
+poetry run test-safe         # Safe test runner
+
+# Maintenance
+poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7
+poetry run python tools/system/manage_compatibility.py --check
+poetry run python tools/maintenance/analyze_models.py
+
+# Data management
+poetry run python tools/data/ingest_folder.py <path>
+poetry run python tools/system/utils.py stats
+poetry run python tools/system/utils.py wipe
 ```
 
 ## Architecture Overview
@@ -101,6 +123,18 @@ The application uses **Injector** for dependency injection:
 - **Query Processing**: User Query → Embedding → Vector Search → Context Retrieval → LLM Response
 - **Threat Intelligence**: RSS/Forum Feeds → Content Parsing → Threat Analysis → Dashboard
 
+### RSS Feed Management
+The application monitors 14+ security feeds including:
+- **Government Sources**: CISA KEV, US-CERT, NIST NVD
+- **Security News**: The Hacker News, Dark Reading, Bleeping Computer, Krebs on Security
+- **Technical Sources**: SANS ISC, Talos Intelligence, Packet Storm
+
+Feed service (`RSSFeedService`):
+- Bound as singleton in dependency injection container
+- Background refresh runs every 60 minutes via `BackgroundRefreshService`
+- Managed in application lifespan events ([launcher.py:41-75](internal_assistant/launcher.py#L41-L75))
+- Endpoints in [feeds_router.py](internal_assistant/server/feeds/feeds_router.py) and [threat_intelligence_router.py](internal_assistant/server/threat_intelligence/threat_intelligence_router.py)
+
 ## Import Conventions
 
 **CRITICAL**: Always use full package imports. Never use relative imports or the old 'src' reference.
@@ -129,8 +163,6 @@ packages = [{ include = "internal_assistant" }]
 ```
 config/
 ├── settings.yaml              # Base configuration (always loaded)
-├── app/
-│   ├── settings_backup.yaml  # Backup settings
 ├── model-configs/
 │   ├── foundation-sec.yaml   # Foundation-Sec model config
 │   └── ollama.yaml           # Ollama-specific settings
@@ -151,6 +183,24 @@ config/
 
 Configuration loaded via `internal_assistant/settings/settings.py` using YAML files.
 
+### Profile-Based Configuration
+Use `PGPT_PROFILES` environment variable to load environment-specific configs:
+```bash
+# Local development
+PGPT_PROFILES=local make run
+
+# Testing
+PGPT_PROFILES=test make test
+
+# Production
+PGPT_PROFILES=production make production
+
+# Docker deployment
+PGPT_PROFILES=docker docker-compose up
+```
+
+Loading order: `config/settings.yaml` → `config/environments/{profile}.yaml` → `config/model-configs/{profile}.yaml`
+
 ## Storage Directories
 
 ### Ephemeral Data (regenerable, safe to delete)
@@ -165,7 +215,7 @@ Configuration loaded via `internal_assistant/settings/settings.py` using YAML fi
 ## Dependency Management
 
 **Critical Version Requirements**:
-- Python: 3.11.9 (exact version, validated on startup)
+- Python: >=3.11.9,<3.12.0 (3.11.9 through 3.11.x supported, validated on startup)
 - FastAPI: >=0.108.0,<0.115.0 (Pydantic compatibility)
 - Pydantic: >=2.8.0,<2.9.0 (LlamaIndex compatibility)
 - Gradio: >=4.15.0,<4.39.0 (FastAPI integration compatibility)
@@ -300,7 +350,11 @@ rm -f local_data/internal_assistant/qdrant/.lock
 ```
 
 **Gradio/Pydantic schema errors**
-The application automatically applies Gradio compatibility patches in `launcher.py` (lines 115-142).
+The application automatically applies Gradio 4.x compatibility patches at startup:
+- Patches `gradio.Blocks.recover_kwargs` to handle Pydantic v2 models
+- Located in [launcher.py:115-142](internal_assistant/launcher.py#L115-L142)
+- Applied automatically during FastAPI app creation
+- No manual intervention needed
 
 ### Health Checks
 ```bash
@@ -330,6 +384,29 @@ make test    # Run tests
 make check   # Full quality check before commit
 ```
 
+## CI/CD Pipeline
+
+### GitHub Workflows
+- **tests.yml** - Runs pytest on push/PR, enforces code quality
+- **docs.yml** - Auto-deploys documentation to GitHub Pages on main branch
+- **release-please.yml** - Automated version management and releases
+- **stale.yml** - Manages stale issues and PRs
+
+### Test Markers
+Use pytest markers to categorize tests:
+```bash
+# Run only non-integration tests (default CI behavior)
+poetry run pytest -m "not integration"
+
+# Run integration tests (requires local Ollama, Qdrant)
+poetry run pytest -m integration
+
+# Run all tests
+poetry run pytest tests
+```
+
+Integration tests are skipped in CI by default (`pytest.ini_options.addopts` in [pyproject.toml:270-272](pyproject.toml#L270-L272)).
+
 ## Key Files Reference
 
 - `internal_assistant/main.py` - Application entry point
@@ -341,9 +418,41 @@ make check   # Full quality check before commit
 - `Makefile` - Development commands
 - `tests/conftest.py` - Pytest configuration
 
+## Project History
+
+### PrivateGPT Foundation
+This project is built on the [PrivateGPT](https://github.com/zylon-ai/private-gpt) RAG framework (~30-40% code overlap) with extensive cybersecurity specialization:
+- **Original License**: Apache 2.0 (maintained)
+- **Original Authors**: Zylon AI
+- **Custom Features**: ~48,000+ lines of cybersecurity-specific code including:
+  - Foundation-Sec-8B integration
+  - 14+ security RSS feeds with threat intelligence
+  - MITRE ATT&CK framework integration
+  - CVE tracking and monitoring
+  - Custom security-focused UI
+
+**Important**: When working with core RAG infrastructure (vector stores, embeddings, LLM components), be aware of the PrivateGPT foundation. Security features and threat intelligence are custom additions.
+
+## Deployment
+
+### Docker Deployment
+```bash
+cd config/deployment/docker
+docker-compose up -d
+```
+
+Docker configurations:
+- [Dockerfile.ollama](config/deployment/docker/Dockerfile.ollama) - Ollama-based deployment
+- [Dockerfile.llamacpp-cpu](config/deployment/docker/Dockerfile.llamacpp-cpu) - CPU-only deployment
+- [docker-compose.yaml](config/deployment/docker/docker-compose.yaml) - Multi-service orchestration
+- [Modelfile](config/deployment/docker/Modelfile) - Ollama model configuration
+
+Use `PGPT_PROFILES=docker` for Docker-specific settings.
+
 ## Security Notes
 
 - **100% Local Processing**: No data sent to external services
 - **Authentication**: Configurable via `server.auth.enabled` in settings.yaml
 - **CORS**: Configured via `server.cors.*` settings
 - **Privacy-First Design**: All models and data stored locally
+- **Banking/Compliance Focus**: Designed for regulated environments (FDIC, SEC, NY DFS monitoring)

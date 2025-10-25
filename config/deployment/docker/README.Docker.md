@@ -448,7 +448,7 @@ docker stats --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.Net
 ## Support
 
 - **Documentation:** [Main README](../../../README.md)
-- **Issues:** [GitHub Issues](https://github.com/SecureYourGear/internal-assistant/issues)
+- **Issues:** [GitHub Issues](https://github.com/GitSolved/Internal-Banking-Assistant/issues)
 - **Configuration:** [CLAUDE.md](../../../CLAUDE.md)
 
 ## Version Information
@@ -462,4 +462,4 @@ docker stats --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.Net
 ---
 
 **Last Updated:** 2025-10-14
-**Maintainer:** SecureYourGear
+**Maintainer:** GitSolved

@@ -47,8 +47,9 @@ REQUIRED_VERSIONS: dict[str, tuple[str, str]] = {
     "ruff": (">=0.0.0", "<1.0.0"),
 }
 
-# Python version requirement
-REQUIRED_PYTHON = "3.11.9"
+# Python version requirement (minimum version)
+REQUIRED_PYTHON_MIN = "3.11.9"
+REQUIRED_PYTHON_MAX = "3.12.0"
 
 # Application version
 APP_VERSION = "0.6.2"
@@ -63,16 +64,36 @@ def check_python_version() -> bool:
         f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     )
 
-    if current_version != REQUIRED_PYTHON:
-        logger.error(
-            "Python version mismatch! Required: %s, Current: %s",
-            REQUIRED_PYTHON,
-            current_version,
-        )
-        return False
+    try:
+        from packaging import version as packaging_version
 
-    logger.info("👾✅ Python version check passed: %s", current_version)
-    return True
+        current = packaging_version.parse(current_version)
+        min_ver = packaging_version.parse(REQUIRED_PYTHON_MIN)
+        max_ver = packaging_version.parse(REQUIRED_PYTHON_MAX)
+
+        if not (min_ver <= current < max_ver):
+            logger.error(
+                "Python version out of range! Required: >=%s,<%s, Current: %s",
+                REQUIRED_PYTHON_MIN,
+                REQUIRED_PYTHON_MAX,
+                current_version,
+            )
+            return False
+
+        logger.info("👾✅ Python version check passed: %s", current_version)
+        return True
+    except ImportError:
+        # Fallback to simple comparison if packaging not available
+        if not (REQUIRED_PYTHON_MIN <= current_version < REQUIRED_PYTHON_MAX):
+            logger.error(
+                "Python version out of range! Required: >=%s,<%s, Current: %s",
+                REQUIRED_PYTHON_MIN,
+                REQUIRED_PYTHON_MAX,
+                current_version,
+            )
+            return False
+        logger.info("👾✅ Python version check passed: %s", current_version)
+        return True
 
 
 def get_package_version(package_name: str) -> str:
@@ -87,11 +108,8 @@ def get_package_version(package_name: str) -> str:
             import pkg_resources
 
             return pkg_resources.get_distribution(package_name).version
-        except ImportError:
-            logger.warning(
-                "Neither importlib.metadata nor pkg_resources available, skipping version check for %s",
-                package_name,
-            )
+        except Exception:
+            # Package not found or other pkg_resources error
             return "unknown"
     except Exception as e:
         logger.warning("Could not get version for %s: %s", package_name, e)
@@ -243,7 +261,9 @@ def generate_compatibility_report() -> dict[str, any]:
     report = {
         "application_version": get_application_version(),
         "python_version": {
-            "required": REQUIRED_PYTHON,
+            "required_min": REQUIRED_PYTHON_MIN,
+            "required_max": REQUIRED_PYTHON_MAX,
+            "required_range": f">={REQUIRED_PYTHON_MIN},<{REQUIRED_PYTHON_MAX}",
             "current": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "compatible": check_python_version(),
         },
@@ -293,7 +313,9 @@ def generate_compatibility_report() -> dict[str, any]:
 
     # Generate recommendations
     if not report["python_version"]["compatible"]:
-        report["recommendations"].append(f"Update Python to version {REQUIRED_PYTHON}")
+        report["recommendations"].append(
+            f"Update Python to version >={REQUIRED_PYTHON_MIN},<{REQUIRED_PYTHON_MAX}"
+        )
 
     for package, info in report["critical_packages"].items():
         if not info["compatible"]:

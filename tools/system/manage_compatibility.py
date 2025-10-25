@@ -43,8 +43,9 @@ COMPATIBILITY_CONSTRAINTS = {
     },
 }
 
-# Python version requirement
-REQUIRED_PYTHON = "3.11.9"
+# Python version requirement (range)
+REQUIRED_PYTHON_MIN = "3.11.9"
+REQUIRED_PYTHON_MAX = "3.12.0"
 
 
 def get_installed_version_pip(package_name: str) -> Optional[str]:
@@ -56,7 +57,7 @@ def get_installed_version_pip(package_name: str) -> Optional[str]:
             text=True,
             check=True,
         )
-        for line in result.stdout.split("\\n"):
+        for line in result.stdout.split("\n"):
             if line.startswith("Version:"):
                 return line.split(":")[1].strip()
     except subprocess.CalledProcessError:
@@ -90,10 +91,22 @@ def check_python_version() -> Tuple[bool, str]:
         f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     )
 
-    if current_version != REQUIRED_PYTHON:
-        return False, f"Python {current_version} (required: {REQUIRED_PYTHON})"
+    try:
+        from packaging import version as packaging_version
 
-    return True, f"Python {current_version}"
+        current = packaging_version.parse(current_version)
+        min_ver = packaging_version.parse(REQUIRED_PYTHON_MIN)
+        max_ver = packaging_version.parse(REQUIRED_PYTHON_MAX)
+
+        if not (min_ver <= current < max_ver):
+            return False, f"Python {current_version} (required: >={REQUIRED_PYTHON_MIN},<{REQUIRED_PYTHON_MAX})"
+
+        return True, f"Python {current_version}"
+    except ImportError:
+        # Fallback to simple string comparison
+        if not (REQUIRED_PYTHON_MIN <= current_version < REQUIRED_PYTHON_MAX):
+            return False, f"Python {current_version} (required: >={REQUIRED_PYTHON_MIN},<{REQUIRED_PYTHON_MAX})"
+        return True, f"Python {current_version}"
 
 
 def check_compatibility_mode() -> Dict[str, any]:
@@ -350,7 +363,7 @@ def display_results(results: Dict[str, any]) -> int:
             print(
                 "   1. Run: poetry run python tools/system/manage_compatibility.py --fix"
             )
-            print("   2. Ensure Python 3.11.9 is installed")
+            print(f"   2. Ensure Python >={REQUIRED_PYTHON_MIN},<{REQUIRED_PYTHON_MAX} is installed")
             return 1
 
     elif results["mode"] == "fix":

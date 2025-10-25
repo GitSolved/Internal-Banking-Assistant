@@ -73,6 +73,16 @@ class RSSFeedService:
         # ========================================
         "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
         "SEC": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&CIK=&type=&company=&dateb=&owner=include&start=0&count=40&output=atom",
+        # ========================================
+        # BANKING REGULATORY FEEDS
+        # ========================================
+        "FDIC": "https://www.fdic.gov/news/press-releases/rss.xml",
+        "OCC": "https://www.occ.treas.gov/rss/news-releases.xml",
+        "CFPB": "https://www.consumerfinance.gov/about-us/newsroom/feed/",
+        "FinCEN": "https://www.fincen.gov/news-room/rss.xml",
+        "NY DFS": "https://www.dfs.ny.gov/rss",
+        "FINRA": "https://www.finra.org/rules-guidance/regulatory-notices/rss",
+        "Basel Committee": "https://www.bis.org/bcbs/rss.htm",
         # MITRE ATT&CK Framework (API-based, not RSS)
         # Note: MITRE ATT&CK data is accessed via dedicated API endpoints
     }
@@ -97,7 +107,16 @@ class RSSFeedService:
         # ========================================
         # REGULATORY & FINANCIAL
         # ========================================
-        "Regulatory": ["Federal Reserve", "SEC"],
+        "Federal Regulators": ["Federal Reserve", "SEC"],
+        # ========================================
+        # BANKING REGULATION & SUPERVISION
+        # ========================================
+        "Banking Regulation": ["FDIC", "OCC", "Federal Reserve"],
+        "Consumer Protection": ["CFPB"],
+        "AML & Financial Crimes": ["FinCEN"],
+        "State Banking Regulators": ["NY DFS"],
+        "Securities Compliance": ["SEC", "FINRA"],
+        "International Standards": ["Basel Committee"],
     }
 
     # Enhanced priority system with clear separation
@@ -122,10 +141,20 @@ class RSSFeedService:
         "Dark Reading": 3,  # Cybersecurity news and analysis
         "BleepingComputer": 3,  # Technical cybersecurity news
         # ========================================
-        # REGULATORY & FINANCIAL (Priority 4)
+        # BANKING REGULATORY (Priority 2)
         # ========================================
-        "Federal Reserve": 4,  # Federal Reserve press releases
-        "SEC": 4,  # Securities and Exchange Commission filings
+        "FDIC": 2,  # Critical banking supervision and enforcement
+        "OCC": 2,  # National bank supervision and bulletins
+        "CFPB": 2,  # Consumer protection enforcement
+        "FinCEN": 2,  # AML/BSA requirements and advisories
+        "NY DFS": 2,  # State cybersecurity and banking regulations
+        # ========================================
+        # REGULATORY & FINANCIAL (Priority 3-4)
+        # ========================================
+        "Federal Reserve": 3,  # Federal Reserve press releases
+        "SEC": 3,  # Securities and Exchange Commission filings
+        "FINRA": 3,  # Securities compliance for broker-dealers
+        "Basel Committee": 4,  # International banking standards
         # ========================================
         # INTELLIGENCE FEEDS (Priority 5)
         # ========================================
@@ -159,6 +188,16 @@ class RSSFeedService:
         "SANS ISC": "#0077BE",  # Blue for security research
         "NIST NVD": "#0077BE",  # Blue for vulnerability info
         "CISA KEV": "#0077BE",  # Blue for vulnerability tracking
+        # ========================================
+        # BANKING REGULATORY - BLUE/NAVY TONES
+        # ========================================
+        "FDIC": "#003366",  # Navy blue for FDIC
+        "OCC": "#0066CC",  # Royal blue for OCC
+        "CFPB": "#1E90FF",  # Dodger blue for CFPB
+        "FinCEN": "#4169E1",  # Royal blue for FinCEN
+        "NY DFS": "#6495ED",  # Cornflower blue for NY DFS
+        "FINRA": "#4682B4",  # Steel blue for FINRA
+        "Basel Committee": "#5F9EA0",  # Cadet blue for Basel
         # ========================================
         # REGULATORY & FINANCIAL - GOLD/YELLOW
         # ========================================

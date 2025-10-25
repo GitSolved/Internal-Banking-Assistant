@@ -15,7 +15,7 @@ See the [Installation Guide](../installation/installation.md) for detailed setup
 **1. Clone and Install**
 
 ```bash
-git clone https://github.com/SecureYourGear/internal-assistant
+git clone https://github.com/GitSolved/Internal-Banking-Assistant
 cd internal-assistant
 poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
 ```
