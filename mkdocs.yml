@@ -1,11 +1,11 @@
 site_name: Internal Assistant
 site_description: Private, secure, customizable GenAI development framework
 site_author: Internal Assistant Team
-site_url: https://secureyourgear.github.io/internal-assistant
+site_url: https://gitsolved.github.io/Internal-Banking-Assistant
 
 # Repository
-repo_name: SecureYourGear/internal-assistant
-repo_url: https://github.com/SecureYourGear/internal-assistant
+repo_name: GitSolved/Internal-Banking-Assistant
+repo_url: https://github.com/GitSolved/Internal-Banking-Assistant
 edit_uri: edit/main/docs/
 
 # Theme
