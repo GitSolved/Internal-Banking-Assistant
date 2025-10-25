@@ -449,6 +449,142 @@ Docker configurations:
 
 Use `PGPT_PROFILES=docker` for Docker-specific settings.
 
+## Parallel Development & Multi-Session Coordination
+
+### Working with Multiple Claude Code Sessions
+
+When running multiple Claude Code sessions in parallel on this codebase, follow these coordination patterns:
+
+#### 1. Branch-Based Workflow (Recommended)
+Each session should work on a dedicated git branch:
+
+```bash
+# Session 1: Feature development
+git checkout -b feature/add-authentication
+# Tell Claude: "Work on authentication feature on this branch"
+
+# Session 2: Bug fixes
+git checkout -b fix/feed-parsing
+# Tell Claude: "Fix feed parsing issues on this branch"
+
+# Session 3: Documentation
+git checkout -b docs/api-updates
+# Tell Claude: "Update API documentation on this branch"
+```
+
+**Why**: Eliminates merge conflicts, enables independent review, allows parallel CI/CD runs.
+
+#### 2. Component Isolation Strategy
+Assign different components to different sessions:
+
+- **Session A**: `internal_assistant/server/` (Backend APIs)
+- **Session B**: `internal_assistant/ui/` (Frontend UI)
+- **Session C**: `tests/` (Testing infrastructure)
+- **Session D**: `docs/` (Documentation)
+
+**Communication Pattern**: Document active work in git commit messages or branch names.
+
+#### 3. Port Allocation for Testing
+If multiple sessions need to run the server simultaneously:
+
+```bash
+# Session 1: Default port
+poetry run make run  # Uses port 8001
+
+# Session 2: Custom port
+UVICORN_PORT=8002 poetry run python -m internal_assistant
+
+# Session 3: Another custom port
+UVICORN_PORT=8003 poetry run python -m internal_assistant
+```
+
+#### 4. Data Isolation
+Sessions working with different data:
+
+```bash
+# Session 1: Production data
+PGPT_PROFILES=local poetry run make run
+
+# Session 2: Test data
+PGPT_PROFILES=test poetry run make run
+
+# Session 3: Docker environment
+PGPT_PROFILES=docker poetry run make run
+```
+
+#### 5. Coordination Checklist
+
+Before starting a new parallel session:
+
+1. **Check active branches**: `git branch -a` - avoid duplicate work
+2. **Pull latest changes**: `git pull origin main` - stay synchronized
+3. **Create feature branch**: `git checkout -b <descriptive-name>`
+4. **Check running processes**: `lsof -i :8001` - avoid port conflicts
+5. **Document your scope**: Add TODO or comment in branch describing work
+
+#### 6. Merge Strategy
+
+When sessions complete work:
+
+```bash
+# Session completes work on feature branch
+git checkout main
+git pull origin main
+git checkout feature/your-feature
+git rebase main  # Rebase on latest main
+# Resolve any conflicts
+git push origin feature/your-feature
+
+# Create PR via gh CLI
+gh pr create --title "Add feature X" --body "Description"
+
+# Other sessions can continue working independently
+```
+
+#### 7. Common Pitfalls to Avoid
+
+❌ **Don't**: Multiple sessions committing to `main` branch directly
+✅ **Do**: Use feature branches and PRs for coordination
+
+❌ **Don't**: Multiple sessions modifying same files simultaneously
+✅ **Do**: Coordinate via comments or divide by components
+
+❌ **Don't**: Running multiple servers on same port
+✅ **Do**: Use environment variables for port configuration
+
+❌ **Don't**: Sharing same `local_data/` directory with different configs
+✅ **Do**: Use PGPT_PROFILES for environment separation
+
+#### 8. Session Communication Protocol
+
+Create a `WORK_LOG.md` file for cross-session coordination:
+
+```markdown
+# Active Work Sessions
+
+## 2025-10-25
+- **Session 1** (Branch: `feature/auth`): Adding JWT authentication - ETA 2 hours
+- **Session 2** (Branch: `fix/feeds`): Fixing RSS feed parsing - IN PROGRESS
+- **Session 3** (Branch: `docs/api`): Updating API docs - COMPLETED
+
+## Blocked/Waiting
+- None
+
+## Next Up
+- Performance optimization
+- Add caching layer
+```
+
+### Quick Reference: Session Startup
+
+```bash
+# Standard parallel session startup
+git pull origin main
+git checkout -b session-$(date +%Y%m%d)-description
+poetry install
+# Start work with isolated scope
+```
+
 ## Security Notes
 
 - **100% Local Processing**: No data sent to external services

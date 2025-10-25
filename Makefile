@@ -105,3 +105,34 @@ list:
 	@echo "  backup          : Create data backup"
 	@echo "  log-cleanup     : Clean old logs (keeps 7)"
 	@echo ""
+	@echo "Parallel Development:"
+	@echo "  new-session     : Start new parallel Claude session"
+	@echo "  list-sessions   : Show active work sessions"
+	@echo ""
+
+########################################################################################################################
+# Parallel Development
+########################################################################################################################
+
+.PHONY: new-session list-sessions
+
+new-session:
+	@if [ -z "$(name)" ]; then \
+		echo "❌ Error: Session name required"; \
+		echo "Usage: make new-session name=<session-name> [component=<component>]"; \
+		echo ""; \
+		echo "Examples:"; \
+		echo "  make new-session name=add-auth component=server"; \
+		echo "  make new-session name=fix-feeds component=ui"; \
+		exit 1; \
+	fi
+	@./scripts/start_parallel_session.sh $(name) $(component)
+
+list-sessions:
+	@echo "📋 Active Work Sessions"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if [ -f WORK_LOG.md ]; then \
+		cat WORK_LOG.md; \
+	else \
+		echo "No WORK_LOG.md found. Run 'make new-session' to start."; \
+	fi
