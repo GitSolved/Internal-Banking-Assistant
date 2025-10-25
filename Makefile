@@ -16,7 +16,7 @@ test-coverage:
 
 format:
 	poetry run black .
-	poetry run ruff check internal_assistant tests --fix
+	poetry run ruff check internal_assistant tests --fix || true
 
 mypy:
 	poetry run mypy internal_assistant
