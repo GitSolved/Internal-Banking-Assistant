@@ -100,20 +100,17 @@ def get_package_version(package_name: str) -> str:
     """Get the installed version of a package."""
     try:
         from importlib.metadata import version
-
         return version(package_name)
-    except ImportError:
-        # Fallback to pkg_resources for older Python versions
+    except Exception as e:
+        # Package not found or other error with importlib.metadata
+        # Try fallback to pkg_resources
         try:
             import pkg_resources
-
             return pkg_resources.get_distribution(package_name).version
         except Exception:
-            # Package not found or other pkg_resources error
+            # Package not found in pkg_resources either
+            logger.warning("Could not get version for %s: %s", package_name, e)
             return "unknown"
-    except Exception as e:
-        logger.warning("Could not get version for %s: %s", package_name, e)
-        return "unknown"
 
 
 def check_version_constraint(version: str, min_version: str, max_version: str) -> bool:
