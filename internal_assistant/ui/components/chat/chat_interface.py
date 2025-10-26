@@ -91,7 +91,7 @@ class ChatInterfaceBuilder:
                 # Message Input Box - At TOP
                 with gr.Row():
                     chat_input = gr.Textbox(
-                        placeholder="💡 Try: 'What CVEs affect our Exchange servers?' or 'Show me our incident response policy'",
+                        placeholder="Type your message...",
                         label="",
                         show_label=False,
                         lines=3,

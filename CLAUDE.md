@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Internal Banking Assistant** (package name: `internal-assistant`) is a privacy-focused cybersecurity intelligence platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for banking, compliance, and security teams to automate risk monitoring, track vulnerabilities, and streamline regulatory research using the Foundation-Sec-8B model.
+**Internal Banking Risk & Compliance Assistant** (package name: `internal-assistant`) is a privacy-focused risk & compliance platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for banking compliance officers, risk managers, and IT security teams to automate regulatory research, streamline compliance monitoring, and analyze security frameworks using the Llama 3.1 70B model.
 
 **Note**: Repository is named `Internal-Banking-Assistant` but the Python package is `internal_assistant` (with underscore).
 

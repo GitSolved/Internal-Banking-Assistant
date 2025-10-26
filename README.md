@@ -1,8 +1,8 @@
-# Internal Banking Assistant
+# Internal-Banking-Assistant
 
-**AI-Powered Compliance and IT Security Platform for NYC-Regulated Financial Institutions**
+**AI-Powered Risk & Compliance Platform for Financial Institutions**
 
-Privacy-first RAG platform built for banking compliance officers, IT security teams, and risk managers to automate regulatory research, streamline compliance monitoring, and analyze security frameworks—100% locally with no external API dependencies.
+Privacy-first RAG platform built for banking compliance officers, risk managers, and IT security teams to automate regulatory research, streamline compliance monitoring, and analyze security frameworks—100% locally with no external API dependencies.
 
 ---
 

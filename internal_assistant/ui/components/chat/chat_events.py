@@ -437,15 +437,14 @@ class ChatEventHandler:
         new_message = ChatMessage(content=message, role=MessageRole.USER)
         all_messages = [*build_history(), new_message]
 
-        # Use default system prompt from settings for RAG queries
-        # Banking compliance and IT security guidance
-        system_prompt = """You are a banking compliance and cybersecurity intelligence assistant.
-Provide accurate, well-cited guidance on regulatory requirements, security threats,
-and compliance obligations. When discussing regulations, cite specific sections
-(e.g., "12 CFR 30", "Reg E", "FFIEC guidance"). For security threats, reference
-MITRE ATT&CK techniques when applicable. Maintain a professional, precise tone
-suitable for banking compliance and IT security professionals."""
-        logger.info("🔍 RAG: Using default banking compliance system prompt")
+        # Use default system prompt for RAG queries
+        # Banking risk & compliance guidance
+        system_prompt = """You are a banking risk & compliance assistant.
+Provide concise, factual answers with specific citations. Be brief and direct.
+When discussing regulations, cite specific sections (e.g., "12 CFR 30", "Reg E").
+For security threats, reference MITRE ATT&CK techniques when applicable.
+Avoid unnecessary elaboration - focus on key facts only."""
+        logger.info("🔍 RAG: Using banking risk & compliance system prompt")
 
         # Normalize mode to ensure backward compatibility
         normalized_mode = normalize_mode(mode)

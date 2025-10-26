@@ -128,7 +128,7 @@ class SidebarComponent(UIComponent):
             response_length = gr.Radio(
                 label="Response Length",
                 choices=["Short", "Medium", "Long", "Very Long"],
-                value="Medium",
+                value="Short",
                 elem_id="response-length",
             )
 
