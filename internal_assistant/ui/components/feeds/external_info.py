@@ -71,37 +71,53 @@ class ExternalInfoBuilder:
             )
             components["section_header"] = section_header
 
-            # Dynamic Time Range Display
-            time_range_display = gr.HTML(
-                "<div style='font-size: 12px; font-weight: 600; color: #0077BE; margin-bottom: 4px; margin-top: 8px;'>⏰ TIME RANGE: 7 days</div>"
-            )
-            components["time_range_display"] = time_range_display
+            # Category display is now embedded in feed_display HTML (no separate component needed)
 
-            # Time Filter Buttons
+            # Source Category Filter Buttons (Row 1: Primary categories)
             with gr.Row():
-                time_24h_btn = gr.Button(
-                    "24h", elem_classes=["filter-btn"], size="sm", scale=1
+                all_sources_btn = gr.Button(
+                    "All Sources", elem_classes=["filter-btn"], size="sm", scale=1
                 )
-                time_7d_btn = gr.Button(
-                    "7d", elem_classes=["filter-btn"], size="sm", scale=1
+                banking_btn = gr.Button(
+                    "Banking Regulation", elem_classes=["filter-btn"], size="sm", scale=1
                 )
-                time_30d_btn = gr.Button(
-                    "30d", elem_classes=["filter-btn"], size="sm", scale=1
+                cybersec_btn = gr.Button(
+                    "Cybersecurity", elem_classes=["filter-btn"], size="sm", scale=1
                 )
-                time_90d_btn = gr.Button(
-                    "90d", elem_classes=["filter-btn"], size="sm", scale=1
+                aml_btn = gr.Button(
+                    "AML/BSA", elem_classes=["filter-btn"], size="sm", scale=1
                 )
 
-                components["time_24h_btn"] = time_24h_btn
-                components["time_7d_btn"] = time_7d_btn
-                components["time_30d_btn"] = time_30d_btn
-                components["time_90d_btn"] = time_90d_btn
+                components["all_sources_btn"] = all_sources_btn
+                components["banking_btn"] = banking_btn
+                components["cybersec_btn"] = cybersec_btn
+                components["aml_btn"] = aml_btn
+
+            # Source Category Filter Buttons (Row 2: Secondary categories)
+            with gr.Row():
+                securities_btn = gr.Button(
+                    "Securities", elem_classes=["filter-btn"], size="sm", scale=1
+                )
+                consumer_btn = gr.Button(
+                    "Consumer Protection", elem_classes=["filter-btn"], size="sm", scale=1
+                )
+                ai_security_btn = gr.Button(
+                    "AI Security", elem_classes=["filter-btn"], size="sm", scale=1
+                )
+                international_btn = gr.Button(
+                    "International", elem_classes=["filter-btn"], size="sm", scale=1
+                )
+
+                components["securities_btn"] = securities_btn
+                components["consumer_btn"] = consumer_btn
+                components["ai_security_btn"] = ai_security_btn
+                components["international_btn"] = international_btn
 
             # Hidden state components to track current selections
-            current_feed_source = gr.Textbox(value="All", visible=False)
-            current_time_filter = gr.Textbox(value="7 days", visible=False)
-            components["current_feed_source"] = current_feed_source
-            components["current_time_filter"] = current_time_filter
+            current_feed_category = gr.Textbox(value="All Sources", visible=False)
+            current_days_filter = gr.Textbox(value="30", visible=False)
+            components["current_feed_category"] = current_feed_category
+            components["current_days_filter"] = current_days_filter
 
             # Feed Status Display
             feed_status = gr.HTML(
@@ -113,8 +129,8 @@ class ExternalInfoBuilder:
             # Feed Items Display
             try:
                 initial_feeds_html = self.format_feeds_fn(
-                    None, 7
-                )  # Default 7 days, All sources
+                    None, 30
+                )  # Default 30 days, All sources
             except Exception as e:
                 logger.warning(f"Error loading initial feeds: {e}")
                 initial_feeds_html = """
@@ -122,7 +138,7 @@ class ExternalInfoBuilder:
                     <div style='text-align: center; color: #666; padding: 20px;'>
                         <div>📡 No external information available</div>
                         <div style='font-size: 12px; margin-top: 8px;'>
-                            Click any time range button to load latest regulatory feeds
+                            Click any category button to load regulatory feeds
                         </div>
                     </div>
                 </div>"""
@@ -227,13 +243,16 @@ class ExternalInfoBuilder:
             Dictionary mapping component names to Gradio component references
         """
         return {
-            "time_range_display": components.get("time_range_display"),
-            "time_24h_btn": components.get("time_24h_btn"),
-            "time_7d_btn": components.get("time_7d_btn"),
-            "time_30d_btn": components.get("time_30d_btn"),
-            "time_90d_btn": components.get("time_90d_btn"),
-            "current_feed_source": components.get("current_feed_source"),
-            "current_time_filter": components.get("current_time_filter"),
+            "all_sources_btn": components.get("all_sources_btn"),
+            "banking_btn": components.get("banking_btn"),
+            "cybersec_btn": components.get("cybersec_btn"),
+            "aml_btn": components.get("aml_btn"),
+            "securities_btn": components.get("securities_btn"),
+            "consumer_btn": components.get("consumer_btn"),
+            "ai_security_btn": components.get("ai_security_btn"),
+            "international_btn": components.get("international_btn"),
+            "current_feed_category": components.get("current_feed_category"),
+            "current_days_filter": components.get("current_days_filter"),
             "feed_status": components.get("feed_status"),
             "feed_display": components.get("feed_display"),
             "cve_time_range_display": components.get("cve_time_range_display"),

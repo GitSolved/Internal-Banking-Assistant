@@ -319,6 +319,92 @@ class FeedsEventHandler:
         filter_map = {"24h": 24, "7d": 24 * 7, "30d": 24 * 30, "90d": 24 * 90}
         return filter_map.get(time_filter.lower())
 
+    def _get_sources_for_category(self, category: str) -> list[str] | None:
+        """Map category buttons to feed sources.
+
+        Args:
+            category: Category name (e.g., "Banking Regulation", "Cybersecurity")
+
+        Returns:
+            List of source names for the category, or None for "All Sources"
+        """
+        category_map = {
+            "All Sources": None,  # No filter = all sources
+            "Banking Regulation": ["FDIC", "OCC", "Federal Reserve"],
+            "Cybersecurity": [
+                "US-CERT",
+                "SANS ISC",
+                "NIST NVD",
+                "CISA KEV",
+                "The Hacker News",
+                "Dark Reading",
+                "BleepingComputer",
+                "ThreatFox",
+            ],
+            "AML/BSA": ["FinCEN"],
+            "Securities": ["SEC", "FINRA"],
+            "Consumer Protection": ["CFPB"],
+            "State Regulators": ["NY DFS"],
+            "International": ["Basel Committee"],
+            "AI Security": ["AI Alignment Forum", "ML Security"],
+            "AI Research": ["DeepMind"],
+        }
+
+        return category_map.get(category)
+
+    def filter_by_category(self, category: str) -> str:
+        """Filter feeds by source category with fixed 30-day window.
+
+        Args:
+            category: Category name (e.g., "Banking Regulation", "Cybersecurity")
+
+        Returns:
+            Combined HTML string with status header and filtered feeds
+        """
+        try:
+            logger.info(f"Filtering feeds by category: {category}")
+
+            sources = self._get_sources_for_category(category)
+
+            # Fixed 30-day window for all category views
+            days_filter = 30
+
+            # Get feeds with days filter
+            all_feeds = self.feeds_service.get_feeds(None, days_filter)
+
+            # Filter by sources if category specifies sources
+            if sources:
+                feeds = [f for f in all_feeds if f["source"] in sources]
+            else:
+                # "All Sources" - no source filtering
+                feeds = all_feeds
+
+            # Format display with status header
+            status_header = f"<div style='font-size: 12px; font-weight: 600; color: #0077BE; margin-bottom: 12px; margin-top: 8px; padding: 8px; background-color: #f0f8ff; border-radius: 4px;'>📊 SHOWING: {category} ({len(feeds)} items, last 30 days)</div>"
+
+            feeds_html = self._format_feeds_html(feeds)
+
+            combined_html = status_header + feeds_html
+
+            logger.info(
+                f"Category filter applied: {category} -> {len(feeds)} items from {len(sources) if sources else 'all'} sources"
+            )
+
+            return combined_html
+
+        except Exception as e:
+            error_msg = f"Failed to filter by category: {e!s}"
+            logger.error(error_msg, exc_info=True)
+
+            error_html = f"""
+            <div class="error-message" style="padding: 20px; background-color: #ffebee; border-left: 4px solid #d32f2f; margin: 10px 0;">
+                <h3 style="color: #c62828; margin: 0 0 10px 0;">⚠️ Category Filter Failed</h3>
+                <p><strong>Error:</strong> {e!s}</p>
+            </div>
+            """
+
+            return error_html
+
     def _format_feeds_html(self, feeds: list[dict[str, Any]]) -> str:
         """Format feeds data into HTML.
 
@@ -907,5 +993,21 @@ class FeedsEventHandlerBuilder:
         async def wrapper():
             # Handler returns (status, time_range_display_html, filter_state, filtered_html)
             return await self.get_handler().refresh_and_filter_cve(time_filter)
+
+        return wrapper
+
+    def create_category_filter_handler(self, category: str):
+        """Create handler for filtering feeds by source category (30-day window).
+
+        Args:
+            category: Category name (e.g., "Banking Regulation", "Cybersecurity")
+
+        Returns:
+            Handler function that filters feeds by category
+        """
+
+        def wrapper():
+            # Handler returns combined HTML with status header + feed display
+            return self.get_handler().filter_by_category(category)
 
         return wrapper

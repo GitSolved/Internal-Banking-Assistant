@@ -31,8 +31,8 @@ data:
 ui:
   enabled: true
   path: /
-  # "RAG Mode" or "General LLM"
-  default_mode: "General LLM"
+  # "RAG Mode" enables RAG with your ingested documents, "General LLM" is direct chat
+  default_mode: "RAG Mode"
   default_chat_system_prompt: >
     You are a banking compliance and cybersecurity intelligence assistant.
     Provide accurate, well-cited guidance on regulatory requirements, security threats,
@@ -56,18 +56,18 @@ ui:
 
 llm:
   mode: ollama  # Switch to Ollama for better performance
-  prompt_style: "llama2"
+  prompt_style: "llama3"  # Use Llama 3 chat template for proper formatting
   # Should be matching the selected model
-  max_new_tokens: 1000  # Significantly increased for larger responses
-  context_window: 8192  # Significantly increased for larger files
+  max_new_tokens: 2048  # Increased for Llama 3.1 70B - allow full banking compliance responses
+  context_window: 4096  # Matches Ollama model config
   # Select your tokenizer. Llama-index tokenizer is the default.
   # tokenizer: local/Foundation-Sec-8B
   temperature: 0.1      # Low temperature for consistent, factual responses
 
 rag:
-  similarity_top_k: 8   # Significantly increased for better document coverage
+  similarity_top_k: 4   # Optimal for M3 Max - balanced speed and context richness
   #This value controls how many "top" documents the RAG returns to use in the context.
-  similarity_value: 0.1  # Much lower threshold to include more relevant documents
+  similarity_value: 0.15  # Accept moderately relevant chunks (typical scores: 0.15-0.35)
   #This value is disabled by default.  If you enable this settings, the RAG will only use articles that meet a certain percentage score.
   rerank:
     enabled: false        # Disabled for optimal performance speed in CTI workflows
@@ -84,13 +84,18 @@ clickhouse:
     database: embeddings
 
 ollama:
-  llm_model: foundation-sec-q4km:latest  # Use the new q4_k_m model for better speed
+  llm_model: llama31-70b-m3max  # Llama 3.1 70B Instruct - M3 Max optimized with 40-core GPU acceleration
   embedding_model: nomic-embed-text
   api_base: http://localhost:11434
   embedding_api_base: http://localhost:11434  # change if your embedding model runs on another ollama
   keep_alive: 5m
-  request_timeout: 60.0  # Increased timeout for larger model
+  request_timeout: 180.0  # Increased for maximum token generation (16K tokens)
+  num_predict: 16384  # MAXIMUM output tokens (~12,000 words / ~25 pages)
   autopull_models: false  # We already have the model
+  # M3 Max specific optimizations (applied via Modelfile, documented here for reference)
+  # num_gpu: 40 (all GPU cores)
+  # num_thread: 12 (leave 4 CPU cores for system)
+  # num_batch: 256 (optimal for 70B model on M3 Max unified memory)
 
 llamacpp:
   llm_hf_repo_id: local/Foundation-Sec-8B

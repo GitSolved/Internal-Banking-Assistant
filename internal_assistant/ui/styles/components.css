@@ -2473,7 +2473,8 @@ select:focus {
 .chatbot span,
 .chatbot .prose {
     color: #e0e0e0 !important; /* Light gray for readability */
-    font-size: 14px !important;
+    font-family: 'Times New Roman', Times, serif !important; /* Professional serif font */
+    font-size: 12pt !important; /* 12 point font size */
     line-height: 1.6 !important;
     font-weight: 400 !important;
     background: transparent !important;
@@ -2481,6 +2482,7 @@ select:focus {
     margin: 8px 0 !important;
     padding: 8px !important;
     text-align: left !important;
+    text-transform: none !important; /* No uppercase transformation */
     box-shadow: none !important;
     border-radius: 6px !important;
 }

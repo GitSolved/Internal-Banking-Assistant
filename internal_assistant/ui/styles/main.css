@@ -248,7 +248,7 @@ div, section, article, aside, main, footer,
     font-weight: 600 !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
-    text-transform: uppercase !important;
+    /* text-transform: uppercase !important; */ /* Removed - user requested normal case */
     letter-spacing: 0.5px !important;
 }
 
@@ -404,7 +404,7 @@ input::placeholder, textarea::placeholder {
     color: #0077BE !important;
     font-size: 14px !important;
     font-weight: 600 !important;
-    text-transform: uppercase !important;
+    /* text-transform: uppercase !important; */ /* Removed - user requested normal case */
     letter-spacing: 0.5px !important;
     margin-bottom: 8px !important;
 }

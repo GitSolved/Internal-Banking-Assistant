@@ -38,11 +38,26 @@ class MockInjector:
 
     def clear_cache(self) -> None:
         """Clear the injector's instance cache to force recreation of singletons."""
+        # First, close any Qdrant clients to release locks before recreating injector
         try:
-            if hasattr(self.test_injector, "_instance_cache"):
-                self.test_injector._instance_cache.clear()
-        except Exception:
+            from internal_assistant.components.vector_store.vector_store_component import (
+                VectorStoreComponent,
+            )
+
+            # Try to get and close the existing vector store client
+            try:
+                vector_store = self.test_injector.get(VectorStoreComponent)
+                if vector_store and hasattr(vector_store, "close"):
+                    vector_store.close()
+            except Exception:
+                # Client might not exist yet, that's fine
+                pass
+        except ImportError:
             pass
+
+        # Now recreate the injector for fresh instances
+        # This ensures all subsequent .get() calls create fresh instances
+        self.test_injector = create_application_injector()
 
 
 @pytest.fixture

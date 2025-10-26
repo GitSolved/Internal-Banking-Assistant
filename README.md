@@ -1,38 +1,39 @@
 # Internal Banking Assistant
 
-**AI-Powered Cybersecurity Intelligence Platform for Financial Institutions**
+**AI-Powered Compliance and IT Security Platform for NYC-Regulated Financial Institutions**
 
-Privacy-first RAG platform built for banking, compliance, and security teams to automate threat monitoring, streamline regulatory research, and analyze vulnerabilities—100% locally with no external API dependencies.
+Privacy-first RAG platform built for banking compliance officers, IT security teams, and risk managers to automate regulatory research, streamline compliance monitoring, and analyze security frameworks—100% locally with no external API dependencies.
 
 ---
 
 ## 🎯 Overview
 
-**Internal Banking Assistant** empowers financial institutions to:
-- 🛡️ Monitor real-time cybersecurity threats and vulnerabilities
-- 📋 Automate regulatory compliance research (FDIC, SEC, NY DFS, FFIEC)
-- 📄 Process and analyze security documents with AI-powered RAG
+**Internal Banking Assistant** empowers NYC-regulated financial institutions to:
+- ⚖️ Automate regulatory compliance research (NY DFS, FDIC, SEC, FFIEC, OCC)
+- 📋 Streamline IT security framework implementation (NIST, ISO 27001, SOC 2)
+- 📄 Process and analyze policy documents, audits, and regulatory guidance with AI-powered RAG
 - 🔒 Operate completely offline for maximum privacy and regulatory safety
+- 🏢 Support cross-departmental workflows: Compliance, IT Security, Risk, Legal, Audit
 
-**Built on**: [Foundation-Sec-8B](https://huggingface.co/Foundation-Sec/Foundation-Sec-8B) cybersecurity AI model + [PrivateGPT](https://github.com/zylon-ai/private-gpt) RAG framework
+**Built on**: [Llama 3.1 70B Instruct](https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct) enterprise AI model + [PrivateGPT](https://github.com/zylon-ai/private-gpt) RAG framework
 
 ---
 
 ## ✨ Key Features
 
 ### Core Capabilities
-- **🤖 Cybersecurity-Trained AI**: Foundation-Sec-8B model specialized for threat analysis
-- **📚 Document RAG**: Ingest PDFs, DOCX, and text files for intelligent search
-- **📡 Threat Intelligence**: 14+ RSS feeds (CISA KEV, US-CERT, SANS ISC, NVD, etc.)
-- **🔍 CVE Tracking**: Real-time vulnerability monitoring with severity filtering
-- **⚖️ Compliance Automation**: FDIC, SEC, NY DFS regulatory update tracking
+- **🤖 Enterprise AI**: Llama 3.1 70B Instruct trained for banking compliance and IT security
+- **📚 Document Intelligence**: Ingest and analyze policies, audits, regulations (PDFs, DOCX, text)
+- **⚖️ Regulatory Monitoring**: 14+ feeds for NY DFS, FDIC, SEC, OCC, FFIEC, FinCEN updates
+- **🛡️ IT Security Frameworks**: NIST CSF, ISO 27001, SOC 2, PCI DSS implementation guidance
+- **📋 Compliance Automation**: Automated tracking of regulatory changes and requirements
 - **🔐 100% Private**: All processing happens locally—zero external API calls
 
 ### Advanced Features
-- **🤝 Multi-Agent Support**: AutoGen integration for collaborative AI analysis ([guide](docs/developer/autogen-integration.md))
-- **🔄 Parallel Development**: Multi-session workflow for team collaboration ([guide](docs/developer/parallel-sessions.md))
-- **📊 MITRE ATT&CK**: Automated technique detection and threat categorization
-- **⚡ Fast Performance**: 6-12s general queries, 12-20s RAG retrieval
+- **🤝 Multi-Agent Support**: AutoGen integration for collaborative compliance analysis ([guide](docs/developer/autogen-integration.md))
+- **🔄 Cross-Departmental**: Shared knowledge base for Compliance, IT Security, Risk, Legal, Audit
+- **📊 Policy Management**: Centralized repository for policies, procedures, and control documentation
+- **⚡ Apple M3 Max Optimized**: GPU-accelerated inference on Apple Silicon (40 GPU cores)
 
 ---
 
@@ -57,7 +58,7 @@ cd Internal-Banking-Assistant
 poetry install --extras "ui llms-ollama embeddings-huggingface vector-stores-qdrant"
 
 # Pull AI model via Ollama
-ollama pull foundation-sec-8b-q4_k_m
+ollama pull llama3.1:70b-instruct-q4_K_M
 
 # Start application
 poetry run make run
@@ -111,38 +112,40 @@ docker-compose up -d
 
 ## 💻 Usage Examples
 
-### Threat Analysis
+### Regulatory Compliance Research
 ```
-User: "Analyze CVE-2025-1234 for banking sector impact"
+User: "What are the NY DFS cybersecurity requirements for third-party risk management?"
 
-AI: "CVE-2025-1234 is a critical remote code execution vulnerability (CVSS 9.8)
-     affecting CoreBanking Suite v12.x-14.3. Banking sector impact is HIGH:
-     - Affects customer transaction processing systems
-     - Enables unauthorized fund transfers
-     - Compromises PII and financial data
-     - SEC disclosure required within 4 business days (Regulation S-K Item 1.05)
-     - Immediate patching to v14.4+ recommended"
-```
-
-### Compliance Research
-```
-User: "What are the latest NY DFS cybersecurity requirements for 2025?"
-AI: [Searches RAG knowledge base + latest feeds]
-    "NY DFS 23 NYCRR 500 updates for 2025 include:
-     - Enhanced incident reporting (72-hour timeline)
-     - Multi-factor authentication mandate for privileged accounts
-     - Third-party vendor risk assessments..."
+AI: [Searches RAG knowledge base + NY DFS feeds]
+    "NY DFS 23 NYCRR 500.11 requires covered entities to implement policies for:
+     - Due diligence of third-party service providers accessing nonpublic information
+     - Minimum cybersecurity practices required of service providers
+     - Periodic assessment of service provider security controls
+     - Annual certification of third-party vendor compliance (23 NYCRR 500.17)"
 ```
 
-### Document Analysis
+### IT Security Framework Implementation
 ```
-User: "Summarize the key points from this SEC filing"
-AI: [Analyzes uploaded PDF]
-    "Key findings from SEC Form 10-K:
-     - Cybersecurity incident occurred Q3 2024
-     - $2.3M remediation costs
-     - No material impact on operations
-     - Enhanced controls implemented..."
+User: "How do we implement NIST CSF Identify function for our organization?"
+AI: [Analyzes uploaded NIST CSF guidance + internal policies]
+    "NIST CSF Identify function implementation approach:
+     - Asset Management (ID.AM): Create inventory of systems, data, personnel
+     - Business Environment (ID.BE): Document mission, objectives, stakeholders
+     - Governance (ID.GV): Establish policies, procedures, compliance requirements
+     - Risk Assessment (ID.RA): Conduct enterprise risk assessment
+     - Recommended timeline: 90 days for initial implementation"
+```
+
+### Policy and Audit Analysis
+```
+User: "Analyze our information security policy for NY DFS compliance gaps"
+AI: [Analyzes uploaded policy document]
+    "Gap analysis of Information Security Policy vs 23 NYCRR 500:
+     ✅ Compliant: Access controls, encryption requirements (§500.15)
+     ⚠️  Gap: Missing qualified CISO designation (§500.04)
+     ⚠️  Gap: Incident response testing frequency undefined (§500.16)
+     ⚠️  Gap: No penetration testing schedule specified (§500.05)
+     Recommended actions: Update policy sections 4.2, 6.1, and 7.3"
 ```
 
 ---
@@ -232,14 +235,20 @@ For parallel development with multiple contributors, see [Parallel Sessions Guid
 │           FastAPI REST API                  │  API layer + endpoints
 ├─────────────────────────────────────────────┤
 │    LlamaIndex RAG Pipeline                  │  Query processing
-│    ├─ Foundation-Sec-8B (via Ollama)       │  LLM inference
+│    ├─ Llama 3.1 70B Instruct (Ollama)     │  LLM inference
 │    ├─ nomic-embed-text-v1.5                │  Embeddings
 │    └─ Qdrant Vector Store                   │  Vector search
 ├─────────────────────────────────────────────┤
-│    Threat Intelligence Layer                │  RSS feeds + CVE tracking
-│    ├─ 14+ Security Feeds                   │  Real-time updates
-│    ├─ MITRE ATT&CK Integration             │  Technique mapping
-│    └─ Compliance Monitoring                 │  FDIC/SEC/NY DFS
+│    Regulatory & Compliance Feed Layer       │  Real-time monitoring
+│    ├─ NY DFS 23 NYCRR 500                  │  NYS Banking Dept
+│    ├─ FDIC Regulatory Updates              │  Federal Deposit Insurance
+│    ├─ OCC Bulletins & Alerts               │  Office of Comptroller
+│    ├─ FFIEC IT Examination Handbooks       │  Federal IT Standards
+│    ├─ SEC Cyber Risk Management            │  Securities & Exchange
+│    ├─ FinCEN AML/BSA Guidance              │  Anti-Money Laundering
+│    ├─ Federal Reserve SR Letters           │  Fed guidance
+│    ├─ NIST Cybersecurity Publications      │  Security frameworks
+│    └─ CVE/NVD Vulnerability Feeds          │  IT security patches
 └─────────────────────────────────────────────┘
 ```
 
@@ -247,7 +256,7 @@ For parallel development with multiple contributors, see [Parallel Sessions Guid
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **LLM** | Foundation-Sec-8B (q4_k_m, 5.06GB) | Cybersecurity-trained AI |
+| **LLM** | Llama 3.1 70B Instruct (q4_K_M, ~40GB) | Enterprise banking AI |
 | **LLM Runtime** | Ollama | Local model inference |
 | **Embeddings** | nomic-embed-text-v1.5 (HuggingFace) | Document vectorization |
 | **Vector DB** | Qdrant (embedded) | Similarity search |
@@ -262,7 +271,7 @@ For parallel development with multiple contributors, see [Parallel Sessions Guid
 2. **Query Embedding** → nomic-embed-text-v1.5 → Vector
 3. **Vector Search** → Qdrant → Top-K relevant documents
 4. **Context Assembly** → LlamaIndex → Prompt with context
-5. **LLM Inference** → Foundation-Sec-8B via Ollama → Response
+5. **LLM Inference** → Llama 3.1 70B via Ollama → Response
 6. **Response** → FastAPI → Gradio UI → User
 
 ---
@@ -274,8 +283,9 @@ For parallel development with multiple contributors, see [Parallel Sessions Guid
 - **Lines of Code**: 36,420 (Python)
 - **License**: Apache 2.0
 - **Based On**: [PrivateGPT](https://github.com/zylon-ai/private-gpt) (~30-40% code overlap)
-- **Custom Code**: ~48,000+ lines for cybersecurity features
-- **Security Feeds**: 14+ sources (CISA, US-CERT, SANS ISC, NVD, etc.)
+- **Custom Code**: ~48,000+ lines for banking compliance and IT security
+- **Regulatory Feeds**: 16+ sources (NY DFS, FDIC, OCC, FFIEC, SEC, FinCEN, Fed, NIST, CVE/NVD)
+- **Target Users**: Compliance Officers, IT Security Teams, Risk Managers, Legal, Audit
 - **Test Coverage**: Comprehensive test suite with pytest
 
 ---
@@ -286,26 +296,27 @@ For parallel development with multiple contributors, see [Parallel Sessions Guid
 This project is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
 
 ### Attribution
-**Internal Banking Assistant** is built on the [PrivateGPT](https://github.com/zylon-ai/private-gpt) RAG framework by [Zylon AI](https://github.com/zylon-ai), extensively specialized for cybersecurity intelligence workflows.
+**Internal Banking Assistant** is built on the [PrivateGPT](https://github.com/zylon-ai/private-gpt) RAG framework by [Zylon AI](https://github.com/zylon-ai), extensively specialized for banking compliance and IT security workflows.
 
 ### What's Different from PrivateGPT
 
 While sharing the foundational RAG infrastructure (~30-40% code overlap), Internal Banking Assistant adds:
 
-- ✅ **Foundation-Sec-8B** cybersecurity-trained AI model (8B params)
-- ✅ **14+ security RSS feeds** (CISA KEV, US-CERT, SANS ISC, NVD, etc.)
-- ✅ **MITRE ATT&CK framework** integration with automated technique detection
-- ✅ **CVE tracking and monitoring** with real-time vulnerability alerts
-- ✅ **Threat intelligence analysis** with security recommendations
-- ✅ **Compliance automation** (FDIC, SEC, NY DFS regulatory monitoring)
-- ✅ **Custom security-focused UI** with threat dashboards
-- ✅ **Banking-specific features** for financial sector use cases
-- ✅ **AutoGen multi-agent support** for collaborative AI analysis
-- ✅ **Parallel development workflow** for team collaboration
-- ✅ **~48,000+ lines of custom code** for cybersecurity features
+- ✅ **Llama 3.1 70B Instruct** enterprise AI for banking compliance (70B params)
+- ✅ **16+ regulatory feeds** (NY DFS, FDIC, OCC, FFIEC, SEC, FinCEN, Federal Reserve, NIST, CVE/NVD)
+- ✅ **Banking compliance automation** (NY DFS 23 NYCRR 500, FDIC requirements, SEC guidance)
+- ✅ **IT security framework support** (NIST CSF, ISO 27001, SOC 2, PCI DSS)
+- ✅ **AML/BSA compliance** (FinCEN guidance, Bank Secrecy Act monitoring)
+- ✅ **Policy and audit analysis** - gap analysis, control assessment, documentation review
+- ✅ **Regulatory change tracking** - automatic monitoring of NY DFS, Federal Reserve, OCC bulletins
+- ✅ **Cross-departmental workflows** - Compliance, IT Security, Risk, Legal, Audit
+- ✅ **Custom banking UI** with regulatory dashboards and policy repositories
+- ✅ **AutoGen multi-agent support** for collaborative compliance analysis
+- ✅ **Apple M3 Max GPU acceleration** for optimized inference on Apple Silicon
+- ✅ **~48,000+ lines of custom code** for banking compliance and IT security
 
-**Original Project**: [PrivateGPT by Zylon AI](https://github.com/zylon-ai/private-gpt)  
-**Our Modifications**: Cybersecurity specialization, banking sector focus, custom features
+**Original Project**: [PrivateGPT by Zylon AI](https://github.com/zylon-ai/private-gpt)
+**Our Modifications**: Banking compliance specialization, NYC-regulated institution focus, regulatory automation
 
 ---
 
@@ -323,7 +334,7 @@ While sharing the foundational RAG infrastructure (~30-40% code overlap), Intern
 ## 🙏 Acknowledgments
 
 - **PrivateGPT** by [Zylon AI](https://github.com/zylon-ai) - Foundation RAG framework
-- **Foundation-Sec-8B** by [Foundation Security](https://huggingface.co/Foundation-Sec) - Cybersecurity AI model
+- **Llama 3.1** by [Meta AI](https://huggingface.co/meta-llama) - Enterprise language model
 - **LlamaIndex** - RAG orchestration framework
 - **Ollama** - Local LLM runtime
 - **FastAPI** - Modern Python web framework

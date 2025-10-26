@@ -1,0 +1,54 @@
+# Optimized Modelfile for Apple M3 Max (40-core GPU, 64GB RAM)
+# This configuration maximizes performance while maintaining quality
+# Tuned specifically for Foundation-Sec-8B banking/security use case
+
+FROM foundation-sec-q4km:latest
+
+TEMPLATE """{{- if .System }}
+<|start_header_id|>system<|end_header_id|>
+
+{{ .System }}<|eot_id|>
+{{- end }}
+<|start_header_id|>user<|end_header_id|>
+
+{{ .Prompt }}<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+
+{{ .Response }}<|eot_id|>"""
+
+# M3 Max GPU Acceleration - use all 40 GPU cores
+PARAMETER num_gpu 40
+PARAMETER num_thread 12
+
+# Context window matching app configuration
+PARAMETER num_ctx 4096
+PARAMETER num_batch 512
+PARAMETER num_keep 24
+
+# Banking/security optimized generation settings
+PARAMETER temperature 0.1
+PARAMETER top_k 40
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.1
+
+# Speed optimization - default max tokens
+PARAMETER num_predict 256
+
+# Stop sequences
+PARAMETER stop <|start_header_id|>
+PARAMETER stop <|end_header_id|>
+PARAMETER stop <|eot_id|>
+PARAMETER stop <|im_end|>
+
+# Disable mirostat for speed
+PARAMETER mirostat 0
+PARAMETER mirostat_eta 0.1
+PARAMETER mirostat_tau 5.0
+
+SYSTEM """You are a specialized banking and cybersecurity assistant. Provide accurate, concise answers focused on:
+- Financial regulations and compliance
+- Cybersecurity threats and vulnerabilities
+- Risk assessment and mitigation
+- Industry best practices
+
+Keep responses professional, factual, and under 200 words unless more detail is explicitly requested."""

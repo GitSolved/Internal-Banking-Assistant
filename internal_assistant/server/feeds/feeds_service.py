@@ -76,13 +76,13 @@ class RSSFeedService:
         # ========================================
         # BANKING REGULATORY FEEDS
         # ========================================
-        "FDIC": "https://www.fdic.gov/news/press-releases/rss.xml",
+        "FDIC": "https://www.fdic.gov/news/press-releases/2025/rss.xml",
         "OCC": "https://www.occ.treas.gov/rss/news-releases.xml",
         "CFPB": "https://www.consumerfinance.gov/about-us/newsroom/feed/",
-        "FinCEN": "https://www.fincen.gov/news-room/rss.xml",
-        "NY DFS": "https://www.dfs.ny.gov/rss",
-        "FINRA": "https://www.finra.org/rules-guidance/regulatory-notices/rss",
-        "Basel Committee": "https://www.bis.org/bcbs/rss.htm",
+        "FinCEN": "https://www.federalregister.gov/api/v1/documents.rss?conditions%5Bagencies%5D%5B%5D=financial-crimes-enforcement-network",
+        "NY DFS": "https://www.federalregister.gov/api/v1/documents.rss?conditions%5Bagencies%5D%5B%5D=new-york-state-department-of-financial-services",
+        "FINRA": "https://www.sec.gov/rss/rules/proposed.xml",
+        "Basel Committee": "https://www.bis.org/doclist/all_pressrels.rss",
         # MITRE ATT&CK Framework (API-based, not RSS)
         # Note: MITRE ATT&CK data is accessed via dedicated API endpoints
     }

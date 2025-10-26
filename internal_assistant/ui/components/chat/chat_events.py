@@ -377,27 +377,35 @@ class ChatEventHandler:
                 yield full_response
                 time.sleep(0.02)
 
-            # Apply citation style settings for document sources with enhanced correlation
+            # Apply citation style settings for document sources
             if completion_gen.sources and citation_style != "Exclude Sources":
-                full_response += SOURCES_SEPARATOR
-                cur_sources = Source.curate_sources(completion_gen.sources)
-                sources_text = "\n\n**📄 Document Sources:**\n\n"
-                used_files = set()
+                try:
+                    full_response += SOURCES_SEPARATOR
+                    # Use sources directly without curate_sources (workaround for missing method)
+                    cur_sources = completion_gen.sources
+                    sources_text = "\n\n**📄 Document Sources:**\n\n"
+                    used_files = set()
 
-                for index, source in enumerate(cur_sources, start=1):
-                    if f"{source.file}-{source.page}" not in used_files:
-                        if citation_style == "Minimal Citations":
-                            sources_text = sources_text + f"{index}. {source.file}\n"
-                        else:  # Include Sources (full citations)
-                            sources_text = (
-                                sources_text
-                                + f"{index}. {source.file} (page {source.page}) \n\n"
-                            )
-                        used_files.add(f"{source.file}-{source.page}")
+                    for index, source in enumerate(cur_sources, start=1):
+                        file_name = getattr(source, 'file_name', str(source))
+                        page = getattr(source, 'page', '?')
 
-                sources_text += "*Document sources from knowledge base*\n"
-                sources_text += "<hr>\n\n"
-                full_response += sources_text
+                        if f"{file_name}-{page}" not in used_files:
+                            if citation_style == "Minimal Citations":
+                                sources_text = sources_text + f"{index}. {file_name}\n"
+                            else:  # Include Sources (full citations)
+                                sources_text = (
+                                    sources_text
+                                    + f"{index}. {file_name} (page {page}) \n\n"
+                                )
+                            used_files.add(f"{file_name}-{page}")
+
+                    sources_text += "*Document sources from knowledge base*\n"
+                    sources_text += "<hr>\n\n"
+                    full_response += sources_text
+                except Exception as e:
+                    logger.warning(f"Could not format sources: {e}")
+                    # Continue without sources rather than failing
 
             yield full_response
 
@@ -429,18 +437,15 @@ class ChatEventHandler:
         new_message = ChatMessage(content=message, role=MessageRole.USER)
         all_messages = [*build_history(), new_message]
 
-        # Use system prompt as-is for better performance
-        system_prompt = self.get_system_prompt() or ""
-
-        # If a system prompt is set, add it as a system message
-        if system_prompt:
-            all_messages.insert(
-                0,
-                ChatMessage(
-                    content=system_prompt,
-                    role=MessageRole.SYSTEM,
-                ),
-            )
+        # Use default system prompt from settings for RAG queries
+        # Banking compliance and IT security guidance
+        system_prompt = """You are a banking compliance and cybersecurity intelligence assistant.
+Provide accurate, well-cited guidance on regulatory requirements, security threats,
+and compliance obligations. When discussing regulations, cite specific sections
+(e.g., "12 CFR 30", "Reg E", "FFIEC guidance"). For security threats, reference
+MITRE ATT&CK techniques when applicable. Maintain a professional, precise tone
+suitable for banking compliance and IT security professionals."""
+        logger.info("🔍 RAG: Using default banking compliance system prompt")
 
         # Normalize mode to ensure backward compatibility
         normalized_mode = normalize_mode(mode)
@@ -448,22 +453,29 @@ class ChatEventHandler:
 
         if normalized_mode == Modes.DOCUMENT_ASSISTANT.value:
             # Document Assistant mode - search documents for contextual answers
+            logger.info("🔍 RAG DIAGNOSTIC: Starting document check...")
             try:
                 available_files = self.list_ingested_files()
+                logger.info(f"🔍 RAG DIAGNOSTIC: Found {len(available_files) if available_files else 0} files")
                 if not available_files or len(available_files) == 0:
                     yield "📄 **Document Assistant Mode - No Documents Available**\n\nI'm in Document Assistant mode but couldn't find any uploaded documents to search. Here's what you can do:\n\n• **📁 Upload Files**: Use the Upload tab to add documents\n• **📂 Upload Folders**: Use the Folder tab to ingest directories\n• **🤖 Switch Mode**: Use General Assistant for questions that don't require documents\n\n**Supported formats**: PDF, Word, Excel, PowerPoint, Text, Markdown, and more\n\nOnce documents are uploaded, I'll search through them to provide contextual answers."
                     return
             except Exception as e:
+                logger.error(f"🔍 RAG DIAGNOSTIC: File check failed: {e}")
                 yield "⚠️ **Document Assistant Mode - Error**\n\nI couldn't access your document library. This might be a temporary issue.\n\n**Try these solutions:**\n• Refresh the page and try again\n• Switch to General Assistant mode for non-document questions\n• Check if your documents are still uploading\n\nIf the problem persists, please contact support."
                 return
 
+            logger.info("🔍 RAG DIAGNOSTIC: Creating context filter...")
             context_filter = self.create_context_filter()
+            logger.info(f"🔍 RAG DIAGNOSTIC: Context filter created: {context_filter}")
 
+            logger.info(f"🔍 RAG DIAGNOSTIC: Calling stream_chat with {len(all_messages)} messages...")
             query_stream = self.chat_service.stream_chat(
                 messages=all_messages,
                 use_context=True,
                 context_filter=context_filter,
             )
+            logger.info("🔍 RAG DIAGNOSTIC: Stream created, starting yield...")
             yield from yield_deltas(query_stream)
 
         elif normalized_mode == Modes.GENERAL_ASSISTANT.value:

@@ -222,7 +222,8 @@ async def qdrant_isolation(injector: MockInjector) -> None:
     # Pre-test setup - minimal cleanup to avoid race conditions
     logger.debug("Starting Qdrant isolation for test")
 
-    # Only clean up obvious conflicts, don't close active clients
+    # Only clean up obvious conflicts, don't close active clients or delete data
+    # The new injector will create fresh clients that can work with existing data
     try:
         # Clean up any existing lock files
         cleanup_qdrant_locks()
@@ -246,28 +247,19 @@ async def qdrant_isolation(injector: MockInjector) -> None:
     # Small delay to ensure all operations are complete
     await asyncio.sleep(0.2)
 
-    # Clear the entire injector cache to force recreation of all components
+    # CRITICAL FIX: Clear the injector cache to force new instances for next test
+    # This ensures the next test creates completely fresh singleton instances
+    # DO NOT close clients before clearing cache - that causes the next test
+    # to get references to closed clients from the cache
     try:
         injector.clear_cache()
         logger.debug("Cleared injector cache for next test")
     except Exception as e:
         logger.warning(f"Error clearing injector cache: {e}")
 
-    # Now do thorough cleanup of all Qdrant clients
-    try:
-        cleanup_all_qdrant_clients()
-        logger.debug("Cleaned up all Qdrant client instances")
-    except Exception as e:
-        logger.warning(f"Error cleaning up Qdrant clients: {e}")
-
-    # Force collection cleanup
-    try:
-        force_collection_cleanup()
-        logger.debug("Forced Qdrant collection cleanup")
-    except Exception as e:
-        logger.warning(f"Error forcing Qdrant collection cleanup: {e}")
-
     # Additional cleanup to ensure no lingering processes
+    # NOTE: force_collection_cleanup() is now done BEFORE each test starts
+    # not after, to prevent "readonly database" errors
     try:
         cleanup_qdrant_locks()
         kill_qdrant_processes()
@@ -290,17 +282,9 @@ def _auto_close_vector_store_client(injector: MockInjector) -> None:
     """
     yield
     # Only close after the test is completely done
-    try:
-        vector_store = injector.get(VectorStoreComponent)
-        if hasattr(vector_store, "close"):
-            vector_store.close()
-        # Also register the client for global cleanup
-        if hasattr(vector_store, "vector_store") and hasattr(
-            vector_store.vector_store, "client"
-        ):
-            register_qdrant_client(vector_store.vector_store.client)
-    except Exception as e:
-        logger.warning(f"Error in auto-close fixture: {e}")
+    # DISABLED: This is now handled by qdrant_isolation fixture
+    # Closing here causes race conditions with the isolation fixture
+    pass
 
 
 # Monkey patch QdrantClient to track instances and prevent multiple instances in test mode

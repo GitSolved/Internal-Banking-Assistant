@@ -571,11 +571,11 @@ class InternalAssistantUI:
                     MessageType.STATE_UPDATED,
                 ],
                 # External Info Components - can send refresh messages
-                "current_feed_source": [
+                "current_feed_category": [
                     MessageType.FEED_FILTER_CHANGED,
                     MessageType.STATE_UPDATED,
                 ],
-                "current_time_filter": [
+                "current_days_filter": [
                     MessageType.FEED_FILTER_CHANGED,
                     MessageType.STATE_UPDATED,
                 ],
@@ -2423,14 +2423,17 @@ class InternalAssistantUI:
                         external_components
                     )
 
-                    # Extract component references for event handling
-                    time_range_display = external_refs["time_range_display"]
-                    time_24h_btn = external_refs["time_24h_btn"]
-                    time_7d_btn = external_refs["time_7d_btn"]
-                    time_30d_btn = external_refs["time_30d_btn"]
-                    time_90d_btn = external_refs["time_90d_btn"]
-                    current_feed_source = external_refs["current_feed_source"]
-                    current_time_filter = external_refs["current_time_filter"]
+                    # Extract component references for event handling - Source Category Filtering
+                    all_sources_btn = external_refs["all_sources_btn"]
+                    banking_btn = external_refs["banking_btn"]
+                    cybersec_btn = external_refs["cybersec_btn"]
+                    aml_btn = external_refs["aml_btn"]
+                    securities_btn = external_refs["securities_btn"]
+                    consumer_btn = external_refs["consumer_btn"]
+                    ai_security_btn = external_refs["ai_security_btn"]
+                    international_btn = external_refs["international_btn"]
+                    current_feed_category = external_refs["current_feed_category"]
+                    current_days_filter = external_refs["current_days_filter"]
                     feed_status = external_refs["feed_status"]
                     feed_display = external_refs["feed_display"]
                     cve_time_range_display = external_refs["cve_time_range_display"]
@@ -2479,8 +2482,8 @@ class InternalAssistantUI:
                         "writing_style": writing_style,
                         "temperature_control": temperature_control,
                         # External Info Components
-                        "current_feed_source": current_feed_source,
-                        "current_time_filter": current_time_filter,
+                        "current_feed_category": current_feed_category,
+                        "current_days_filter": current_days_filter,
                     }
 
                     # Register all state-managed components
@@ -3071,45 +3074,20 @@ class InternalAssistantUI:
                 show_progress=True,
             )
 
-            # Connect mode change to indicator update with automatic state synchronization
-            def handle_mode_change_with_auto_sync(new_mode):
-                # Update centralized state first
+            # Connect mode change to indicator update - using PrivateGPT pattern
+            def handle_mode_change_simple(new_mode):
+                # Update centralized state only
                 self._state_integration.set_state_value("chat.mode", new_mode)
-                # Update system prompt for new mode
-                try:
-                    mode_enum = (
-                        Modes(new_mode)
-                        if new_mode in [m.value for m in Modes]
-                        else Modes.DOCUMENT_ASSISTANT
-                    )
-                    new_prompt = self._get_default_system_prompt(mode_enum)
-                    self._state_integration.set_state_value(
-                        "settings.system_prompt", new_prompt
-                    )
-                except ValueError:
-                    logger.warning(
-                        f"Invalid mode: {new_mode}, defaulting to Document Assistant"
-                    )
+                logger.info(f"Mode changed to: {new_mode}")
 
-                # Use the new automatic sync system to update UI components
-                # This will automatically sync any components bound to affected state paths
-                sync_handler = self._create_ui_sync_handler(
-                    ["system_prompt_input", "mode_selector"]
-                )
-                synced_values = sync_handler()
-
-                # Still handle the mode indicator manually since it's not bound to state
-                mode_indicator_html = (
-                    self._chat_event_builder.create_mode_change_handler()(new_mode)
-                )
-
-                # Return the mode indicator update (other components auto-sync)
-                return mode_indicator_html
+                # Return empty gr.update() - this is FAST and non-blocking like PrivateGPT
+                # No complex operations, no component reads, no threading issues
+                return None
 
             mode.change(
-                fn=handle_mode_change_with_auto_sync,
+                fn=handle_mode_change_simple,
                 inputs=[mode],
-                outputs=[mode_indicator],
+                outputs=None,  # PrivateGPT pattern: simple and fast
             )
 
             # Clear chat button handler
@@ -3137,58 +3115,64 @@ class InternalAssistantUI:
 
             # Feed filtering function - now handled by FeedsEventHandler
 
-            # Wire up RSS feed handlers - time filters auto-refresh
+            # Wire up RSS feed handlers - category-based filtering with 30-day window
 
-            # Source filtering removed - always show all sources
+            # Category filter buttons filter feeds by source type
 
-            # Time filter buttons automatically refresh and filter feeds
-
-            time_24h_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
-                    "24h"
+            all_sources_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "All Sources"
                 ),
-                outputs=[
-                    feed_status,
-                    time_range_display,
-                    current_time_filter,
-                    feed_display,
-                ],
+                outputs=[feed_display],
             )
 
-            time_7d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
-                    "7d"
+            banking_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "Banking Regulation"
                 ),
-                outputs=[
-                    feed_status,
-                    time_range_display,
-                    current_time_filter,
-                    feed_display,
-                ],
+                outputs=[feed_display],
             )
 
-            time_30d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
-                    "30d"
+            cybersec_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "Cybersecurity"
                 ),
-                outputs=[
-                    feed_status,
-                    time_range_display,
-                    current_time_filter,
-                    feed_display,
-                ],
+                outputs=[feed_display],
             )
 
-            time_90d_btn.click(
-                fn=self._feeds_event_builder.create_refresh_and_filter_feeds_handler(
-                    "90d"
+            aml_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "AML/BSA"
                 ),
-                outputs=[
-                    feed_status,
-                    time_range_display,
-                    current_time_filter,
-                    feed_display,
-                ],
+                outputs=[feed_display],
+            )
+
+            securities_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "Securities"
+                ),
+                outputs=[feed_display],
+            )
+
+            consumer_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "Consumer Protection"
+                ),
+                outputs=[feed_display],
+            )
+
+            ai_security_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "AI Security"
+                ),
+                outputs=[feed_display],
+            )
+
+            international_btn.click(
+                fn=self._feeds_event_builder.create_category_filter_handler(
+                    "International"
+                ),
+                outputs=[feed_display],
             )
 
             # CVE Tracking Event Handlers - now handled by FeedsEventHandler

@@ -64,7 +64,7 @@ def create_chat_settings_selector() -> MemoizedSelector[dict[str, Any]]:
 
         return {
             "temperature": chat_settings.get("temperature", 0.1),
-            "max_tokens": chat_settings.get("max_tokens", 512),
+            "max_tokens": chat_settings.get("max_tokens", 2048),
             "citation_style": chat_settings.get("citation_style", "Bullets"),
             "show_sources": chat_settings.get("show_sources", True),
             "similarity_threshold": rag_settings.get("similarity_threshold", 0.5),

@@ -17,64 +17,70 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - HuggingFace (embeddings) with nomic-embed-text-v1.5
 - Qdrant (vector store)
 
-## Essential Commands
+## Quick Reference
 
-### Running the Application
+### Most Common Commands
 ```bash
-make run              # Start application (port 8001)
+# Run & Development
+make run                    # Start app (port 8001) - auto-cleans logs
+make dev                    # Dev mode with auto-reload
+poetry run pytest tests/server/feeds/test_feeds_service.py::test_parse_feed -v  # Run single test
+
+# Code Quality
+make format                 # Format + lint (black, ruff)
+make check                  # Full check: format + mypy + compatibility
+
+# Data
+make ingest path/to/docs   # Ingest documents
+make stats                  # Database stats
+```
+
+### Full Command Reference
+
+**Running:**
+```bash
+make run              # Start application (port 8001, auto log cleanup)
 make dev              # Development mode with auto-reload
-make production       # Production mode (port 8000, secure)
+make production       # Production mode (port 8000, PGPT_PROFILES=production)
 ```
 
-### Testing
+**Testing:**
 ```bash
-make test             # Run all tests
-make test-coverage    # Run tests with coverage report
-poetry run pytest tests/server/feeds/  # Run specific test directory
-poetry run pytest tests/ui/test_ui.py::test_name  # Run single test
+make test                          # Run all tests
+make test-coverage                 # Generate coverage report
+poetry run pytest tests/ui/ -v    # Test specific directory
+poetry run pytest tests/ui/test_ui.py::test_ui_creation -v  # Single test
+poetry run pytest -m "not integration"  # Skip integration tests (CI default)
 ```
 
-### Code Quality
+**Code Quality:**
 ```bash
-make format           # Format code (black + ruff)
-make mypy             # Type checking
-make check            # Full quality check (format + mypy + compatibility)
-make compatibility-check  # Check dependency versions
+make format           # Auto-format (black + ruff)
+make mypy             # Type checking (strict mode, excludes tests)
+make check            # Full quality check before commit
+make compatibility-check  # Verify dependency versions
 ```
 
-### Data Management
+**Data Management:**
 ```bash
 make ingest path/to/docs  # Ingest documents into RAG
-make stats            # Show database statistics
-make analyze-models   # Analyze model files
-make wipe             # Delete all data (requires confirmation)
+make stats            # Database statistics
+make analyze-models   # Analyze model files in models/
+make wipe             # ⚠️ Delete all data (requires CONFIRM-WIPE)
 ```
 
-### Documentation
+**Documentation:**
 ```bash
 poetry run mkdocs serve   # Serve docs at http://localhost:8000
-poetry run mkdocs build   # Build static docs site
-make api-docs         # Generate OpenAPI documentation
+make api-docs             # Generate OpenAPI spec
 ```
 
-### Utility Tools
+**Troubleshooting:**
 ```bash
-# Environment verification
-poetry run verify-env        # Check Python version and dependencies
-
-# Testing utilities
-poetry run verify-tests      # Verify test fixes
-poetry run test-safe         # Safe test runner
-
-# Maintenance
+poetry run verify-env              # Check Python version
+make health-check                  # curl http://localhost:8001/health
+ollama list                        # Verify models
 poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7
-poetry run python tools/system/manage_compatibility.py --check
-poetry run python tools/maintenance/analyze_models.py
-
-# Data management
-poetry run python tools/data/ingest_folder.py <path>
-poetry run python tools/system/utils.py stats
-poetry run python tools/system/utils.py wipe
 ```
 
 ## Architecture Overview
@@ -124,16 +130,16 @@ The application uses **Injector** for dependency injection:
 - **Threat Intelligence**: RSS/Forum Feeds → Content Parsing → Threat Analysis → Dashboard
 
 ### RSS Feed Management
-The application monitors 14+ security feeds including:
-- **Government Sources**: CISA KEV, US-CERT, NIST NVD
-- **Security News**: The Hacker News, Dark Reading, Bleeping Computer, Krebs on Security
-- **Technical Sources**: SANS ISC, Talos Intelligence, Packet Storm
+**14+ Security Feeds**: CISA KEV, US-CERT, NIST NVD, The Hacker News, Dark Reading, Bleeping Computer, Krebs on Security, SANS ISC, Talos Intelligence, Packet Storm
 
-Feed service (`RSSFeedService`):
-- Bound as singleton in dependency injection container
-- Background refresh runs every 60 minutes via `BackgroundRefreshService`
-- Managed in application lifespan events ([launcher.py:41-75](internal_assistant/launcher.py#L41-L75))
-- Endpoints in [feeds_router.py](internal_assistant/server/feeds/feeds_router.py) and [threat_intelligence_router.py](internal_assistant/server/threat_intelligence/threat_intelligence_router.py)
+**Feed Architecture:**
+- `RSSFeedService` - Singleton service bound in [di.py:13](internal_assistant/di.py#L13) (maintains feed cache)
+- `BackgroundRefreshService` - Manages 60-minute refresh cycle via asyncio task
+- Lifecycle managed in [launcher.py:41-75](internal_assistant/launcher.py#L41-L75) lifespan events
+- API endpoints: [feeds_router.py](internal_assistant/server/feeds/feeds_router.py), [threat_intelligence_router.py](internal_assistant/server/threat_intelligence/threat_intelligence_router.py)
+
+**Critical Design Pattern:**
+The feed service MUST be a singleton to maintain cache consistency across requests. It's started during FastAPI lifespan startup, not at module import.
 
 ## Import Conventions
 
@@ -233,96 +239,191 @@ poetry run <command>          # Run commands in virtual environment
 - `gradio` - Web UI framework
 - `feedparser`, `aiohttp`, `beautifulsoup4` - RSS feed processing
 
-## Testing Strategy
+## Testing Architecture
 
-### Test Organization
+### Test Organization & Fixtures
+**Fixture System** ([conftest.py:14](tests/conftest.py#L14)):
+- Auto-discovers fixtures from `tests/fixtures/[!_]*.py`
+- Converts to pytest plugins dynamically
+- Key fixtures:
+  - `mock_injector` - Mocked dependency injection for isolated testing
+  - `auto_close_qdrant` - Automatic Qdrant cleanup after tests
+  - `ingest_helper` - Document ingestion utilities
+  - `fast_api_test_client` - FastAPI test client with injector
+
+**Test Structure:**
 ```
 tests/
-├── conftest.py              # Pytest configuration
-├── fixtures/                # Shared test fixtures
-│   ├── mock_injector.py    # Mock dependency injection
-│   ├── auto_close_qdrant.py # Qdrant cleanup
-│   └── ingest_helper.py    # Ingestion test helpers
-├── server/                  # API endpoint tests
+├── conftest.py              # Auto-discovery of fixtures
+├── fixtures/                # Reusable test fixtures
+├── server/                  # API endpoint tests (use mock_injector)
 │   ├── feeds/              # Feed service tests
-│   ├── ingest/             # Ingestion tests
-│   └── ...
-├── ui/                      # UI component tests
-├── integration/             # Full integration tests
-└── components/              # Component unit tests
+│   └── ingest/             # Ingestion tests
+├── ui/                      # UI component tests (use ComponentRegistry mocks)
+├── integration/             # Full stack tests (marked with @pytest.mark.integration)
+└── components/              # Unit tests for core components
 ```
 
-### Test Execution
+### Test Configuration
+**Pytest settings** ([pyproject.toml:270-285](pyproject.toml#L270-L285)):
+- `asyncio_mode = "auto"` - Auto-detects and runs async tests
+- `--import-mode=importlib` - Resolves import issues with package structure
+- Integration tests skipped by default in CI: `addopts = "-m 'not integration'"`
+- Logs: `local_data/logs/pytest.log` (auto-rotated)
+
+**Running Tests:**
 ```bash
-# Run all tests
-poetry run pytest tests -v
-
-# Run specific test file
-poetry run pytest tests/server/feeds/test_feeds_service.py -v
-
-# Run single test function
-poetry run pytest tests/ui/test_ui.py::test_ui_creation -v
-
-# Run with coverage
-poetry run pytest tests --cov=internal_assistant --cov-report=html
+poetry run pytest tests/server/feeds/test_feeds_service.py::test_parse_feed -v  # Single test
+poetry run pytest tests/ui/ -v                          # Directory
+poetry run pytest -m integration                        # Only integration tests
+poetry run pytest --cov=internal_assistant --cov-report=html  # With coverage
 ```
-
-### Test Configuration (`pytest.ini_options` in `pyproject.toml`)
-- Async mode: `asyncio_mode = "auto"`
-- Import mode: `--import-mode=importlib`
-- Logs saved to: `local_data/logs/pytest.log`
 
 ## UI Architecture
 
 ### Modular UI System (44% code reduction from refactoring)
-The UI uses a component-based architecture with:
-- **Component Registry**: Centralized component management
-- **Event Router**: Decoupled event handling between components
-- **Service Facades**: Clean API abstraction layer
-- **Layout Manager**: Theme and layout configuration
+The UI uses a component-based architecture centered around three key systems:
 
-### Key UI Components
-- `ChatComponent` - Chat interface and message handling
-- `DocumentComponent` - Document upload and management
-- `FeedComponent` - RSS feed display and threat intelligence
-- `SidebarComponent` - Navigation and settings
-- `SettingsComponent` - Application configuration
+**1. Component Registry Pattern** (`internal_assistant/ui/core/component_registry.py`)
+- Centralized singleton registry manages all UI components
+- Components register themselves on creation: `ComponentRegistry.register(name, component)`
+- Access via `ComponentRegistry.get(name)` - enables loose coupling
+- Lifecycle management: Components can be retrieved, replaced, or cleared
 
-### UI Development Pattern
-Components inherit from `UIComponent` base class and register via `ComponentRegistry`. Events flow through `EventRouter` for loose coupling.
+**2. Event Router Pattern** (`internal_assistant/ui/core/event_router.py`)
+- Pub/sub event system for inter-component communication
+- Subscribe: `EventRouter.subscribe(event_name, callback_function)`
+- Publish: `EventRouter.publish(event_name, data)`
+- Prevents tight coupling - components don't need direct references to each other
+- Example: `ChatComponent` publishes "message_sent" event, `FeedComponent` subscribes to update context
 
-## Common Development Tasks
+**3. Service Facade Pattern** (`internal_assistant/ui/services/`)
+- Clean abstraction layer between UI and FastAPI backend
+- Each service class wraps API endpoints with simple methods
+- Services handle HTTP requests, error handling, and response parsing
+- Example: `FeedService.get_feeds()` wraps `/api/v1/feeds` endpoint
+
+**UI Component Structure:**
+```
+internal_assistant/ui/
+├── components/          # UI components
+│   ├── chat/           # ChatComponent - inherits UIComponent
+│   ├── documents/      # DocumentComponent
+│   ├── feeds/          # FeedComponent
+│   ├── sidebar/        # SidebarComponent
+│   └── settings/       # SettingsComponent
+├── core/               # Core infrastructure
+│   ├── component_registry.py  # Singleton registry
+│   ├── event_router.py         # Pub/sub events
+│   └── base.py                 # UIComponent base class
+├── services/           # API facades
+│   ├── chat_service.py
+│   ├── feed_service.py
+│   └── ingest_service.py
+└── ui.py              # Main UI assembly
+```
+
+**Component Lifecycle:**
+1. Component inherits from `UIComponent` base class
+2. Component builds Gradio UI in `build()` method
+3. Component registers itself: `ComponentRegistry.register("chat", self)`
+4. Component subscribes to events: `EventRouter.subscribe("feed_updated", self.refresh)`
+5. Main UI (`ui.py`) retrieves components from registry and assembles layout
+
+## Key Architectural Patterns
 
 ### Adding a New API Endpoint
-1. Create router in `internal_assistant/server/<feature>/<feature>_router.py`
-2. Define service in `internal_assistant/server/<feature>/<feature>_service.py`
-3. Register router in `internal_assistant/launcher.py` via `app.include_router()`
-4. Add tests in `tests/server/<feature>/`
+**Pattern**: Router → Service → Dependency Injection
+```python
+# 1. Create service (internal_assistant/server/<feature>/<feature>_service.py)
+class MyService:
+    def __init__(self, settings: Settings) -> None:
+        self._settings = settings
+
+    def do_work(self) -> Result:
+        return process()
+
+# 2. Create router (internal_assistant/server/<feature>/<feature>_router.py)
+my_router = APIRouter(prefix="/api/v1/my-feature")
+
+@my_router.get("/endpoint")
+def my_endpoint(request: Request) -> Response:
+    service = request.state.injector.get(MyService)
+    return service.do_work()
+
+# 3. Register in launcher.py
+app.include_router(my_router)
+
+# 4. Service auto-binds via injector (di.py) - no manual binding needed unless singleton required
+```
 
 ### Adding a New UI Component
-1. Create component in `internal_assistant/ui/components/<name>/`
-2. Inherit from `UIComponent` base class
-3. Register in `ComponentRegistry`
-4. Wire events through `EventRouter`
-5. Add tests in `tests/ui/`
+**Pattern**: Inherit UIComponent → Register → Subscribe to Events → Publish Events
+```python
+# internal_assistant/ui/components/myfeature/my_component.py
+from internal_assistant.ui.core.base import UIComponent
+from internal_assistant.ui.core.component_registry import ComponentRegistry
+from internal_assistant.ui.core.event_router import EventRouter
 
-### Modifying Configuration
-1. Update base config in `config/settings.yaml`
-2. Update settings schema in `internal_assistant/settings/settings.py`
-3. Environment-specific overrides in `config/environments/<env>.yaml`
-4. Restart application for changes to take effect
+class MyComponent(UIComponent):
+    def build(self):
+        # Subscribe to events from other components
+        EventRouter.subscribe("data_updated", self._on_data_updated)
 
-### Running Single Tests During Development
-```bash
-# Run specific test with verbose output
-poetry run pytest tests/server/feeds/test_feeds_service.py::test_parse_feed -v -s
+        # Build Gradio UI
+        with gr.Column():
+            self.output = gr.Textbox()
+            self.button = gr.Button("Action")
+            self.button.click(self._on_click, outputs=[self.output])
 
-# Run all tests in a directory
-poetry run pytest tests/ui/ -v
+        # Register component
+        ComponentRegistry.register("my_component", self)
 
-# Run with coverage for specific module
-poetry run pytest tests/server/feeds/ --cov=internal_assistant.server.feeds
+    def _on_click(self):
+        result = self._do_work()
+        # Publish event for other components
+        EventRouter.publish("my_event", {"data": result})
+        return result
 ```
+
+### Background Service Lifecycle Pattern
+**RSS Feed Background Refresh** (60-minute intervals):
+```python
+# launcher.py lifespan pattern
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize singleton service from DI container
+    feed_service = root_injector.get(RSSFeedService)  # Singleton bound in di.py
+    background_service = BackgroundRefreshService(feed_service, refresh_interval_minutes=60)
+    await background_service.start()  # Starts asyncio task
+
+    yield  # App runs
+
+    # Shutdown: Clean stop
+    await background_service.stop()
+```
+
+**Key Points:**
+- `RSSFeedService` is bound as singleton in `di.py` (maintains cache across requests)
+- `BackgroundRefreshService` manages asyncio task lifecycle
+- Service started in lifespan event, not at import time
+- Graceful shutdown via asyncio task cancellation
+
+### Configuration Override Pattern
+**Three-Layer Configuration System:**
+```
+config/settings.yaml              # Base (always loaded)
+↓
+config/environments/local.yaml    # Environment override (via PGPT_PROFILES=local)
+↓
+config/model-configs/ollama.yaml  # Model-specific override
+```
+
+**Making Changes:**
+1. Modify `config/settings.yaml` for base changes
+2. Use `config/environments/{env}.yaml` for environment-specific overrides
+3. Update `internal_assistant/settings/settings.py` schema if adding new fields
+4. Restart app - configuration loaded once at startup
 
 ## Troubleshooting
 
@@ -354,7 +455,8 @@ The application automatically applies Gradio 4.x compatibility patches at startu
 - Patches `gradio.Blocks.recover_kwargs` to handle Pydantic v2 models
 - Located in [launcher.py:115-142](internal_assistant/launcher.py#L115-L142)
 - Applied automatically during FastAPI app creation
-- No manual intervention needed
+- **Why needed**: Gradio 4.15-4.38 has compatibility issues with Pydantic v2 (used by LlamaIndex)
+- No manual intervention needed - patches applied silently on app startup
 
 ### Health Checks
 ```bash
@@ -449,141 +551,60 @@ Docker configurations:
 
 Use `PGPT_PROFILES=docker` for Docker-specific settings.
 
-## Parallel Development & Multi-Session Coordination
+## Parallel Development Coordination
 
-### Working with Multiple Claude Code Sessions
+### Multi-Session Workflow
+When multiple Claude Code sessions work in parallel, use branch-based isolation:
 
-When running multiple Claude Code sessions in parallel on this codebase, follow these coordination patterns:
-
-#### 1. Branch-Based Workflow (Recommended)
-Each session should work on a dedicated git branch:
-
+**Branch Strategy (Recommended):**
 ```bash
-# Session 1: Feature development
-git checkout -b feature/add-authentication
-# Tell Claude: "Work on authentication feature on this branch"
-
-# Session 2: Bug fixes
-git checkout -b fix/feed-parsing
-# Tell Claude: "Fix feed parsing issues on this branch"
-
-# Session 3: Documentation
-git checkout -b docs/api-updates
-# Tell Claude: "Update API documentation on this branch"
+# Each session gets own branch
+git checkout -b feature/add-authentication    # Session 1
+git checkout -b fix/feed-parsing             # Session 2
+git checkout -b docs/api-updates             # Session 3
 ```
 
-**Why**: Eliminates merge conflicts, enables independent review, allows parallel CI/CD runs.
+**Component Isolation:**
+- Session A: `internal_assistant/server/` (Backend)
+- Session B: `internal_assistant/ui/` (Frontend)
+- Session C: `tests/` (Testing)
+- Session D: `docs/` (Documentation)
 
-#### 2. Component Isolation Strategy
-Assign different components to different sessions:
-
-- **Session A**: `internal_assistant/server/` (Backend APIs)
-- **Session B**: `internal_assistant/ui/` (Frontend UI)
-- **Session C**: `tests/` (Testing infrastructure)
-- **Session D**: `docs/` (Documentation)
-
-**Communication Pattern**: Document active work in git commit messages or branch names.
-
-#### 3. Port Allocation for Testing
-If multiple sessions need to run the server simultaneously:
-
+**Port Allocation for Parallel Testing:**
 ```bash
-# Session 1: Default port
-poetry run make run  # Uses port 8001
-
-# Session 2: Custom port
-UVICORN_PORT=8002 poetry run python -m internal_assistant
-
-# Session 3: Another custom port
-UVICORN_PORT=8003 poetry run python -m internal_assistant
+make run                              # Default port 8001
+UVICORN_PORT=8002 poetry run python -m internal_assistant  # Session 2
+UVICORN_PORT=8003 poetry run python -m internal_assistant  # Session 3
 ```
 
-#### 4. Data Isolation
-Sessions working with different data:
-
+**Environment Isolation:**
 ```bash
-# Session 1: Production data
-PGPT_PROFILES=local poetry run make run
-
-# Session 2: Test data
-PGPT_PROFILES=test poetry run make run
-
-# Session 3: Docker environment
-PGPT_PROFILES=docker poetry run make run
+PGPT_PROFILES=local poetry run make run   # Production data
+PGPT_PROFILES=test poetry run make run    # Test data
+PGPT_PROFILES=docker poetry run make run  # Docker environment
 ```
 
-#### 5. Coordination Checklist
+**Session Startup Checklist:**
+1. `git pull origin main` - Sync with latest
+2. `git checkout -b <feature-name>` - Create feature branch
+3. `lsof -i :8001` - Check port availability
+4. Document work in branch name or `WORK_LOG.md`
 
-Before starting a new parallel session:
-
-1. **Check active branches**: `git branch -a` - avoid duplicate work
-2. **Pull latest changes**: `git pull origin main` - stay synchronized
-3. **Create feature branch**: `git checkout -b <descriptive-name>`
-4. **Check running processes**: `lsof -i :8001` - avoid port conflicts
-5. **Document your scope**: Add TODO or comment in branch describing work
-
-#### 6. Merge Strategy
-
-When sessions complete work:
-
+**Merge Strategy:**
 ```bash
-# Session completes work on feature branch
-git checkout main
-git pull origin main
+git checkout main && git pull origin main
 git checkout feature/your-feature
-git rebase main  # Rebase on latest main
-# Resolve any conflicts
+git rebase main  # Rebase on latest
 git push origin feature/your-feature
-
-# Create PR via gh CLI
-gh pr create --title "Add feature X" --body "Description"
-
-# Other sessions can continue working independently
+gh pr create --title "Feature X" --body "Description"
 ```
 
-#### 7. Common Pitfalls to Avoid
-
-❌ **Don't**: Multiple sessions committing to `main` branch directly
-✅ **Do**: Use feature branches and PRs for coordination
-
-❌ **Don't**: Multiple sessions modifying same files simultaneously
-✅ **Do**: Coordinate via comments or divide by components
-
-❌ **Don't**: Running multiple servers on same port
-✅ **Do**: Use environment variables for port configuration
-
-❌ **Don't**: Sharing same `local_data/` directory with different configs
-✅ **Do**: Use PGPT_PROFILES for environment separation
-
-#### 8. Session Communication Protocol
-
-Create a `WORK_LOG.md` file for cross-session coordination:
-
-```markdown
-# Active Work Sessions
-
-## 2025-10-25
-- **Session 1** (Branch: `feature/auth`): Adding JWT authentication - ETA 2 hours
-- **Session 2** (Branch: `fix/feeds`): Fixing RSS feed parsing - IN PROGRESS
-- **Session 3** (Branch: `docs/api`): Updating API docs - COMPLETED
-
-## Blocked/Waiting
-- None
-
-## Next Up
-- Performance optimization
-- Add caching layer
-```
-
-### Quick Reference: Session Startup
-
-```bash
-# Standard parallel session startup
-git pull origin main
-git checkout -b session-$(date +%Y%m%d)-description
-poetry install
-# Start work with isolated scope
-```
+**Critical Rules:**
+- ✅ Use feature branches + PRs (not direct main commits)
+- ✅ Divide work by components to avoid file conflicts
+- ✅ Use `UVICORN_PORT` for parallel servers
+- ✅ Use `PGPT_PROFILES` for data isolation
+- ❌ Never share `local_data/` between sessions with different configs
 
 ## Security Notes
 
