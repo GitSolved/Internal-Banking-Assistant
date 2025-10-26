@@ -31,7 +31,6 @@ jobs:
       - uses: ./.github/workflows/actions/install_dependencies
       - name: run ${{ matrix.quality-command }}
         run: make ${{ matrix.quality-command }}
-        continue-on-error: true  # Allow quality checks to fail without blocking
 
   test:
     needs: setup
@@ -42,9 +41,6 @@ jobs:
       - uses: ./.github/workflows/actions/install_dependencies
       - name: run test
         run: make test-coverage
-        continue-on-error: true  # Allow failures initially while we fix tests
-      # Run even if make test fails for coverage reports
-      # TODO: select a better xml results displayer
       - name: Archive test results coverage results
         uses: actions/upload-artifact@v4
         if: always()
