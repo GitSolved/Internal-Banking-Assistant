@@ -295,12 +295,55 @@ function setupPaginationHandler() {
 }
 
 // Initialize document management functionality when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Document management module initialized');
-    
-    // Setup pagination handler
-    setupPaginationHandler();
-    
-    // Initialize filters
-    filterDocuments();
-});
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Document management module initialized');
+
+        // Setup pagination handler
+        setupPaginationHandler();
+
+        // Initialize filters
+        filterDocuments();
+    });
+}
+
+// ====================
+// Document Selection State Management
+// ====================
+
+// Global state to track currently selected document
+let selectedDocumentState = {
+    filename: null,
+    doc_id: null
+};
+
+/**
+ * Select document for action tools (used in DOCUMENT ASSISTANT TOOLS dropdown)
+ * @param {HTMLElement} element - The document card element
+ * @param {string} filename - Document filename
+ * @param {string} doc_id - Document ID
+ */
+function selectDocumentForTools(element, filename, doc_id) {
+    console.log(`📂 [JS] Document selected for tools: ${filename} (${doc_id})`);
+
+    // Update selection state
+    selectedDocumentState.filename = filename;
+    selectedDocumentState.doc_id = doc_id;
+
+    // Remove previous selection highlighting
+    document.querySelectorAll('.document-item').forEach(item => {
+        item.style.border = '1px solid #333';
+        item.style.background = '#1a1a2e';
+    });
+
+    // Highlight selected document
+    element.style.border = '2px solid #4CAF50';
+    element.style.background = '#1e2a2e';
+
+    console.log(`📂 [JS] Selection state updated:`, selectedDocumentState);
+}
+
+// Make selection function globally available
+window.selectDocumentForTools = selectDocumentForTools;
+
+console.log('📂 Document selection functionality registered');

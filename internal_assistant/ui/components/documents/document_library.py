@@ -49,6 +49,64 @@ class DocumentLibraryBuilder:
         self._chat_service = chat_service
         self._utility_builder = utility_builder
 
+    def _get_quality_badge(self, meta: dict) -> str:
+        """Generate HTML for document quality badge based on processing status.
+
+        Args:
+            meta: Document metadata dict containing quality information
+
+        Returns:
+            HTML string for quality badge
+        """
+        status = meta.get("processing_status", "indexed")
+        quality_score = meta.get("quality_score", 100)
+        chunk_count = meta.get("chunk_count", 0)
+        error_message = meta.get("error_message", "")
+
+        # Badge configurations
+        badges = {
+            "indexed": {
+                "icon": "✅",
+                "text": "Indexed",
+                "color": "#10b981",
+                "title": f"Fully indexed • {chunk_count} chunks • Quality: {quality_score}%",
+            },
+            "processing": {
+                "icon": "⏳",
+                "text": "Processing",
+                "color": "#f59e0b",
+                "title": "Document is being processed...",
+                "animate": True,
+            },
+            "failed": {
+                "icon": "❌",
+                "text": "Failed",
+                "color": "#ef4444",
+                "title": f"Indexing failed: {error_message or 'Unknown error'}",
+            },
+            "low_quality": {
+                "icon": "⚠️",
+                "text": "Low Quality",
+                "color": "#f97316",
+                "title": f"Low quality warning • {chunk_count} chunks • Quality: {quality_score}%",
+            },
+        }
+
+        badge = badges.get(status, badges["indexed"])
+        animation = "@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }" if badge.get("animate") else ""
+
+        return f"""
+        <style>{animation}</style>
+        <span class='quality-badge'
+              style='display: inline-block; padding: 2px 8px; border-radius: 4px;
+                     font-size: 11px; font-weight: 500; color: white;
+                     background-color: {badge['color']}; margin-left: 6px;
+                     {"animation: pulse 2s ease-in-out infinite;" if badge.get("animate") else ""}'
+              title='{badge["title"]}'>
+            {badge["icon"]} {badge["text"]}
+        </span>
+        """
+
     def get_document_library_html(
         self, search_query: str = "", filter_tags: list = None
     ) -> str:
@@ -98,6 +156,11 @@ class DocumentLibraryBuilder:
                             "creation_date", ""
                         ),
                         "hash": ingested_document.doc_metadata.get("content_hash", ""),
+                        "doc_id": ingested_document.doc_id,
+                        "processing_status": ingested_document.processing_status,
+                        "quality_score": ingested_document.quality_score,
+                        "chunk_count": ingested_document.chunk_count,
+                        "error_message": ingested_document.error_message,
                         "type": self._utility_builder.get_file_type(file_name),
                     }
 
@@ -253,23 +316,26 @@ class DocumentLibraryBuilder:
                     for file_name in sorted_files[:15]:  # Show max 15 files per folder
                         file_type = self._utility_builder.get_file_type(file_name)
                         file_meta = doc_metadata.get(file_name, {})
+                        doc_id = file_meta.get('doc_id', '')
 
                         # File type icon
                         type_icon = self._utility_builder.get_file_type_icon(file_type)
 
+                        # Quality badge
+                        quality_badge = self._get_quality_badge(file_meta)
+
                         html_content += f"""
-                        <div class='document-item' data-filename='{file_name}' data-type='{file_type}' 
-                             onclick='selectDocument(this)'>
+                        <div class='document-item' data-filename='{file_name}' data-type='{file_type}' data-docid='{doc_id}'
+                             onclick='selectDocumentForTools(this, "{file_name}", "{doc_id}")'>
                             <span class='document-icon'>{type_icon}</span>
                             <div style='flex: 1;'>
-                                <div style='font-weight: 500;'>{file_name}</div>
+                                <div style='font-weight: 500;'>
+                                    {file_name}
+                                    {quality_badge}
+                                </div>
                                 <div style='font-size: 11px; color: #888; margin-top: 2px;'>
                                     {file_type.upper()} • {self._utility_builder.format_file_size(file_meta.get('size', 0))}
                                 </div>
-                            </div>
-                            <div class='document-actions' style='margin-left: 8px;'>
-                                <button class='doc-action-btn' onclick='event.stopPropagation(); analyzeDocument("{file_name}")' 
-                                        title='Analyze Document'>🔍</button>
                             </div>
                         </div>
                         """

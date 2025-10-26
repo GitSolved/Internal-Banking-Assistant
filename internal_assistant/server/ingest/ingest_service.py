@@ -669,11 +669,19 @@ class IngestService:
                         logger.debug(
                             f"📖 [LIST_INGESTED] Processing doc {doc_id}: {doc_metadata.get('file_name', 'Unknown')}"
                         )
+
+                    # Assess document quality
+                    quality_info = self.assess_document_quality(doc_id)
+
                     ingested_docs.append(
                         IngestedDoc(
                             object="ingest.document",
                             doc_id=doc_id,
                             doc_metadata=doc_metadata,
+                            processing_status=quality_info.get("processing_status", "indexed"),
+                            quality_score=quality_info.get("quality_score", 100),
+                            chunk_count=quality_info.get("chunk_count", 0),
+                            error_message=quality_info.get("error_message"),
                         )
                     )
             else:
@@ -698,11 +706,19 @@ class IngestService:
                                     if hasattr(doc, "metadata") and doc.metadata
                                     else None
                                 )
+
+                                # Assess document quality
+                                quality_info = self.assess_document_quality(doc_id)
+
                                 ingested_docs.append(
                                     IngestedDoc(
                                         object="ingest.document",
                                         doc_id=doc_id,
                                         doc_metadata=doc_metadata,
+                                        processing_status=quality_info.get("processing_status", "indexed"),
+                                        quality_score=quality_info.get("quality_score", 100),
+                                        chunk_count=quality_info.get("chunk_count", 0),
+                                        error_message=quality_info.get("error_message"),
                                     )
                                 )
                                 logger.debug(
@@ -840,3 +856,90 @@ class IngestService:
         except Exception as e:
             logger.error(f"❌ [INGEST_SERVICE] DELETE ALL failed: {e}", exc_info=True)
             raise
+
+    def assess_document_quality(self, doc_id: str) -> dict[str, any]:
+        """Assess document quality based on chunks and processing status.
+
+        Args:
+            doc_id: Document ID to assess
+
+        Returns:
+            Dictionary with quality metadata:
+            - processing_status: "indexed", "processing", "failed", or "low_quality"
+            - quality_score: 0-100 score based on chunk count
+            - chunk_count: Number of chunks generated
+            - error_message: Error details if failed (optional)
+        """
+        try:
+            # Get document chunks from vector store
+            logger.debug(f"🔍 [QUALITY_CHECK] Assessing quality for doc_id: {doc_id}")
+
+            # Query vector store for chunks belonging to this document
+            chunk_count = 0
+            try:
+                # Get all nodes from doc store for this document
+                ref_doc_info = self.storage_context.docstore.get_ref_doc_info(doc_id)
+                if ref_doc_info:
+                    chunk_count = len(ref_doc_info.node_ids)
+                    logger.debug(
+                        f"📊 [QUALITY_CHECK] Found {chunk_count} chunks for {doc_id}"
+                    )
+            except Exception as e:
+                logger.warning(
+                    f"⚠️ [QUALITY_CHECK] Could not get chunk count for {doc_id}: {e}"
+                )
+                chunk_count = 0
+
+            # Calculate quality score based on chunk count
+            # Scoring thresholds:
+            # - 0 chunks = 0 (failed)
+            # - 1-2 chunks = 40 (low quality)
+            # - 3-5 chunks = 70 (medium quality)
+            # - 6-10 chunks = 90 (good quality)
+            # - 10+ chunks = 100 (excellent quality)
+
+            if chunk_count == 0:
+                quality_score = 0
+                processing_status = "failed"
+                error_message = "No chunks generated during ingestion"
+            elif chunk_count <= 2:
+                quality_score = 40
+                processing_status = "low_quality"
+                error_message = None
+            elif chunk_count <= 5:
+                quality_score = 70
+                processing_status = "indexed"
+                error_message = None
+            elif chunk_count <= 10:
+                quality_score = 90
+                processing_status = "indexed"
+                error_message = None
+            else:
+                quality_score = 100
+                processing_status = "indexed"
+                error_message = None
+
+            result = {
+                "processing_status": processing_status,
+                "quality_score": quality_score,
+                "chunk_count": chunk_count,
+            }
+
+            if error_message:
+                result["error_message"] = error_message
+
+            logger.info(
+                f"✅ [QUALITY_CHECK] Quality assessment for {doc_id}: "
+                f"status={processing_status}, score={quality_score}, chunks={chunk_count}"
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"❌ [QUALITY_CHECK] Quality assessment failed for {doc_id}: {e}")
+            return {
+                "processing_status": "failed",
+                "quality_score": 0,
+                "chunk_count": 0,
+                "error_message": str(e),
+            }
