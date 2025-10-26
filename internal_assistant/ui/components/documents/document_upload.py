@@ -59,7 +59,7 @@ class DocumentUploadBuilder:
 
             # Section Header
             section_header = gr.HTML(
-                "<div class='file-section-title'>📁 Internal Information Repository</div>"
+                "<div class='file-section-title'>📁 Document Repository</div>"
             )
             components["section_header"] = section_header
 
