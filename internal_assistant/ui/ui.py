@@ -463,9 +463,6 @@ class InternalAssistantUI:
                 # Advanced Settings - bidirectional sync
                 "calc_input": "settings.calculator.input",
                 "definition_shortcuts": "settings.shortcuts.selected",
-                "model_selection": "settings.model.selected",
-                "writing_style": "settings.chat.writing_style",
-                "temperature_control": "settings.chat.temperature_advanced",
             }
 
             # Register components with new Gradio sync system
@@ -2334,51 +2331,6 @@ class InternalAssistantUI:
                                 """
                                 )
 
-                            # Enhanced AI Configuration Controls
-                            with gr.Group(visible=True) as enhanced_ai_controls:
-                                # Model Selection
-                                model_selection = gr.Radio(
-                                    choices=[
-                                        "Foundation-Sec-8B (Local)",
-                                        "GPT-3.5 Turbo (OpenAI)",
-                                        "GPT-4 (OpenAI)",
-                                        "Llama 2 (Ollama)",
-                                        "Claude 3 Sonnet",
-                                        "Claude 3 Haiku",
-                                    ],
-                                    value="Foundation-Sec-8B (Local)",
-                                    label="AI Model",
-                                    info="Select the AI model to use for responses",
-                                    elem_classes=["model-selector"],
-                                )
-
-                                # Writing Style Selection
-                                writing_style = gr.Radio(
-                                    choices=[
-                                        "Balanced",
-                                        "Concise",
-                                        "Explanatory",
-                                        "Creative",
-                                        "Professional",
-                                        "Casual",
-                                        "Technical",
-                                    ],
-                                    value="Balanced",
-                                    label="Writing Style",
-                                    info="Adjust how the AI communicates",
-                                    elem_classes=["writing-style-selector"],
-                                )
-
-                                # Temperature Control (Enhanced)
-                                temperature_control = gr.Slider(
-                                    minimum=0.0,
-                                    maximum=1.0,
-                                    value=0.1,
-                                    step=0.05,
-                                    label="Creativity Level",
-                                    info="Lower = More focused, Higher = More creative",
-                                    elem_classes=["temperature-control"],
-                                )
 
                 # Right Side - Chat and Document Management
                 with gr.Column(scale=8, elem_classes=["main-content-column"]):
@@ -2478,9 +2430,6 @@ class InternalAssistantUI:
                         # Advanced Settings Components
                         "calc_input": calc_input,
                         "definition_shortcuts": definition_shortcuts,
-                        "model_selection": model_selection,
-                        "writing_style": writing_style,
-                        "temperature_control": temperature_control,
                         # External Info Components
                         "current_feed_category": current_feed_category,
                         "current_days_filter": current_days_filter,
