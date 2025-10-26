@@ -15,6 +15,26 @@ class IngestedDoc(BaseModel):
             }
         ]
     )
+    # Document quality and processing status
+    processing_status: Literal["indexed", "processing", "failed", "low_quality"] = Field(
+        default="indexed",
+        description="Current processing status of the document"
+    )
+    quality_score: int = Field(
+        default=100,
+        ge=0,
+        le=100,
+        description="Document quality score (0-100) based on chunks and text extraction"
+    )
+    error_message: str | None = Field(
+        default=None,
+        description="Error details if processing failed"
+    )
+    chunk_count: int = Field(
+        default=0,
+        ge=0,
+        description="Number of chunks generated from this document"
+    )
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @staticmethod

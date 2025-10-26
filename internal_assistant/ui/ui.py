@@ -2166,11 +2166,7 @@ class InternalAssistantUI:
 
                                 # JavaScript functionality moved to mode_selector.js module
 
-                                # Visual indicator for active mode
-                                mode_indicator = gr.HTML(
-                                    value=f"<div style='text-align: center; padding: 8px; background: #e3f2fd; border-radius: 4px; margin-top: 8px;'><strong>🎯 Active Mode:</strong> {default_mode}</div>",
-                                    elem_id="mode-indicator",
-                                )
+                                # Mode indicator removed - the radio selector in chat header shows current mode
 
                         # Hidden AI controls that will be moved to the AI Configuration section
                         with gr.Group(visible=False) as ai_controls:
