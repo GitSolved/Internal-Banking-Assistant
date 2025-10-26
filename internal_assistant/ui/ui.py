@@ -2021,7 +2021,7 @@ class InternalAssistantUI:
                         """
                         <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 4px; margin: 0; padding: 0;'>
                             <h1 class='header-title' style='margin: 0; padding: 0;'>Internal Risk & Compliance Assistant</h1>
-                            <p class='header-subtitle' style='margin: 0; padding: 0;'>Private AI Assistant</p>
+                            <p class='header-subtitle' style='margin: 0; padding: 0;'>Private AI RAG Platform</p>
                         </div>
                     """
                     )
