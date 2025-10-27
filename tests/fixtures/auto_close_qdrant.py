@@ -84,12 +84,9 @@ def cleanup_all_qdrant_clients():
 
 def get_qdrant_test_path() -> Path:
     """Get the Qdrant path used in test configuration."""
-    # Check if we're in test mode and use the test-specific path
-    test_data_path = Path("local_data/tests")
-    if test_data_path.exists():
-        return test_data_path
-    # Fallback to the standard path
-    return local_data_path / "internal_assistant" / "qdrant"
+    # Return the shared test path for cleanup operations
+    # Individual tests will use unique tmp_path directories
+    return Path("local_data/tests")
 
 
 def cleanup_qdrant_locks() -> None:
@@ -209,63 +206,60 @@ def wait_for_lock_release(qdrant_path: Path, timeout: float = 5.0) -> bool:
 
 @pytest.fixture(autouse=True, scope="function")
 async def qdrant_isolation(injector: MockInjector) -> None:
-    """Force clean Qdrant state - prevents lock conflicts.
+    """Ensure proper Qdrant client cleanup between tests - prevents lock conflicts.
 
-    This fixture ensures each test starts with a clean Qdrant state by:
-    1. Enabling test mode
-    2. Minimal pre-test cleanup to avoid interfering with running tests
-    3. Thorough post-test cleanup to ensure isolation
+    This fixture ensures tests don't conflict by:
+    1. Closing all Qdrant clients before each test starts
+    2. Clearing the injector cache to force new instances
+    3. Closing all clients after the test completes
+
+    This prevents the "already accessed by another instance" error by ensuring
+    only one Qdrant client instance exists at a time.
     """
     # Enable test mode
     set_test_mode(True)
 
-    # Pre-test setup - minimal cleanup to avoid race conditions
-    logger.debug("Starting Qdrant isolation for test")
-
-    # Only clean up obvious conflicts, don't close active clients or delete data
-    # The new injector will create fresh clients that can work with existing data
+    # Pre-test cleanup: Close any lingering clients from previous tests
+    logger.debug("Pre-test cleanup: closing any existing Qdrant clients")
     try:
-        # Clean up any existing lock files
-        cleanup_qdrant_locks()
-
-        # Kill any existing Qdrant processes that might be holding locks
-        kill_qdrant_processes()
-
-        # Wait for locks to be released
-        await asyncio.sleep(0.1)
-
+        cleanup_all_qdrant_clients()
+        await asyncio.sleep(0.2)  # Give time for files to be released
         logger.debug("Pre-test cleanup completed")
     except Exception as e:
-        logger.warning(f"Pre-test cleanup error: {e}")
+        logger.warning(f"Error in pre-test cleanup: {e}")
 
-    # Yield control to the test - don't interfere during execution
-    yield
-
-    # Post-test cleanup - only after the test completes
-    logger.debug("Starting post-test cleanup")
-
-    # Small delay to ensure all operations are complete
-    await asyncio.sleep(0.2)
-
-    # CRITICAL FIX: Clear the injector cache to force new instances for next test
-    # This ensures the next test creates completely fresh singleton instances
-    # DO NOT close clients before clearing cache - that causes the next test
-    # to get references to closed clients from the cache
+    # Clear injector cache to ensure fresh instances
     try:
         injector.clear_cache()
-        logger.debug("Cleared injector cache for next test")
+        logger.debug("Cleared injector cache before test")
     except Exception as e:
         logger.warning(f"Error clearing injector cache: {e}")
 
-    # Additional cleanup to ensure no lingering processes
-    # NOTE: force_collection_cleanup() is now done BEFORE each test starts
-    # not after, to prevent "readonly database" errors
+    # Yield control to the test
+    yield
+
+    # Post-test cleanup
+    logger.debug("Starting post-test cleanup")
+
+    # Small delay to ensure all operations are complete
+    await asyncio.sleep(0.1)
+
+    # Close all Qdrant clients created during the test
     try:
-        cleanup_qdrant_locks()
-        kill_qdrant_processes()
-        await asyncio.sleep(0.1)
+        cleanup_all_qdrant_clients()
+        logger.debug("Closed all Qdrant clients after test")
     except Exception as e:
-        logger.warning(f"Error in additional cleanup: {e}")
+        logger.warning(f"Error closing Qdrant clients: {e}")
+
+    # Small delay after closing clients to ensure file locks are released
+    await asyncio.sleep(0.2)
+
+    # Clear the injector cache to release resources
+    try:
+        injector.clear_cache()
+        logger.debug("Cleared injector cache after test")
+    except Exception as e:
+        logger.warning(f"Error clearing injector cache: {e}")
 
     # Disable test mode
     set_test_mode(False)
@@ -298,9 +292,24 @@ def patch_qdrant_client():
         def patched_init(self, *args, **kwargs):
             global _test_mode
 
-            # In test mode, disable singleton management entirely to avoid race conditions
+            # In test mode, clean up lock files before creating a new client
             if _test_mode:
-                # Just create a new client and register it for cleanup
+                # Try to clean up any existing lock files before creating the client
+                try:
+                    # Get the path from kwargs if provided
+                    path = kwargs.get("path")
+                    if path:
+                        lock_file = Path(path) / ".lock"
+                        if lock_file.exists():
+                            try:
+                                lock_file.unlink()
+                                logger.debug(f"Removed stale lock file: {lock_file}")
+                            except Exception as e:
+                                logger.warning(f"Could not remove lock file: {e}")
+                except Exception as e:
+                    logger.warning(f"Error checking for lock file: {e}")
+
+                # Create the client
                 original_init(self, *args, **kwargs)
                 register_qdrant_client(self)
                 logger.debug(f"Created QdrantClient for test mode: {id(self)}")
