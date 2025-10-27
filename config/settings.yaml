@@ -61,7 +61,7 @@ llm:
   max_new_tokens: 2048  # Increased for Llama 3.1 70B - allow full banking compliance responses
   context_window: 4096  # Matches Ollama model config
   # Select your tokenizer. Llama-index tokenizer is the default.
-  # tokenizer: local/Foundation-Sec-8B
+  # tokenizer: local/Llama-3.1-70B  # Optional: specify custom tokenizer
   temperature: 0.1      # Low temperature for consistent, factual responses
 
 rag:
@@ -98,8 +98,8 @@ ollama:
   # num_batch: 256 (optimal for 70B model on M3 Max unified memory)
 
 llamacpp:
-  llm_hf_repo_id: local/Foundation-Sec-8B
-  llm_hf_model_file: Foundation-Sec-8B-q4_k_m.gguf
+  llm_hf_repo_id: local/Llama-3.1-70B
+  llm_hf_model_file: llama31-70b-m3max.gguf
   tfs_z: 1.0
   top_k: 40
   top_p: 0.9

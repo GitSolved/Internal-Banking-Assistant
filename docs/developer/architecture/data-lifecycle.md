@@ -37,7 +37,7 @@ This document outlines the data management strategy for the Internal Assistant p
 #### **Model Cache**
 - **Location**: `local_data/models/cache/`
 - **Purpose**: HuggingFace model cache and downloaded models
-- **Size**: 5GB+ for Foundation-Sec-8B model
+- **Size**: 42GB+ for Llama 3.1 70B model
 
 ### Log Management
 

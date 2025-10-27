@@ -17,7 +17,7 @@ Run models locally for complete privacy and control.
 
 ### Basic Configuration
 
-Edit `config/model-configs/foundation-sec.yaml` or `config/model-configs/ollama.yaml`:
+Edit `config/model-configs/ollama.yaml`:
 
 ```yaml
 llm:
@@ -56,7 +56,7 @@ llm:
 
 ### Supported Models
 
-- **Foundation-Sec-8B** - Cybersecurity-focused (recommended)
+- **Llama 3.1 70B Instruct** - Enterprise-grade, banking compliance focused (recommended)
 - **Llama 2/3** - General purpose
 - **Mistral** - High performance
 - **Custom GGUF models** - Any compatible model

@@ -27,7 +27,7 @@ Internal Assistant uses the `AutoTokenizer` library to tokenize input text accur
    In your `settings.yaml` file, specify the model you want to use:
    ```yaml
    llm:
-     tokenizer: local/Foundation-Sec-8B
+     # tokenizer: local/Llama-3.1-70B  # Optional: specify custom tokenizer
    ```
 2. **Set Access Token for Gated Models:**
    If you are using a gated model, ensure the `access_token` is set as mentioned in the previous section.

@@ -21,7 +21,7 @@ The full list of properties configurable can be found in `settings.yaml`.
 
 Profiles are stored in multiple locations:
 - **Environment profiles**: `config/environments/{profile}.yaml` (e.g., `local.yaml`, `test.yaml`, `docker.yaml`)
-- **Model profiles**: `config/model-configs/{profile}.yaml` (e.g., `foundation-sec.yaml`, `ollama.yaml`)
+- **Model profiles**: `config/model-configs/{profile}.yaml` (e.g., `ollama.yaml`, `openai.yaml`)
 - **Legacy profiles**: `config/settings-{profile}.yaml` (for backward compatibility)
 
 To see available profiles:

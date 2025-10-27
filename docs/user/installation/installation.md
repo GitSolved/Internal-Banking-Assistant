@@ -125,7 +125,7 @@ make run
 
 ### Local Setup with Ollama (Recommended)
 
-This is the recommended setup for fully local operation with Foundation-Sec-8B cybersecurity model.
+This is the recommended setup for fully local operation with Llama 3.1 70B Instruct model.
 
 **1. Install Ollama**
 
@@ -142,7 +142,7 @@ ollama serve
 Internal Assistant automatically pulls models when needed, or pull manually:
 
 ```bash
-ollama pull foundation-sec-q4km:latest    # ~4.7GB cybersecurity LLM
+ollama list                                # Verify llama31-70b-m3max is available (~42GB)
 ollama pull nomic-embed-text             # ~275MB embeddings
 ```
 
@@ -160,7 +160,7 @@ PGPT_PROFILES=ollama make run
 
 The UI will be available at **http://localhost:8001**
 
-Configuration is in `config/model-configs/foundation-sec.yaml` and `config/model-configs/ollama.yaml`.
+Configuration is in `config/model-configs/ollama.yaml` and `config/settings.yaml`.
 
 ### Cloud-Based Setups
 

@@ -28,10 +28,10 @@ Visit [ollama.ai](https://ollama.ai/) and install Ollama, then start the service
 ollama serve
 ```
 
-**3. Pull the Model**
+**3. Verify the Model**
 
 ```bash
-ollama pull foundation-sec-q4km:latest
+ollama list  # Verify llama31-70b-m3max is available
 ```
 
 **4. Run Internal Assistant**
@@ -144,7 +144,7 @@ poetry run make compatibility-check
 - Review ingestion logs
 
 **Model not found:**
-- Pull the model: `ollama pull foundation-sec-q4km:latest`
+- Verify the model: `ollama list` (should show llama31-70b-m3max)
 - Verify Ollama is running: `ollama list`
 
 For more issues, see the [Troubleshooting Guide](../installation/troubleshooting.md).
