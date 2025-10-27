@@ -31,7 +31,7 @@
 
 [tool.poetry]
 name = "internal-assistant"
-version = "0.6.2"
+version = "0.0.1"
 description = "Internal Cybersecurity Intelligence Platform"
 authors = ["GitSolved"]
 repository = "https://github.com/GitSolved/Internal-Banking-Assistant"
