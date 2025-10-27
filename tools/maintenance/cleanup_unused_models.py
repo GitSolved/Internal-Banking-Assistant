@@ -27,13 +27,19 @@ def get_active_models() -> Set[str]:
 
         active_models = set()
 
-        # Add LLM model
+        # Add LLM model (dynamically detect from config)
         if current_settings.llm.mode == "ollama":
-            active_models.add("foundation-sec-q4km")
+            # Get model name from Ollama config
+            model_name = current_settings.ollama.llm_model
+            if model_name:
+                active_models.add(model_name)
         elif current_settings.llm.mode == "llamacpp":
+            # Get model file from llamacpp config
             model_file = current_settings.llamacpp.llm_hf_model_file
-            if "foundation-sec" in model_file.lower():
-                active_models.add("Foundation-Sec-8B")
+            if model_file:
+                # Extract model name from file (e.g., "llama31-70b-m3max.gguf" -> "llama31-70b-m3max")
+                model_name = model_file.replace(".gguf", "")
+                active_models.add(model_name)
 
         # Add embedding model
         if current_settings.embedding.mode == "huggingface":

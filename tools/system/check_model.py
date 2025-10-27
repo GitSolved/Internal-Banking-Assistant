@@ -47,9 +47,6 @@ def check_current_model() -> bool:
                 print(f"Status: Found")
                 print(f"Path: {model_path}")
                 print(f"Size: {size_gb:.1f} GB")
-
-                if "foundation-sec" in model_file.lower():
-                    print("\nModel Type: Foundation-Sec-8B (Cybersecurity-specialized)")
                 return True
             else:
                 print(f"Status: Not Found")
