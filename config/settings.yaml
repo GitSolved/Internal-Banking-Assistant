@@ -17,10 +17,10 @@ server:
     allow_headers: ["*"]
   auth:
     enabled: false
-    # python -c 'import base64; print("Basic " + base64.b64encode("secret:key".encode()).decode())'
-    # 'secret' is the username and 'key' is the password for basic auth by default
-    # If the auth is enabled, this value must be set in the "Authorization" header of the request.
-    secret: "Basic c2VjcmV0OmtleQ=="
+    # Authentication secret for API access (required when enabled)
+    # Generate with: python -c 'import base64, secrets; print("Basic " + base64.b64encode(f"admin:{secrets.token_urlsafe(32)}".encode()).decode())'
+    # Set via environment variable: export AUTH_SECRET="Basic <base64-encoded-credentials>"
+    secret: ${AUTH_SECRET:}
 
 data:
   local_ingestion:
@@ -77,11 +77,11 @@ summarize:
   use_async: true
 
 clickhouse:
-    host: localhost
-    port: 8443
-    username: admin
-    password: clickhouse
-    database: embeddings
+    host: ${CLICKHOUSE_HOST:localhost}
+    port: ${CLICKHOUSE_PORT:8443}
+    username: ${CLICKHOUSE_USER:admin}
+    password: ${CLICKHOUSE_PASSWORD:}
+    database: ${CLICKHOUSE_DB:embeddings}
 
 ollama:
   llm_model: llama31-70b-m3max  # Llama 3.1 70B Instruct - M3 Max optimized with 40-core GPU acceleration
@@ -141,12 +141,12 @@ qdrant:
   collection_name: internal_assistant_documents
 
 postgres:
-  host: localhost
-  port: 5432
-  database: postgres
-  user: postgres
-  password: postgres
-  schema_name: internal_assistant
+  host: ${POSTGRES_HOST:localhost}
+  port: ${POSTGRES_PORT:5432}
+  database: ${POSTGRES_DB:postgres}
+  user: ${POSTGRES_USER:postgres}
+  password: ${POSTGRES_PASSWORD:}
+  schema_name: ${POSTGRES_SCHEMA:internal_assistant}
 
 sagemaker:
   llm_endpoint_name: huggingface-pytorch-tgi-inference-2023-09-25-19-53-32-140

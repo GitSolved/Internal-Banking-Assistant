@@ -63,6 +63,8 @@ Thumbs.db
 *_backup.*
 *.bak
 *.old
+config/*.backup*
+config/**/*.backup*
 
 # ============================================
 # Internal Assistant Runtime Data (NEVER COMMIT)

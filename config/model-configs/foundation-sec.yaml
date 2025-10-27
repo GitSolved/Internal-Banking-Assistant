@@ -9,7 +9,7 @@ server:
     allow_headers: ["*"]
   auth:
     enabled: false
-    secret: "Basic c2VjcmV0OmtleQ=="
+    secret: ${AUTH_SECRET:}
 
 data:
   local_ingestion:
@@ -49,11 +49,11 @@ summarize:
   use_async: true
 
 clickhouse:
-    host: localhost
-    port: 8443
-    username: admin
-    password: clickhouse
-    database: embeddings
+    host: ${CLICKHOUSE_HOST:localhost}
+    port: ${CLICKHOUSE_PORT:8443}
+    username: ${CLICKHOUSE_USER:admin}
+    password: ${CLICKHOUSE_PASSWORD:}
+    database: ${CLICKHOUSE_DB:embeddings}
 
 llamacpp:
   # Foundation-Sec-8B Configuration
@@ -94,12 +94,12 @@ qdrant:
   path: local_data/internal_assistant/qdrant
 
 postgres:
-  host: localhost
-  port: 5432
-  database: postgres
-  user: postgres
-  password: postgres
-  schema_name: internal_assistant
+  host: ${POSTGRES_HOST:localhost}
+  port: ${POSTGRES_PORT:5432}
+  database: ${POSTGRES_DB:postgres}
+  user: ${POSTGRES_USER:postgres}
+  password: ${POSTGRES_PASSWORD:}
+  schema_name: ${POSTGRES_SCHEMA:internal_assistant}
 
 sagemaker:
   llm_endpoint_name: huggingface-pytorch-tgi-inference-2023-09-25-19-53-32-140

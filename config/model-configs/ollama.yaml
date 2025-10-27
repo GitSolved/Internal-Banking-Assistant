@@ -8,7 +8,7 @@ server:
     allow_headers: ["*"]
   auth:
     enabled: false
-    secret: "Basic c2VjcmV0OmtleQ=="
+    secret: ${AUTH_SECRET:}
 
 data:
   local_ingestion:
