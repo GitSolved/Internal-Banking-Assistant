@@ -58,8 +58,9 @@ Internal Assistant is a cybersecurity intelligence platform evolved from open-so
 ### 3. Core Services
 
 #### LLM Service (Ollama)
-- **Model**: Foundation-Sec-8B-q4_k_m.gguf (4.7GB)
-- **Purpose**: Cybersecurity-focused language model
+- **Model**: Llama 3.1 70B Instruct (llama31-70b-m3max, ~42GB)
+- **Alternative**: Foundation-Sec-8B-q4_k_m.gguf (4.7GB, cybersecurity-specialized)
+- **Purpose**: Enterprise-grade language model with banking compliance expertise
 - **Integration**: LlamaIndex LLM component
 
 #### Embeddings Service (HuggingFace)
@@ -75,9 +76,10 @@ Internal Assistant is a cybersecurity intelligence platform evolved from open-so
 ### 4. Data Layer
 
 #### Models
-- **Location**: `local_data/models/` directory
-- **Content**: Foundation-Sec-8B model file (~4.7GB)
-- **Management**: Ollama handles model storage
+- **Location**: Ollama manages models in `~/.ollama/models/`
+- **Primary**: Llama 3.1 70B Instruct (~42GB)
+- **Alternative**: Foundation-Sec-8B (~4.7GB, cybersecurity-specialized)
+- **Management**: Ollama handles model storage and loading
 
 #### Storage
 - **Location**: `local_data/internal_assistant/`
@@ -130,7 +132,7 @@ Internal Assistant is a cybersecurity intelligence platform evolved from open-so
 ## Performance Characteristics
 
 ### Current Setup
-- **LLM**: Foundation-Sec-8B (4.7GB, optimized for cybersecurity)
+- **LLM**: Llama 3.1 70B Instruct (~42GB, enterprise-grade) or Foundation-Sec-8B (4.7GB, cybersecurity-specialized alternative)
 - **Embeddings**: nomic-embed-text-v1.5 (high-quality text embeddings)
 - **Vector Store**: Qdrant (vector similarity search)
 - **Storage**: Local file system (fast access, no network latency)

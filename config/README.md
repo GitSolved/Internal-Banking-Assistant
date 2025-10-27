@@ -10,8 +10,7 @@ config/
 │   ├── settings.yaml       # Main application configuration
 │   └── settings_backup.yaml # Backup of previous settings
 ├── model-configs/          # Model-specific configurations
-│   ├── foundation-sec.yaml # Foundation-Sec-8B model settings
-│   ├── ollama.yaml         # Ollama integration settings
+│   ├── ollama.yaml         # Ollama integration settings (Llama 3.1 70B)
 │   ├── openai.yaml         # OpenAI API settings
 │   └── ...                 # Other model configs
 ├── environments/           # Environment-specific configs

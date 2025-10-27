@@ -898,27 +898,27 @@ class InternalAssistantUI:
     def _get_default_system_prompt(mode: Modes) -> str:
         match mode:
             case Modes.DIRECT_CHAT:
-                # Foundation-Sec-8B already knows cybersecurity - minimal prompt
+                # Direct chat mode - minimal prompt
                 return "Answer questions directly and concisely."
 
             case Modes.RAG_MODE:
-                # Foundation-Sec-8B knows how to analyze security docs - minimal prompt
+                # RAG mode - use document context
                 return "Use document context to answer questions."
 
             case Modes.COMPARE_MODE:
-                # Foundation-Sec-8B knows how to compare security documents
+                # Document comparison mode
                 return "Compare and analyze the provided documents."
 
             case Modes.SEARCH_MODE:
-                # Foundation-Sec-8B knows how to search security content
+                # Document search mode
                 return "Find relevant information from documents."
 
             case Modes.SUMMARIZE_MODE:
-                # Foundation-Sec-8B knows how to summarize security content
+                # Summarization mode
                 return "Provide concise summaries."
 
             case _:
-                # Default fallback - minimal
+                # Default fallback
                 return "Answer directly."
 
     @staticmethod

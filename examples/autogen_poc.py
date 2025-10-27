@@ -28,7 +28,7 @@ class AutoGenPOC:
         Initialize AutoGen agents with your existing Ollama setup.
 
         Args:
-            use_local_llm: If True, uses Foundation-Sec-8B via Ollama (default).
+            use_local_llm: If True, uses Llama 3.1 70B Instruct via Ollama (default).
                           If False, would use OpenAI (not recommended for privacy).
         """
         self.use_local_llm = use_local_llm
@@ -36,7 +36,7 @@ class AutoGenPOC:
         # Configuration matching your existing settings
         if use_local_llm:
             self.llm_config = {
-                "model": "foundation-sec-8b-q4_k_m",
+                "model": "llama31-70b-m3max",
                 "base_url": "http://localhost:11434",  # Your Ollama endpoint
                 "api_type": "ollama",
                 "temperature": 0.7,
@@ -244,7 +244,7 @@ async def main():
     print("=" * 60)
     print()
 
-    # Initialize with local LLM (Foundation-Sec-8B via Ollama)
+    # Initialize with local LLM (Llama 3.1 70B Instruct via Ollama)
     poc = AutoGenPOC(use_local_llm=True)
 
     # Sample threat intelligence feed content
@@ -312,6 +312,6 @@ if __name__ == "__main__":
         print(f"\n❌ Demo failed: {e}")
         print("\nNote: This POC requires AutoGen to be installed:")
         print("  pip install pyautogen")
-        print("\nAnd Ollama must be running with foundation-sec-8b-q4_k_m model:")
+        print("\nAnd Ollama must be running with llama31-70b-m3max model:")
         print("  ollama serve")
-        print("  ollama pull foundation-sec-8b-q4_k_m")
+        print("  ollama list  # Verify llama31-70b-m3max is available")

@@ -260,36 +260,9 @@ class ChatMLPromptStyle(AbstractPromptStyle):
         )
 
 
-class FoundationSecPromptStyle(AbstractPromptStyle):
-    """Custom prompt style for Foundation-Sec-8B to avoid duplicate <s> tokens."""
-
-    def _messages_to_prompt(self, messages: Sequence[ChatMessage]) -> str:
-        """Format messages for Foundation-Sec-8B without duplicate tokens."""
-        prompt = ""
-
-        for message in messages:
-            if message.role == MessageRole.SYSTEM:
-                # System message - no special formatting needed
-                prompt += f"{message.content.strip()}\n\n"
-            elif message.role == MessageRole.USER:
-                # User message - simple format
-                prompt += f"User: {message.content.strip()}\n"
-            elif message.role == MessageRole.ASSISTANT:
-                # Assistant message - simple format
-                prompt += f"Assistant: {message.content.strip()}\n"
-
-        # Add completion trigger
-        prompt += "Assistant: "
-        return prompt
-
-    def _completion_to_prompt(self, completion: str) -> str:
-        """Format completion prompt for Foundation-Sec-8B."""
-        return f"User: {completion.strip()}\nAssistant: "
-
-
 def get_prompt_style(
     prompt_style: (
-        Literal["default", "llama2", "llama3", "tag", "chatml", "foundation-sec"] | None
+        Literal["default", "llama2", "llama3", "tag", "chatml"] | None
     )
 ) -> AbstractPromptStyle:
     """Get the prompt style to use from the given string.
@@ -305,9 +278,6 @@ def get_prompt_style(
         return Llama3PromptStyle()
     elif prompt_style == "tag":
         return TagPromptStyle()
-
     elif prompt_style == "chatml":
         return ChatMLPromptStyle()
-    elif prompt_style == "foundation-sec":
-        return FoundationSecPromptStyle()
     raise ValueError(f"Unknown prompt_style='{prompt_style}'")

@@ -376,7 +376,7 @@ class SidebarComponent(UIComponent):
             return f"""
             <div class="system-info">
                 <p><b>Version:</b> 0.6.2</p>
-                <p><b>Model:</b> Foundation-Sec-8B</p>
+                <p><b>Model:</b> Llama 3.1 70B</p>
                 <p><b>Vector DB:</b> Qdrant</p>
                 <p><b>Platform:</b> {platform.system()} {platform.release()}</p>
                 <p><b>CPU Usage:</b> {cpu_percent}%</p>
@@ -391,7 +391,7 @@ class SidebarComponent(UIComponent):
             return """
             <div class="system-info">
                 <p><b>Version:</b> 0.6.2</p>
-                <p><b>Model:</b> Foundation-Sec-8B</p>
+                <p><b>Model:</b> Llama 3.1 70B</p>
                 <p><b>Vector DB:</b> Qdrant</p>
                 <p><b>Status:</b> <span style="color: green;">Ready</span></p>
                 <p><b>Error:</b> Could not get system metrics</p>

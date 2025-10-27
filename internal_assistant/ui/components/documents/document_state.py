@@ -88,8 +88,12 @@ class DocumentStateManager:
                     settings().llamacpp, "llm_hf_model_file", "Unknown"
                 )
                 # Extract model name from filename
-                if "foundation-sec" in model_file.lower():
-                    model_info["llm_model"] = "Foundation-Sec-8B"
+                # Extract model name from file (e.g., "llama31-70b-m3max" or "llama3.1")
+                if "llama" in model_file.lower():
+                    if "70b" in model_file.lower() or "3.1" in model_file:
+                        model_info["llm_model"] = "Llama 3.1 70B"
+                    else:
+                        model_info["llm_model"] = "Llama Model"
                 elif "llama" in model_file.lower():
                     model_info["llm_model"] = "Llama"
                 elif "phi" in model_file.lower():

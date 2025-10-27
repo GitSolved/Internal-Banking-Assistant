@@ -36,9 +36,9 @@ docker-compose --profile ollama-cpu up -d
 ```
 
 **Features:**
-- ✅ Foundation-Sec-8B model via Ollama
-- ✅ CPU-only operation
-- ✅ Lower resource requirements
+- ✅ Llama 3.1 70B Instruct model via Ollama
+- ✅ CPU-only operation (requires significant RAM ~64GB+ recommended)
+- ✅ Enterprise-grade language model
 - ✅ Easy setup
 
 ### 2. Ollama CUDA Mode (GPU Acceleration)
@@ -86,7 +86,7 @@ PGPT_PROFILES=docker
 HF_TOKEN=your_huggingface_token_here
 
 # Ollama Settings
-PGPT_OLLAMA_LLM_MODEL=foundation-sec-q4km:latest
+PGPT_OLLAMA_LLM_MODEL=llama31-70b-m3max
 PGPT_OLLAMA_API_BASE=http://ollama:11434
 
 # Logging
@@ -140,20 +140,17 @@ environment:
 ```
 
 **Required Models:**
-- `foundation-sec-q4km:latest` - Primary LLM
+- `llama31-70b-m3max` - Primary LLM (Llama 3.1 70B Instruct)
 - `nomic-embed-text` - Embedding model
 
 ### Manual Model Installation
 
 ```bash
-# Enter Ollama container
-docker-compose exec ollama-cpu bash
+# Verify models are available
+docker-compose exec ollama-cpu ollama list
 
-# Pull Foundation-Sec model
-ollama pull foundation-sec-q4km:latest
-
-# Verify installation
-ollama list
+# If needed, pull embedding model
+docker-compose exec ollama-cpu ollama pull nomic-embed-text
 ```
 
 ### Using Custom Models
@@ -162,15 +159,15 @@ Place GGUF files in `models/` directory:
 
 ```bash
 models/
-└── Foundation-Sec-8B-q4_k_m.gguf
+└── llama31-70b-m3max.gguf  # If using llamacpp mode
 ```
 
 Update environment:
 
 ```yaml
 environment:
-  PGPT_HF_REPO_ID: local/Foundation-Sec-8B
-  PGPT_HF_MODEL_FILE: Foundation-Sec-8B-q4_k_m.gguf
+  PGPT_HF_REPO_ID: local/Llama-3.1-70B
+  PGPT_HF_MODEL_FILE: llama31-70b-m3max.gguf
 ```
 
 ## Advanced Configuration
@@ -339,9 +336,9 @@ docker-compose restart ollama-cpu
 docker-compose exec ollama-cpu ollama list
 ```
 
-**Pull missing model:**
+**Verify models:**
 ```bash
-docker-compose exec ollama-cpu ollama pull foundation-sec-q4km:latest
+docker-compose exec ollama-cpu ollama list
 ```
 
 ### Slow Performance
@@ -457,7 +454,7 @@ docker stats --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.Net
 - Application: v0.6.2
 - Python: 3.11.9
 - Ollama: latest
-- Foundation-Sec: 8B-q4_k_m
+- LLM: Llama 3.1 70B Instruct (llama31-70b-m3max)
 
 ---
 

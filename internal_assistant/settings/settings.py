@@ -145,17 +145,17 @@ class LLMSettings(BaseModel):
         description="The temperature of the model. Increasing the temperature will make the model answer more creatively. A value of 0.1 would be more factual.",
     )
     prompt_style: Literal[
-        "default", "llama2", "llama3", "tag", "chatml", "foundation-sec"
+        "default", "llama2", "llama3", "tag", "chatml"
     ] = Field(
-        "llama2",
+        "llama3",
         description=(
             "The prompt style to use for the chat engine. "
             "If `default` - use the default prompt style from the llama_index. It should look like `role: message`.\n"
             "If `llama2` - use the llama2 prompt style from the llama_index. Based on `<s>`, `[INST]` and `<<SYS>>`.\n"
-            "If `llama3` - use the llama3 prompt style from the llama_index."
+            "If `llama3` - use the llama3 prompt style from the llama_index (recommended for Llama 3.1 models)."
             "If `tag` - use the `tag` prompt style. It should look like `<|role|>: message`. \n"
-            "If `foundation-sec` - use the custom Foundation-Sec-8B prompt style to avoid duplicate tokens.\n"
-            "`llama2` is the historic behaviour. `default` might work better with your custom models."
+            "If `chatml` - use the chatml prompt style. It should look like `<|im_start|>role\nmessage<|im_end|>`.\n"
+            "`llama3` is recommended for Llama 3.1 70B. `llama2` is for legacy Llama 2 models. `default` might work better with custom models."
         ),
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)

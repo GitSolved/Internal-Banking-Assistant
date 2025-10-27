@@ -24,7 +24,7 @@ AutoGen is highly compatible with this project and could provide significant ben
 2. **Local-First Architecture**
    - Your project: 100% local processing, no external APIs
    - AutoGen: Can use local LLMs via Ollama
-   - **Status**: ✅ Your Foundation-Sec-8B model works with AutoGen
+   - **Status**: ✅ Your Llama 3.1 70B model works with AutoGen
 
 3. **FastAPI Integration**
    - Your project: FastAPI-based API layer
@@ -76,7 +76,7 @@ AutoGen is highly compatible with this project and could provide significant ben
    ```python
    # Use your existing Ollama setup
    config = {
-       "model": "foundation-sec-8b-q4_k_m",
+       "model": "llama31-70b-m3max",
        "base_url": "http://localhost:11434",
        "api_type": "ollama"
    }
@@ -113,7 +113,7 @@ AutoGen is highly compatible with this project and could provide significant ben
 ┌─────────────────────────────────────────────┐
 │        Shared Resources                     │
 ├─────────────────────────────────────────────┤
-│  Foundation-Sec-8B (Ollama)                 │
+│  Llama 3.1 70B (Ollama)                     │
 │  Qdrant Vector Store                        │
 │  RSS Feeds / External Data                  │
 └─────────────────────────────────────────────┘
@@ -127,7 +127,7 @@ from autogen import AssistantAgent, UserProxyAgent, GroupChat
 class ThreatIntelligenceTeam:
     def __init__(self, injector):
         self.llm_config = {
-            "model": "foundation-sec-8b-q4_k_m",
+            "model": "llama31-70b-m3max",
             "base_url": "http://localhost:11434",
             "api_type": "ollama"
         }
@@ -281,7 +281,7 @@ daily_report = await compliance_team.generate_daily_report()
 ### Phase 1: Proof of Concept (1-2 weeks)
 - [ ] Install AutoGen v0.4 alongside existing stack
 - [ ] Create simple 2-agent system (Feed Monitor + Analyzer)
-- [ ] Test with Foundation-Sec-8B via Ollama
+- [ ] Test with Llama 3.1 70B via Ollama
 - [ ] Validate no dependency conflicts
 - [ ] Benchmark performance vs single-agent
 
@@ -330,7 +330,7 @@ autogen:
   max_agents: 5
   timeout: 300  # seconds
   llm:
-    model: "foundation-sec-8b-q4_k_m"
+    model: "llama31-70b-m3max"
     base_url: "http://localhost:11434"
     api_type: "ollama"
   observability:
@@ -416,7 +416,7 @@ class SimpleThreatAnalysisTeam:
 
     def __init__(self):
         llm_config = {
-            "model": "foundation-sec-8b-q4_k_m",
+            "model": "llama31-70b-m3max",
             "base_url": "http://localhost:11434",
             "api_type": "ollama",
             "temperature": 0.7
@@ -526,7 +526,7 @@ if __name__ == "__main__":
 **Yes, AutoGen can work extremely well with this project!**
 
 The combination of:
-- Your local-first architecture (Foundation-Sec-8B via Ollama)
+- Your local-first architecture (Llama 3.1 70B via Ollama)
 - Python 3.11.x environment
 - FastAPI + async design
 - Existing RAG infrastructure (LlamaIndex + Qdrant)

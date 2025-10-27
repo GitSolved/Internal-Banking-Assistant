@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Internal Banking Risk & Compliance Assistant** (package name: `internal-assistant`) is a privacy-focused risk & compliance platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for banking compliance officers, risk managers, and IT security teams to automate regulatory research, streamline compliance monitoring, and analyze security frameworks using the Llama 3.1 70B model.
+**Internal Banking Risk & Compliance Assistant** (package name: `internal-assistant`) is a privacy-focused risk & compliance platform built on FastAPI and LlamaIndex. It runs 100% locally with no external API dependencies, designed for banking compliance officers, risk managers, and IT security teams to automate regulatory research, streamline compliance monitoring, and analyze security frameworks.
 
 **Note**: Repository is named `Internal-Banking-Assistant` but the Python package is `internal_assistant` (with underscore).
 
@@ -13,9 +13,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - FastAPI (API layer)
 - LlamaIndex (RAG pipeline)
 - Gradio (Web UI)
-- Ollama (LLM management) with Foundation-Sec-8B-q4_k_m
+- Ollama (LLM management) with **Llama 3.1 70B Instruct** (llama31-70b-m3max)
 - HuggingFace (embeddings) with nomic-embed-text-v1.5
 - Qdrant (vector store)
+
+**⚠️ Model Configuration Note**:
+- **Current Active Model**: Llama 3.1 70B Instruct (llama31-70b-m3max) - M3 Max optimized with 40-core GPU acceleration
+- **Model Selection**: Configured in `config/settings.yaml` under `ollama.llm_model`
+- **Switching Models**: Update `ollama.llm_model` in settings.yaml and ensure model is available via `ollama list`
+- **Note**: Foundation-Sec support has been removed. For alternative models, consider other Ollama-compatible options
 
 ## Quick Reference
 
@@ -79,8 +85,32 @@ make api-docs             # Generate OpenAPI spec
 ```bash
 poetry run verify-env              # Check Python version
 make health-check                  # curl http://localhost:8001/health
-ollama list                        # Verify models
+ollama list                        # Verify models installed
+ollama ps                          # Check if model is running
 poetry run python tools/maintenance/manage_logs.py --auto --keep-sessions 7
+```
+
+### Quick Health Check
+**Fast diagnostic commands to verify system health:**
+```bash
+# 1. Check if app is running
+curl -f http://localhost:8001/health || echo "❌ App not responding"
+
+# 2. Verify Ollama is running and model is loaded
+ollama ps  # Should show llama31-70b-m3max if model is active
+ollama list  # List all available models
+
+# 3. Check Python version (must be 3.11.9-3.11.x)
+poetry run python --version
+
+# 4. Verify critical dependencies
+poetry show | grep -E "fastapi|llama-index-core|gradio|pydantic"
+
+# 5. Check Qdrant vector database
+ls -la local_data/internal_assistant/qdrant/  # Should exist, no .lock file
+
+# 6. View recent logs for errors
+tail -50 local_data/logs/internal_assistant.log
 ```
 
 ## Architecture Overview
@@ -130,7 +160,9 @@ The application uses **Injector** for dependency injection:
 - **Threat Intelligence**: RSS/Forum Feeds → Content Parsing → Threat Analysis → Dashboard
 
 ### RSS Feed Management
-**14+ Security Feeds**: CISA KEV, US-CERT, NIST NVD, The Hacker News, Dark Reading, Bleeping Computer, Krebs on Security, SANS ISC, Talos Intelligence, Packet Storm
+**16+ Security & Regulatory Feeds**:
+- **Regulatory**: NY DFS, FDIC, OCC, FFIEC, SEC, FinCEN, Federal Reserve
+- **Security**: CISA KEV, US-CERT, NIST NVD, The Hacker News, Dark Reading, Bleeping Computer, Krebs on Security, SANS ISC, Talos Intelligence, Packet Storm
 
 **Feed Architecture:**
 - `RSSFeedService` - Singleton service bound in [di.py:13](internal_assistant/di.py#L13) (maintains feed cache)
@@ -140,6 +172,12 @@ The application uses **Injector** for dependency injection:
 
 **Critical Design Pattern:**
 The feed service MUST be a singleton to maintain cache consistency across requests. It's started during FastAPI lifespan startup, not at module import.
+
+**Testing Feeds:**
+```bash
+curl http://localhost:8001/api/v1/feeds  # List all configured feeds
+curl http://localhost:8001/api/v1/threat-intelligence  # Get recent threat intel
+```
 
 ## Import Conventions
 
@@ -170,8 +208,10 @@ packages = [{ include = "internal_assistant" }]
 config/
 ├── settings.yaml              # Base configuration (always loaded)
 ├── model-configs/
-│   ├── foundation-sec.yaml   # Foundation-Sec model config
-│   └── ollama.yaml           # Ollama-specific settings
+│   ├── ollama.yaml           # Ollama-specific settings (Llama 3.1 70B)
+│   ├── openai.yaml           # OpenAI API settings
+│   ├── gemini.yaml           # Google Gemini settings
+│   └── ...                   # Other model configs
 ├── environments/
 │   ├── local.yaml            # Local development
 │   ├── test.yaml             # Testing environment
@@ -181,7 +221,7 @@ config/
 ```
 
 **Active Configuration**:
-- LLM: `llm.mode = ollama` (Foundation-Sec-8B-q4_k_m)
+- LLM: `llm.mode = ollama` with `llm_model = llama31-70b-m3max` (Llama 3.1 70B Instruct)
 - Embeddings: `embedding.mode = huggingface` (nomic-embed-text-v1.5)
 - Vector Store: `vectorstore.database = qdrant`
 - Node Store: `nodestore.database = simple`
@@ -233,7 +273,7 @@ poetry run <command>          # Run commands in virtual environment
 ```
 
 **Active Dependencies** (currently used):
-- `llama-index-llms-ollama` - LLM integration (Foundation-Sec via Ollama)
+- `llama-index-llms-ollama` - LLM integration (Llama 3.1 70B via Ollama)
 - `llama-index-embeddings-huggingface` - Embeddings (nomic-embed-text-v1.5)
 - `llama-index-vector-stores-qdrant` - Vector storage
 - `gradio` - Web UI framework
@@ -242,7 +282,7 @@ poetry run <command>          # Run commands in virtual environment
 ## Testing Architecture
 
 ### Test Organization & Fixtures
-**Fixture System** ([conftest.py:14](tests/conftest.py#L14)):
+**Fixture System** ([conftest.py](tests/conftest.py)):
 - Auto-discovers fixtures from `tests/fixtures/[!_]*.py`
 - Converts to pytest plugins dynamically
 - Key fixtures:
@@ -250,6 +290,16 @@ poetry run <command>          # Run commands in virtual environment
   - `auto_close_qdrant` - Automatic Qdrant cleanup after tests
   - `ingest_helper` - Document ingestion utilities
   - `fast_api_test_client` - FastAPI test client with injector
+
+**When to Use Task Tool vs Direct Commands:**
+- ✅ **Use Task tool (Explore agent)** for:
+  - Open-ended codebase exploration ("Where are errors handled?")
+  - Understanding architecture ("How does the feed system work?")
+  - Finding patterns across multiple files
+- ❌ **Use direct Glob/Grep/Read** for:
+  - Specific file/class lookup ("Find UserService class")
+  - Known file paths ("Read config/settings.yaml")
+  - Simple 1-2 file searches
 
 **Test Structure:**
 ```
@@ -412,18 +462,50 @@ async def lifespan(app: FastAPI):
 ### Configuration Override Pattern
 **Three-Layer Configuration System:**
 ```
-config/settings.yaml              # Base (always loaded)
-↓
-config/environments/local.yaml    # Environment override (via PGPT_PROFILES=local)
-↓
-config/model-configs/ollama.yaml  # Model-specific override
+config/settings.yaml                      # Base (always loaded first)
+↓ (overrides base)
+config/environments/{profile}.yaml        # Environment override (via PGPT_PROFILES)
+↓ (overrides environment)
+config/model-configs/{model}.yaml         # Model-specific override
 ```
 
-**Making Changes:**
-1. Modify `config/settings.yaml` for base changes
-2. Use `config/environments/{env}.yaml` for environment-specific overrides
-3. Update `internal_assistant/settings/settings.py` schema if adding new fields
-4. Restart app - configuration loaded once at startup
+**Configuration Loading Example:**
+```bash
+# With PGPT_PROFILES=test
+# Loads: settings.yaml → environments/test.yaml → model-configs/{model}.yaml
+PGPT_PROFILES=test make run
+
+# With PGPT_PROFILES=production
+# Loads: settings.yaml → environments/production.yaml → model-configs/{model}.yaml
+PGPT_PROFILES=production make production
+```
+
+**Making Configuration Changes:**
+1. **Global changes** (affect all environments): Edit `config/settings.yaml`
+2. **Environment-specific changes**: Edit `config/environments/{env}.yaml` (local.yaml, test.yaml, docker.yaml)
+3. **Model-specific settings**: Edit `config/model-configs/ollama.yaml` for Ollama-specific settings
+4. **Add new settings fields**: Update `internal_assistant/settings/settings.py` Pydantic schema first
+5. **Apply changes**: Restart app - configuration loaded once at startup
+
+**Configuration Hierarchy Example:**
+```yaml
+# config/settings.yaml (base)
+llm:
+  mode: ollama
+
+ollama:
+  llm_model: llama31-70b-m3max  # Current active model
+
+# config/environments/test.yaml (overrides for testing)
+llm:
+  mode: mock  # Use mock LLM for tests
+
+# config/model-configs/ollama.yaml (Ollama-specific settings)
+ollama:
+  api_base: http://localhost:11434
+  keep_alive: 5m
+  request_timeout: 180.0
+```
 
 ## Troubleshooting
 
@@ -511,14 +593,29 @@ Integration tests are skipped in CI by default (`pytest.ini_options.addopts` in 
 
 ## Key Files Reference
 
-- `internal_assistant/main.py` - Application entry point
-- `internal_assistant/launcher.py` - FastAPI app factory
-- `internal_assistant/di.py` - Dependency injection setup
-- `internal_assistant/settings/settings.py` - Configuration schema
-- `config/settings.yaml` - Base configuration file
-- `pyproject.toml` - Project metadata, dependencies, tool configs
-- `Makefile` - Development commands
-- `tests/conftest.py` - Pytest configuration
+**Application Core:**
+- [internal_assistant/main.py](internal_assistant/main.py) - Application entry point
+- [internal_assistant/launcher.py](internal_assistant/launcher.py) - FastAPI app factory, lifecycle management
+- [internal_assistant/di.py](internal_assistant/di.py) - Dependency injection container setup
+
+**Configuration:**
+- [config/settings.yaml](config/settings.yaml) - Base configuration (always loaded first)
+- [internal_assistant/settings/settings.py](internal_assistant/settings/settings.py) - Configuration schema (Pydantic models)
+- [config/model-configs/ollama.yaml](config/model-configs/ollama.yaml) - Ollama model configuration
+- [config/environments/](config/environments/) - Environment-specific overrides (local.yaml, test.yaml, docker.yaml)
+
+**Build & Development:**
+- [pyproject.toml](pyproject.toml) - Poetry dependencies, package metadata, tool configs
+- [Makefile](Makefile) - Development commands (run, test, format, ingest)
+
+**Testing:**
+- [tests/conftest.py](tests/conftest.py) - Pytest configuration, fixture auto-discovery
+- [tests/fixtures/](tests/fixtures/) - Reusable test fixtures
+
+**Documentation:**
+- [README.md](README.md) - User-facing project overview
+- [CLAUDE.md](CLAUDE.md) - Developer guide (this file)
+- [docs/](docs/) - MkDocs documentation site
 
 ## Project History
 
@@ -527,11 +624,12 @@ This project is built on the [PrivateGPT](https://github.com/zylon-ai/private-gp
 - **Original License**: Apache 2.0 (maintained)
 - **Original Authors**: Zylon AI
 - **Custom Features**: ~48,000+ lines of cybersecurity-specific code including:
-  - Foundation-Sec-8B integration
-  - 14+ security RSS feeds with threat intelligence
+  - Llama 3.1 70B Instruct integration (M3 Max optimized, ~42GB model)
+  - 16+ security & regulatory RSS feeds with threat intelligence
   - MITRE ATT&CK framework integration
   - CVE tracking and monitoring
-  - Custom security-focused UI
+  - Custom banking compliance & security-focused UI
+  - Support for multiple LLM backends (Ollama, OpenAI, Gemini, etc.)
 
 **Important**: When working with core RAG infrastructure (vector stores, embeddings, LLM components), be aware of the PrivateGPT foundation. Security features and threat intelligence are custom additions.
 
@@ -605,6 +703,45 @@ gh pr create --title "Feature X" --body "Description"
 - ✅ Use `UVICORN_PORT` for parallel servers
 - ✅ Use `PGPT_PROFILES` for data isolation
 - ❌ Never share `local_data/` between sessions with different configs
+
+## Model Migration Notes
+
+### Foundation-Sec Removed - Llama 3.1 70B Only
+The codebase has completed migration from Foundation-Sec-8B to Llama 3.1 70B Instruct. **Foundation-Sec support has been completely removed.**
+
+**Files Removed:**
+- ✅ `config/model-configs/foundation-sec.yaml` - Deleted
+- ✅ `internal_assistant/components/llm/prompt_helper.py` - FoundationSecPromptStyle class removed
+- ✅ `internal_assistant/settings/settings.py` - "foundation-sec" removed from prompt_style enum
+
+**All Code Files Updated (✅ Complete):**
+1. ✅ `config/model-configs/foundation-sec.yaml` - DELETED (139 lines removed)
+2. ✅ `internal_assistant/components/llm/prompt_helper.py` - Removed FoundationSecPromptStyle class
+3. ✅ `internal_assistant/settings/settings.py` - Removed "foundation-sec" enum, default now "llama3"
+4. ✅ `examples/autogen_poc.py` - Updated to llama31-70b-m3max
+5. ✅ `config/README.md` - Model references updated
+6. ✅ `docs/developer/architecture/overview.md` - Model references updated
+7. ✅ `internal_assistant/ui/ui.py` - Foundation-Sec comments removed
+8. ✅ `internal_assistant/ui/components/sidebar/sidebar_component.py` - Updated to "Llama 3.1 70B"
+9. ✅ `internal_assistant/ui/components/documents/document_state.py` - Dynamic model detection
+10. ✅ `config/environments/docker.yaml` - Updated to llama31-70b-m3max, prompt_style "llama3"
+11. ✅ `config/model-configs/ollama.yaml` - Updated to llama31-70b-m3max
+
+**Documentation Files (Lower Priority - Not Critical):**
+- ⚠️ `config/deployment/docker/README.Docker.md` - Docker setup docs (informational only)
+- ⚠️ `docs/developer/autogen-integration.md` - AutoGen examples (informational only)
+
+**Ollama Models (Optional Cleanup):**
+```bash
+# Remove Foundation-Sec models from Ollama (optional)
+ollama rm foundation-sec-m3max
+ollama rm foundation-sec-q4km
+```
+
+**Current Active Configuration:**
+- Model: `llama31-70b-m3max` (Llama 3.1 70B Instruct, ~42GB)
+- Prompt Style: `llama3` (default in settings.py)
+- Config: Set in `config/settings.yaml` under `ollama.llm_model`
 
 ## Security Notes
 
