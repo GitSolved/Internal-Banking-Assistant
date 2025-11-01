@@ -105,7 +105,7 @@ retry-async = "^0.1.4"
 pydantic = ">=2.8.0,<2.9.0"
 psutil = "^7.0.0"
 olefile = "^0.46"  # ← Required for PIL image plugins
-packaging = "^24.0"  # ← Required for version parsing
+packaging = "^25.0"  # ← Required for version parsing
 [tool.poetry.extras]
 # UI extras (REQUIRED for Gradio interface)
 ui = ["gradio", "ffmpy"]  # ← CURRENT: Gradio web interface
